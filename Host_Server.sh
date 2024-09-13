@@ -32,7 +32,8 @@ run_script_in_container() {
     docker exec "$container_id" mkdir -p "$JACOCO_EXEC_DIR/$container_id" || { echo "Failed to mkdir $JACOCO_EXEC_DIR/$container_id in container $container_name $container_id"; exit 1; }
     docker exec "$container_id" cp "$APP_EXEC_TAR" "$JACOCO_EXEC_DIR/$container_id/exec.tar" || { echo "Failed to cp $APP_EXEC_TAR in container $container_name $container_id"; exit 1; }
     docker exec "$container_id" chmod -R 777 "$JACOCO_DIR" || { echo "Failed to chmod $JACOCO_DIR in container $container_name $container_id"; exit 1; }
-    docker cp "$container_id:$JACOCO_DIR" "$APP_DIR" || { echo "Failed to cp $JACOCO_DIR from container $container_name $container_id "; exit 1; }
+    docker cp "$container_id":"$JACOCO_DIR" "$APP_DIR" || { echo "Failed to cp $JACOCO_DIR from container $container_name $container_id "; exit 1; }
+    docker cp "$container_id":"$APP_JAR" "$APP_DIR" || { echo "Failed to cp $APP_JAR from container $container_name $container_id "; exit 1; }
     echo "container_name: $container_name and container_id: $container_id"
 }
 
@@ -60,16 +61,6 @@ if [[ -n "$container_name" && "$container_name" == *irp-business-admin* ]] || [[
     exec_tar="exec.tar"
     jacoco_exec="./app/exec/jacoco.exec"
     cd "$APP_DIR" || { echo "Failed to change directory to $APP_DIR"; exit 1; }
-    [[ -d $jacoco ]] && rm -rf $jacoco
-    mkdir -p $jacoco || { echo "Failed to create directory $jacoco"; exit 1; }
-    cd "$jacoco" || { echo "Failed to change directory to $jacoco"; exit 1; }
-    curl -u "20431644:AP9EZniqgqnuSHqmHM3NtUfUgFT" -O "https://devops.cscec.com/repo/repository/jspt-generic/jacoco/jar/jacococli.jar" || { echo "Failed to download jacococli.jar"; exit 1; }
-    [[ -d ./result ]] && rm -rf ./result
-    mkdir -p ./result || { echo "Failed to create directory ./result"; exit 1; }
-    # cp "$APP_DIR"/app.jar . || { echo "Failed to copy app.jar"; exit 1; }
-    # unzip app.jar || { echo "Failed to unzip app.jar"; exit 1; }
-    # 使用 find 命令获取所有 exec.tar 文件的路径，并逐行处理
-    cd "$APP_DIR"  || { echo "Failed to change directory to $APP_DIR"; exit 1; }
     find . -type f -name "$exec_tar" | while read -r file_path; do
         # 获取文件所在的目录
         dir=$(dirname "$file_path")
@@ -89,14 +80,12 @@ if [[ -n "$container_name" && "$container_name" == *irp-business-admin* ]] || [[
     # jacococli合并数据文件&生成报告
     cd "$jacoco" || { echo "Failed to change directory to $jacoco"; exit 1; }
     jacoco_exec_files=$(echo `find . -type f -name "jacoco*.exec" -print0 | xargs -0 -I{} basename {} | tr '\n' ' '`)
-#    java -jar jacococli.jar merge $jacoco_exec_files --destfile ./merged.exec || { echo "Failed to merge jacoco exec files"; exit 1; }
-#    java -jar jacococli.jar report "$jacoco"/merged.exec --classfiles BOOT-INF/classes/com/cscec/ccdt/resource/ --html ./result || { echo "Failed to generate jacoco report"; exit 1; }
 
     # 压缩&上传制品库
-    ls -A1 $APP_JAR 2>/dev/null || { echo "Error: No files matching pattern 'jacoco*.exec' found."; exit 1; }
+    ls -A1 $APP_JAR 2>/dev/null || { echo "Error: No files $APP_JAR found."; exit 1; }
     unzip -o $APP_JAR -d ./ || { echo "Failed to unzip app.jar"; exit 1; }
     zip -r "irp_server_class.zip" ./BOOT-INF/classes
-    zip -r "jacoco_exec.zip" ./$jacoco_exec_files || { echo "Failed to zip jacoco exec files"; exit 1; }
+    zip "jacoco_exec.zip" ./jacoco_*.exec || { echo "Failed to zip jacoco exec files"; exit 1; }
     curl -u "20431644:AP9EZniqgqnuSHqmHM3NtUfUgFT" -T "irp_server_class.zip" "https://devops.cscec.com/repo/repository/jspt-generic/jacoco/exec/${today}/${AGILE_PIPELINE_BUILD_ID}/irp_server_class.zip" || { echo "Failed to upload class file to artifactory"; exit 1; }
     curl -u "20431644:AP9EZniqgqnuSHqmHM3NtUfUgFT" -T "jacoco_exec.zip" "https://devops.cscec.com/repo/repository/jspt-generic/jacoco/exec/${today}/${AGILE_PIPELINE_BUILD_ID}/jacoco_exec.zip" || { echo "Failed to upload jacoco exec files to artifactory"; exit 1; }
     echo "上传覆盖率数据文件 ${today} ${AGILE_PIPELINE_BUILD_ID} jacoco_exec 成功"
