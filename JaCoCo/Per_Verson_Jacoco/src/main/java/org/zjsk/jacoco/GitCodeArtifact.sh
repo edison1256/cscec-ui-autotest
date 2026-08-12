@@ -1,0 +1,5 @@
+#!/bin/bash
+today=$(date +%Y%m%d)
+cp -r irp-service/{business-admin,business-core}/src/main/java .
+zip -r -x=*.jar "irp_service_code.zip" ./java || { echo "Failed to zip irp-service java code files"; exit 1; }
+curl -u "20431644:AP9EZniqgqnuSHqmHM3NtUfUgFT" -T "irp_service_code.zip" "https://devops.cscec.com/repo/repository/jspt-generic/jacoco/exec/${today}/${AGILE_PIPELINE_BUILD_ID}/irp_service_code.zip" || { echo "Failed to upload irp-server java code zip to artifactory"; exit 1; }

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CSCEC UI automation case asset registry",
+  "type": "object",
+  "required": ["registry_version", "assets"],
+  "properties": {
+    "registry_version": { "type": "integer" },
+    "updated_at": { "type": "string" },
+    "assets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["asset_id", "module", "title", "lifecycle", "automation_status", "markers", "env_policy"],
+        "properties": {
+          "asset_id": { "type": "string" },
+          "module": { "type": "string" },
+          "title": { "type": "string" },
+          "lifecycle": {
+            "type": "string",
+            "enum": [
+              "new_requirement",
+              "candidate",
+              "uat_automated",
+              "pre_verified",
+              "prod_regression",
+              "manual_only",
+              "api_preferred",
+              "deprecated"
+            ]
+          },
+          "automation_status": {
+            "type": "string",
+            "enum": ["candidate", "automated", "needs_stabilization", "manual_only", "api_preferred", "deprecated"]
+          },
+          "source": { "type": "object" },
+          "test_path": { "type": "string" },
+          "page_objects": { "type": "array", "items": { "type": "string" } },
+          "markers": { "type": "array", "items": { "type": "string" } },
+          "env_policy": {
+            "type": "object",
+            "required": ["uat", "pre", "prod_default", "prod_explicit"],
+            "properties": {
+              "uat": { "type": "boolean" },
+              "pre": { "type": "boolean" },
+              "prod_default": { "type": "boolean" },
+              "prod_explicit": { "type": "boolean" }
+            }
+          },
+          "evidence": { "type": "object" },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

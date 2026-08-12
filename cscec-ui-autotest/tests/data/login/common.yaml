@@ -1,0 +1,54 @@
+# 登录模块通用测试数据
+# 适用于所有环境
+
+# 正常登录测试
+login_success:
+  description: 正常登录流程测试
+  username: "${USERNAME}"
+  password: "${PASSWORD}"
+  expected:
+    url_contains: "irp.cscec.com"
+    page_title: "中国建筑"
+
+# 登录失败测试
+login_failure:
+  description: 登录失败场景测试数据
+  cases:
+    - name: 错误密码
+      username: "${USERNAME}"
+      password: "WrongPassword123"
+      expected_error: "密码错误"
+
+    - name: 空用户名
+      username: ""
+      password: "SomePassword"
+      expected_error: "请输入用户名"
+
+    - name: 空密码
+      username: "testuser"
+      password: ""
+      expected_error: "请输入密码"
+
+    - name: 不存在的用户
+      username: "nonexistent_user_12345"
+      password: "SomePassword123"
+      expected_error: "用户不存在"
+
+# 登出测试
+logout:
+  description: 登出流程测试
+  expected:
+    see_text: "登录"
+    not_see_text: "退出"
+
+# 用户信息
+users:
+  default:
+    username: "${USERNAME}"
+    password: "${PASSWORD}"
+    display_name: "测试用户"
+
+  admin:
+    username: "admin"
+    password: "${ADMIN_PASSWORD:admin123}"
+    display_name: "管理员"

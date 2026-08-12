@@ -1,0 +1,2039 @@
+registry_version: 1
+generated_at: '2026-08-11'
+requirement: 数据资源导入功能优化
+source: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+assets:
+- asset_id: UI-CAND-0001
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-01 M02入口展示上传文件-校验表格-导入路径
+    type:
+    - UI
+    - 功能
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m02_import_contracts.py::TestM02ImportContracts::test_m02_import_dialog_and_template_download_are_available
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-12 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "m02_import_dialog" -v --no-html: 1 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0002
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-02 M03入口展示上传文件-校验表格-导入路径
+    type:
+    - UI
+    - 功能
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportContracts::test_import_dialog_and_template_download_are_available[chromium-m03]
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0003
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-03 M04入口展示上传文件-校验表格-导入路径
+    type:
+    - UI
+    - 功能
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportContracts::test_import_dialog_and_template_download_are_available[chromium-m04]
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0004
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-04 下载模板后上传xls文件可进入业务校验
+    type:
+    - 功能
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0005
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-05 下载模板后上传xlsx文件可进入业务校验
+    type:
+    - 功能
+    priority: P1
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: M03 xlsx 正向文件已通过 UAT 自动化覆盖；只校验到导入前通过态，不点击最终导入。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03ImportA5PreImportContracts::test_m03_valid_xlsx_passes_validation_without_pre_import_write
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-12 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "m03_valid_xlsx" -v --no-html: 1 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0006
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-06 列名与模板不符时提示且不展示导入按钮
+    type:
+    - UI
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_import_column_mismatch.py::TestM03ImportColumnMismatch::test_m03_import_column_mismatch_blocks_import_and_creates_no_resource
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 python run_tests.py --env uat -p dataresources -k column_mismatch -v: 1 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0007
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-07 多行错误数据支持复数错误行展示
+    type:
+    - UI
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: M03 多行错误数据已通过 UAT 自动化覆盖；前端弹窗稳定展示第 2 行和第 3 行错误。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03ImportA6DialogState::test_m03_multiple_invalid_rows_show_multiple_error_lines
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-12 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A6DialogState" -v --no-html: 2 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0008
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-08 业务校验不通过后重新上传正确文件可继续导入
+    type:
+    - 功能
+    - 异常
+    priority: P1
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: M03 业务校验失败后同一弹窗重新上传正确 xlsx，可回到校验通过态；不点击最终导入。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03ImportA6DialogState::test_m03_reupload_valid_file_after_error_returns_to_passed_validation
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-12 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A6DialogState" -v --no-html: 2 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0009
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-09 点击导入按钮前不提前写入通过校验的数据
+    type:
+    - 数据
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: M03 校验通过后未点击最终导入，回到数据资源列表按唯一表英文名搜索仍为空，证明导入前未提前写入。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03ImportA5PreImportContracts::test_m03_valid_xlsx_passes_validation_without_pre_import_write
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-12 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "m03_valid_xlsx" -v --no-html: 1 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0010
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-10 仅存在重复数据时业务校验通过并可选择处理方式
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0011
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-11 选择重复跳过后保留重复的第一条数据
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0012
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-12 选择重复覆盖后保留重复的第二条数据
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0013
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M1-公共导入流程
+    title: M1-13 导入过程中展示进度条且页面无重复提交
+    type:
+    - UI
+    - 功能
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0014
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-01 M02正确模板新增L1/L2/L3后分层树展示正确
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0015
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-02 A列一级应用域名称不存在时输出错误行
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0016
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-03 多行一级应用域名称不存在时支持复数错误行
+    type:
+    - UI
+    - 异常
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0017
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-04 M02四个必填字段任一为空时业务校验不通过
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0018
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-05 M02列名与模板不符时输出固定提示
+    type:
+    - UI
+    - 异常
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0019
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-06 一级应用域名称L1L2L3全部相同时判定重复
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0020
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-07 同一级应用域同一L1同一L2下相同L3判定重复
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0021
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-08 不同上级路径下相同L3允许通过
+    type:
+    - 功能
+    - 数据
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0022
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-09 同一级应用域同一L1下相同L2判定重复
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0023
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-10 不同一级应用域下相同L1允许通过
+    type:
+    - 功能
+    - 数据
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0024
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-11 定义字段相同但层级名称不同不按重复拦截
+    type:
+    - 功能
+    - 数据
+    priority: P2
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0025
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-12 重复跳过保留第一条M02分层数据
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0026
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-13 重复覆盖保留第二条M02分层数据且不删除下级树
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - destructive
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0027
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-14 业务上错误但系统无法判定的L1树按新数据导入
+    type:
+    - 功能
+    - 数据
+    priority: P2
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0028
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M2-M02数据分层清单导入
+    title: M2-15 M02导入完成后可推送门户成功
+    type:
+    - 功能
+    - 数据
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0029
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-01 M03正确模板新增数据实体后列表可查询
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0030
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-02 B列一级应用域名称不存在时输出错误行
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportBusinessErrors::test_m03_missing_app_domain_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0031
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-03 D列应用系统名称不存在时输出错误行
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m03_missing_app_system_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A1BusinessErrors" -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0032
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-04 一级应用域与应用系统不对应时输出错误行
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m03_app_domain_system_mismatch_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A1BusinessErrors" -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0033
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-05 L1L2L3任一在库中不存在时输出错误行
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m03_missing_layer_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A1BusinessErrors" -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0034
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-06 M03十个必填字段任一为空时业务校验不通过
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m03_missing_required_field_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A1BusinessErrors" -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0035
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-07 M03非必填字段为空不拦截导入
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0036
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-08 唯一组合完全相同时M03判定重复
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0037
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-09 相同应用系统下相同表英文名称判定重复
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0038
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-10 表英文名称大小写不同按重复处理
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0039
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-11 表中文名称相同但表英文名称不同不按重复拦截
+    type:
+    - 功能
+    - 数据
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0040
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-12 M03表内重复选择跳过保留第一条实体数据
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0041
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-13 M03表内重复选择覆盖保留第二条实体数据
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0042
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-14 M03覆盖库中重复实体后列表展示第二条数据
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0043
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M3-M03数据实体清单导入
+    title: M3-15 M03导入前业务校验阶段不提前写入实体
+    type:
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0044
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-01 M04正确模板新增字段属性后数据项列表可查询
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0045
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-02 BDEFGI任一定位列不存在时认定为错误数据
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m04_missing_locator_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A1BusinessErrors" -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0046
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-03 BDEFGI多元组不对应时认定为错误数据
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m04_locator_mismatch_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A1BusinessErrors" -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0047
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-04 表英文名称对应实体不存在时输出错误行
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA2BusinessErrors::test_m04_missing_entity_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A2BusinessErrors" -v --no-html: 2 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0048
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-05 M04十八个必填字段任一为空时业务校验不通过
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportBusinessErrors::test_m04_missing_required_field_shows_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0049
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-06 是否主键是否可空是否外键非是/否时业务校验不通过
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportBusinessErrors::test_m04_invalid_attribute_values_show_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0050
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-07 是否主键是否可空是否外键为空时业务校验不通过
+    type:
+    - 异常
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA2BusinessErrors::test_m04_empty_boolean_flags_show_error_row
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A2BusinessErrors" -v --no-html: 2 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0051
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-08 是否本系统产生的数据为空不拦截M04导入
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA3PositiveContracts::test_m04_empty_source_system_flag_does_not_block_validation
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A3PositiveContracts" -v --no-html: 2 passed, 1 xfailed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0052
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-09 是否本系统产生的数据非是/否不拦截M04导入
+    type:
+    - 功能
+    - 数据
+    priority: P1
+  automation:
+    status: needs_stabilization
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA3PositiveContracts::test_m04_non_yes_no_source_system_flag_does_not_block_validation
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 UAT xfail: 当前弹窗返回“是否本系统产生的数据的值不正确”，与“不拦截”预期不一致'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0053
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-10 M04非必填字段为空不拦截导入
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA3PositiveContracts::test_m04_optional_fields_empty_do_not_block_validation
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "A3PositiveContracts" -v --no-html: 2 passed, 1 xfailed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0054
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-11 M04唯一组合完全相同时判定重复
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0055
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-12 表英文名称和字段英文名称大小写不同按重复处理
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0056
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-13 字段中文名称相同但字段英文名称不同不按重复拦截
+    type:
+    - 功能
+    - 数据
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0057
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-14 除唯一组合外其他字段相同不按重复拦截
+    type:
+    - 功能
+    - 数据
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0058
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-15 M04表内重复选择跳过保留第一条字段属性
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0059
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-16 M04表内重复选择覆盖保留第二条字段属性
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0060
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-17 M04覆盖库中重复字段后数据项属性展示第二条数据
+    type:
+    - 功能
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0061
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M4-M04数据属性清单导入
+    title: M4-18 M04导入前业务校验阶段不提前写入字段属性
+    type:
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0062
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M5-进度条与容量代表性
+    title: M5-01 M02较大xls文件导入过程中展示进度条且树结构正确
+    type:
+    - 功能
+    - 性能
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0063
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M5-进度条与容量代表性
+    title: M5-02 M03较大xlsx文件导入过程中展示进度条且列表可查询
+    type:
+    - 功能
+    - 性能
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0064
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M5-进度条与容量代表性
+    title: M5-03 M04较大xlsx文件导入过程中展示进度条且字段可查询
+    type:
+    - 功能
+    - 性能
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0065
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M5-进度条与容量代表性
+    title: M5-04 导入过程中重复点击导入不产生重复数据
+    type:
+    - 功能
+    - 数据
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0066
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M5-进度条与容量代表性
+    title: M5-05 如页面展示总需求导入行数则排除表头和空行
+    type:
+    - UI
+    - 数据
+    priority: P2
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0067
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M5-进度条与容量代表性
+    title: M5-06 如页面展示总需求导入行数则排除重复跳过行
+    type:
+    - UI
+    - 数据
+    priority: P2
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0068
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-01 M02导入入口和模板下载仍可用
+    type:
+    - 功能
+    - 回归
+    priority: P1
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m02_import_contracts.py::TestM02ImportContracts::test_m02_import_dialog_and_template_download_are_available
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-12 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -k "m02_import_dialog" -v --no-html: 1 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0069
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-02 M03和M04导入入口及模板下载仍可用
+    type:
+    - 功能
+    - 回归
+    priority: P1
+  automation:
+    status: automated
+    suggested_markers:
+    - regression
+    - dataresources
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportContracts::test_import_dialog_and_template_download_are_available
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: '2026-08-11 .\.venv\Scripts\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed'
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0070
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-03 M03编码字段为空不再按历史编码规则报错
+    type:
+    - 回归
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0071
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-04 M03数据责任部门为空不再按历史必填规则报错
+    type:
+    - 回归
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0072
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-05 M04编码字段为空不再按历史编码规则报错
+    type:
+    - 回归
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0073
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-06 M04是否国资监管为空不再按历史必填规则报错
+    type:
+    - 回归
+    - 数据
+    priority: P0
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0074
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-07 M02导入后分层新增编辑删除功能不受影响
+    type:
+    - 功能
+    - 回归
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - destructive
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0075
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-08 M03导入后数据资源手动添加编辑上架下架入口不受影响
+    type:
+    - 功能
+    - 回归
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - destructive
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''
+- asset_id: UI-CAND-0076
+  source_case:
+    source_file: 详细测试用例数据.json
+    module: M6-历史功能回归与兼容
+    title: M6-09 M04导入后数据项属性新增编辑删除上移下移入口不受影响
+    type:
+    - 功能
+    - 回归
+    priority: P1
+  automation:
+    status: candidate
+    suggested_markers:
+    - regression
+    - module_pending
+    - destructive
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    reason: 包含稳定前端交互或功能/UI/权限/回归验证，可进入 UI 自动化候选池。
+    target_test_path: ''
+  promotion:
+    lifecycle: new_requirement
+    uat_evidence: ''
+    pre_evidence: ''
+    prod_regression_since: ''

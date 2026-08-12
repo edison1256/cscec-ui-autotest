@@ -1,0 +1,1409 @@
+registry_version: 1
+updated_at: "2026-08-12"
+asset_lifecycle:
+  - new_requirement
+  - candidate
+  - uat_automated
+  - pre_verified
+  - prod_regression
+  - manual_only
+  - api_preferred
+  - deprecated
+promotion_rules:
+  uat_to_pre: "UAT 自动化通过后，可进入 PRE 验证候选。"
+  pre_to_prod_regression: "PRE 验证通过且已上线后，readonly 用例可沉淀为 prod_regression。"
+  prod_default: "PROD 默认只执行 smoke + readonly；write/destructive 必须显式 marker/path。"
+assets:
+  - asset_id: UI-BASE-LOGIN-001
+    module: 登录
+    title: 正常登录流程
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/login/test_login.py::TestLogin::test_login_success
+    page_objects:
+      - pages/portal/login_page.py
+    markers:
+      - login
+      - smoke
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      uat: "2026-08-11 python run_tests.py --env uat --refresh-auth -m smoke: 5 passed"
+    notes: "独立 fresh_page 登录验证；使用环境级密码和 auth_states/<env>.json。"
+
+  - asset_id: UI-BASE-LOGIN-002
+    module: 登录
+    title: 登录后门户首页可访问
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/login/test_login.py::TestLogin::test_portal_homepage_accessible
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - login
+      - smoke
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      uat: "2026-08-11 python run_tests.py --env uat --refresh-auth -m smoke: 5 passed"
+    notes: "复用登录态验证门户首页已登录状态。"
+
+  - asset_id: UI-BASE-CONSOLE-001
+    module: 控制台
+    title: 控制台入口页可访问
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/console/test_console_navigation.py::TestConsoleNavigation::test_console_home_accessible
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/console/console_home_page.py
+    markers:
+      - console
+      - smoke
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      uat: "2026-08-11 python run_tests.py --env uat --refresh-auth -m smoke: 5 passed"
+    notes: "验证门户控制台入口和控制台首页核心文案。"
+
+  - asset_id: UI-BASE-DOCCENTER-001
+    module: 文档中心
+    title: 文档中心页面可访问
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/doccenter/test_doc_center.py::TestDocCenter::test_doc_center_accessible
+    page_objects:
+      - pages/doccenter/doc_center_page.py
+    markers:
+      - doccenter
+      - smoke
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      uat: "2026-08-11 python run_tests.py --env uat --refresh-auth -m smoke: 5 passed"
+    notes: "直接访问文档中心 URL，验证模块入口。"
+
+  - asset_id: UI-BASE-DOCCENTER-002
+    module: 文档中心
+    title: 文档中心工作台可见
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/doccenter/test_doc_center.py::TestDocCenter::test_workspace_visible
+    page_objects:
+      - pages/doccenter/doc_center_page.py
+    markers:
+      - doccenter
+      - smoke
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      uat: "2026-08-11 python run_tests.py --env uat --refresh-auth -m smoke: 5 passed"
+    notes: "验证文档中心工作台核心文案。"
+
+  - asset_id: UI-P0-PORTAL-001
+    module: 门户
+    title: PROD P0 门户导航只读回归
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: historical_regression
+      requirement: 阶段3-C PROD 反向梳理 P0 只读页面回归
+      checklist: docs/prod-p0-readonly-regression-checklist.md
+      checklist_ids:
+        - C-P0-PORTAL-001
+        - C-P0-PORTAL-002
+        - C-P0-PORTAL-003
+        - C-P0-PORTAL-004
+        - C-P0-PORTAL-005
+        - C-P0-PORTAL-006
+    test_path: tests/portal/test_portal_p0_readonly_regression.py::TestPortalP0ReadonlyRegression::test_portal_p0_page_accessible_and_safe_interaction
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - portal
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod: "2026-08-11 python run_tests.py --env prod --refresh-auth -p portal -m \"smoke and readonly\" -v: 6 passed"
+      prod_default: "2026-08-11 python run_tests.py --env prod -m \"smoke and readonly\" -v: 24 passed, 8 deselected"
+    notes: "覆盖门户首页、服务中心、智能建造、解决方案、开发者平台、支持与帮助；仅做页面健康断言和安全输入框填充清空。"
+
+  - asset_id: UI-P0-CONSOLE-001
+    module: 控制台
+    title: PROD P0 控制台工作台与菜单组只读回归
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: historical_regression
+      requirement: 阶段3-C PROD 反向梳理 P0 只读页面回归
+      checklist: docs/prod-p0-readonly-regression-checklist.md
+      checklist_ids:
+        - C-P0-CONSOLE-001
+        - C-P0-CONSOLE-002
+        - C-P0-CONSOLE-003
+        - C-P0-CONSOLE-004
+        - C-P0-CONSOLE-005
+        - C-P0-CONSOLE-006
+        - C-P0-CONSOLE-007
+        - C-P0-CONSOLE-008
+        - C-P0-CONSOLE-009
+        - C-P0-CONSOLE-010
+        - C-P0-CONSOLE-011
+        - C-P0-CONSOLE-012
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/console/console_home_page.py
+    markers:
+      - console
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod: "2026-08-11 python run_tests.py --env prod -p console -k \"p0_readonly\" -m \"smoke and readonly\" -v: 13 passed"
+      prod_default: "2026-08-11 python run_tests.py --env prod -m \"smoke and readonly\" -v: 24 passed, 8 deselected"
+    notes: "覆盖控制台工作台、菜单总览和主要菜单组。PROD 当前未稳定暴露“查看全部菜单”，自动化以当前菜单视图为准；子菜单默认展开情况只记录，不作为 P0 阻断。"
+
+  - asset_id: UI-P0-CONSOLE-002
+    module: 控制台
+    title: PROD P0 控制台流程页面只读回归
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: historical_regression
+      requirement: 阶段3-C PROD 反向梳理 P0 只读页面回归
+      checklist: docs/prod-p0-readonly-regression-checklist.md
+      checklist_ids:
+        - C-P0-CONSOLE-013
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_flow_page_accessible
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/console/console_home_page.py
+    markers:
+      - console
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod: "2026-08-11 python run_tests.py --env prod -p console -k \"p0_readonly\" -m \"smoke and readonly\" -v: 13 passed"
+      prod_default: "2026-08-11 python run_tests.py --env prod -m \"smoke and readonly\" -v: 24 passed, 8 deselected"
+    notes: "从控制台菜单进入流程页面，验证 flowmodel 路由、页面健康状态和菜单搜索框只读交互。"
+
+  - asset_id: UI-REG-CONSOLE-001
+    module: 控制台
+    title: 服务供给入口
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/console/test_console_navigation.py::TestConsoleNavigation::test_navigate_to_service_supply
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/console/console_home_page.py
+    markers:
+      - console
+      - regression
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    evidence:
+      uat: ""
+    notes: "已从 smoke 降级到 regression；需单独稳定二级页面断言后再晋级。"
+
+  - asset_id: UI-REG-DOCCENTER-001
+    module: 文档中心
+    title: 我的文档导航
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/doccenter/test_doc_center.py::TestDocCenter::test_navigate_to_my_documents
+    page_objects:
+      - pages/doccenter/doc_center_page.py
+    markers:
+      - doccenter
+      - regression
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    evidence:
+      uat: ""
+    notes: "当前 UAT 页面未暴露“我的文档”入口，需确认入口或调整定位。"
+
+  - asset_id: UI-REG-OPS-001
+    module: 运维巡检
+    title: 人工巡检页面可访问
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/ops/test_manual_inspection.py::TestManualInspection::test_inspection_page_accessible
+    page_objects:
+      - pages/ops/manual_inspection_page.py
+    markers:
+      - ops
+      - regression
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    evidence:
+      uat: ""
+    notes: "当前门户首页未暴露“运维巡检”菜单，需确认入口路径。"
+
+  - asset_id: UI-WRITE-OPS-001
+    module: 运维巡检
+    title: 执行人工巡检保存流程
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: baseline
+      requirement: 阶段1工程基线
+      manual_case_id: ""
+    test_path: tests/ops/test_manual_inspection.py::TestManualInspection::test_do_inspection
+    page_objects:
+      - pages/ops/manual_inspection_page.py
+    markers:
+      - ops
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: ""
+    notes: "写入类用例，默认仅 UAT/PRE；需确认巡检项目测试数据和入口后再执行。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-001
+    module: 数据资源导入功能优化
+    title: M1-06 M03 列名与模板不符时阻断导入且不新增数据
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0006
+      original_title: M1-06 列名与模板不符时提示且不展示导入按钮
+    test_path: tests/dataresources/test_m03_import_column_mismatch.py::TestM03ImportColumnMismatch::test_m03_import_column_mismatch_blocks_import_and_creates_no_resource
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 python run_tests.py --env uat -p dataresources -k column_mismatch -v: 1 passed"
+    notes: "M03 上传列名错误文件后系统自动返回“导入Excel列名与模板不符！”，无精确“导入”按钮；回到列表按唯一表英文名搜索为空。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M02-001
+    module: 数据资源导入功能优化
+    title: M02 导入入口、上传控件和模板下载可用
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0001
+      original_title: M1-01 M02入口展示上传文件-校验表格-导入路径
+    test_path: tests/dataresources/test_m02_import_contracts.py::TestM02ImportContracts::test_m02_import_dialog_and_template_download_are_available
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-12 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"m02_import_dialog\" -v --no-html: 1 passed"
+    notes: "入口位于控制台“数据分层设置”页面；只验证导入数据分层清单弹窗、上传控件和 M02 模板下载，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-002
+    module: 数据资源导入功能优化
+    title: M03 导入入口、上传控件和模板下载可用
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0002
+      original_title: M1-02 M03入口展示上传文件-校验表格-导入路径
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportContracts::test_import_dialog_and_template_download_are_available[chromium-m03]
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed"
+    notes: "只验证 M03 导入弹窗、上传控件和模板下载，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-001
+    module: 数据资源导入功能优化
+    title: M04 导入入口、上传控件和模板下载可用
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0003
+      original_title: M1-03 M04入口展示上传文件-校验表格-导入路径
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportContracts::test_import_dialog_and_template_download_are_available[chromium-m04]
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed"
+    notes: "只验证 M04 导入弹窗、上传控件和模板下载，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-003
+    module: 数据资源导入功能优化
+    title: M03 一级应用域名称不存在时输出错误行
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0030
+      original_title: M3-02 B列一级应用域名称不存在时输出错误行
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportBusinessErrors::test_m03_missing_app_domain_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed"
+    notes: "按 UAT 下载模板表头生成一行错误数据；上传后前端自动返回“校验失败、错误行号、第 2 行、一级应用域不存在”。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-002
+    module: 数据资源导入功能优化
+    title: M04 必填字段为空时输出错误行
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0048
+      original_title: M4-05 M04十八个必填字段任一为空时业务校验不通过
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportBusinessErrors::test_m04_missing_required_field_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed"
+    notes: "按 UAT 下载模板表头生成一行一级应用域名称为空的数据；断言弹窗错误行和字段名。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-003
+    module: 数据资源导入功能优化
+    title: M04 是否类字段非法值时输出错误行
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0049
+      original_title: M4-06 是否主键是否可空是否外键非是/否时业务校验不通过
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportBusinessErrors::test_m04_invalid_attribute_values_show_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed"
+    notes: "按 UAT 下载模板表头生成一行是否类字段非法值数据；断言弹窗错误行和“不正确”类提示。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03M04-001
+    module: 数据资源导入功能优化
+    title: M03/M04 导入入口及模板下载仍可用
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0069
+      original_title: M6-02 M03和M04导入入口及模板下载仍可用
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportContracts::test_import_dialog_and_template_download_are_available
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -v --no-html: 6 passed"
+    notes: "复用 M03/M04 参数化导入弹窗合同用例，作为兼容回归资产；当前仅在 UAT 新需求阶段登记。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M02-002
+    module: 数据资源导入功能优化
+    title: M02 导入入口和模板下载仍可用
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0068
+      original_title: M6-01 M02导入入口和模板下载仍可用
+    test_path: tests/dataresources/test_m02_import_contracts.py::TestM02ImportContracts::test_m02_import_dialog_and_template_download_are_available
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-12 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"m02_import_dialog\" -v --no-html: 1 passed"
+    notes: "复用 M02 导入弹窗合同用例，覆盖历史兼容回归中的入口和模板下载检查；不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-004
+    module: 数据资源导入功能优化
+    title: M03 应用系统名称不存在时输出错误行
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0031
+      original_title: M3-03 D列应用系统名称不存在时输出错误行
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m03_missing_app_system_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A1BusinessErrors\" -v --no-html: 6 passed"
+    notes: "按 UAT 下载模板生成一行应用系统名称不存在的数据；只点击校验表格，断言导入弹窗错误行与应用系统提示，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-005
+    module: 数据资源导入功能优化
+    title: M03 一级应用域与应用系统不对应时输出错误行
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0032
+      original_title: M3-04 一级应用域与应用系统不对应时输出错误行
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m03_app_domain_system_mismatch_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A1BusinessErrors\" -v --no-html: 6 passed"
+    notes: "按 UAT 页面可见数据构造应用域与应用系统不对应组合；只读取前端弹窗业务校验文本。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-006
+    module: 数据资源导入功能优化
+    title: M03 L1/L2/L3 任一在库中不存在时输出错误行
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0033
+      original_title: M3-05 L1L2L3任一在库中不存在时输出错误行
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m03_missing_layer_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A1BusinessErrors\" -v --no-html: 6 passed"
+    notes: "当前 UAT 前端稳定返回 L1 在库中不存在；用例只校验错误行与层级提示。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-007
+    module: 数据资源导入功能优化
+    title: M03 必填字段为空时业务校验不通过
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0034
+      original_title: M3-06 M03十个必填字段任一为空时业务校验不通过
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m03_missing_required_field_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A1BusinessErrors\" -v --no-html: 6 passed"
+    notes: "按模板构造表英文名称为空的一行数据；断言前端弹窗错误行与字段名，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-004
+    module: 数据资源导入功能优化
+    title: M04 BDEFGI 任一定位列不存在时认定为错误数据
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0045
+      original_title: M4-02 BDEFGI任一定位列不存在时认定为错误数据
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m04_missing_locator_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A1BusinessErrors\" -v --no-html: 6 passed"
+    notes: "按 UAT 当前前端表现断言 L1 在库中不存在的错误行；不通过 API 或数据库校验。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-005
+    module: 数据资源导入功能优化
+    title: M04 BDEFGI 多元组不对应时认定为错误数据
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0046
+      original_title: M4-03 BDEFGI多元组不对应时认定为错误数据
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA1BusinessErrors::test_m04_locator_mismatch_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A1BusinessErrors\" -v --no-html: 6 passed"
+    notes: "用 UAT 页面可见应用系统和不同一级应用域构造不对应组合；断言前端弹窗错误行与应用系统归属提示。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-006
+    module: 数据资源导入功能优化
+    title: M04 表英文名称对应实体不存在时输出错误行
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0047
+      original_title: M4-04 表英文名称对应实体不存在时输出错误行
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA2BusinessErrors::test_m04_missing_entity_shows_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A2BusinessErrors\" -v --no-html: 2 passed"
+    notes: "按 UAT 有效应用域、应用系统、L1/L2/L3 组合构造不存在表英文名；断言前端弹窗“表在该应用系统的该分层下不存在”，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-007
+    module: 数据资源导入功能优化
+    title: M04 是否主键/是否可空/是否外键为空时业务校验不通过
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0050
+      original_title: M4-07 是否主键是否可空是否外键为空时业务校验不通过
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA2BusinessErrors::test_m04_empty_boolean_flags_show_error_row
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A2BusinessErrors\" -v --no-html: 2 passed"
+    notes: "使用 UAT 已存在实体定位组合和唯一字段英文名，构造是否主键/是否可空/是否外键为空；只断言前端错误行和字段提示。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-008
+    module: 数据资源导入功能优化
+    title: M04 是否本系统产生的数据为空不拦截导入前校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0051
+      original_title: M4-08 是否本系统产生的数据为空不拦截M04导入
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA3PositiveContracts::test_m04_empty_source_system_flag_does_not_block_validation
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A3PositiveContracts\" -v --no-html: 2 passed, 1 xfailed"
+    notes: "只校验到“校验通过，可导入 1 条数据”和导入按钮可用；不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-009
+    module: 数据资源导入功能优化
+    title: M04 是否本系统产生的数据非是/否当前 UAT 仍拦截
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0052
+      original_title: M4-09 是否本系统产生的数据非是/否不拦截M04导入
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA3PositiveContracts::test_m04_non_yes_no_source_system_flag_does_not_block_validation
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 UAT strict xfail: 当前弹窗返回“是否本系统产生的数据的值不正确”，与“不拦截”预期不一致"
+    notes: "保留 strict xfail 监控；如果后续 UAT 修复为校验通过，该用例会 XPASS 并触发转正处理。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M04-010
+    module: 数据资源导入功能优化
+    title: M04 非必填字段为空不拦截导入前校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0053
+      original_title: M4-10 M04非必填字段为空不拦截导入
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA3PositiveContracts::test_m04_optional_fields_empty_do_not_block_validation
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-11 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A3PositiveContracts\" -v --no-html: 2 passed, 1 xfailed"
+    notes: "一级应用域编号、应用系统编码、外键关联信息、数据来源、是否国资监管和监管指标等非必填字段留空；只校验通过态，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-008
+    module: 数据资源导入功能优化
+    title: M03 xlsx 正向文件可进入导入前校验通过态
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0005
+      original_title: M1-05 下载模板后上传xlsx文件可进入业务校验
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03ImportA5PreImportContracts::test_m03_valid_xlsx_passes_validation_without_pre_import_write
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-12 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"m03_valid_xlsx\" -v --no-html: 1 passed"
+    notes: "下载 UAT M03 模板并按模板表头生成唯一表英文名的一行正向 xlsx；上传后前端显示校验通过和导入按钮可用，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-009
+    module: 数据资源导入功能优化
+    title: M03 校验通过后点击最终导入前不提前写入
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0009
+      original_title: M1-09 点击导入按钮前不提前写入通过校验的数据
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03ImportA5PreImportContracts::test_m03_valid_xlsx_passes_validation_without_pre_import_write
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-12 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"m03_valid_xlsx\" -v --no-html: 1 passed"
+    notes: "校验通过后关闭导入弹窗，回到数据资源列表按唯一表英文名搜索仍为空；断言只使用前端搜索和空态，不通过接口或数据库。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-010
+    module: 数据资源导入功能优化
+    title: M03 多行错误数据支持复数错误行展示
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0007
+      original_title: M1-07 多行错误数据支持复数错误行展示
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03ImportA6DialogState::test_m03_multiple_invalid_rows_show_multiple_error_lines
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-12 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A6DialogState\" -v --no-html: 2 passed"
+    notes: "按 UAT M03 模板构造两行错误数据；前端弹窗稳定展示校验失败、错误行号、第 2 行和第 3 行，不点击最终导入。"
+
+  - asset_id: UI-REQ-DATARESOURCE-M03-011
+    module: 数据资源导入功能优化
+    title: M03 业务校验失败后重新上传正确文件可继续导入前校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化
+      source_file: D:\AI\LM\新需求\数据资源导入功能优化\详细测试用例数据.json
+      source_case_id: UI-CAND-0008
+      original_title: M1-08 业务校验不通过后重新上传正确文件可继续导入
+    test_path: tests/dataresources/test_m03_m04_import_contracts.py::TestM03ImportA6DialogState::test_m03_reupload_valid_file_after_error_returns_to_passed_validation
+    page_objects:
+      - pages/portal/portal_home_page.py
+      - pages/dataresources/data_resource_page.py
+    markers:
+      - dataresources
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    evidence:
+      uat: "2026-08-12 .\\.venv\\Scripts\\python.exe run_tests.py --env uat -p dataresources -k \"A6DialogState\" -v --no-html: 2 passed"
+    notes: "同一 M03 导入弹窗先上传错误文件出现业务校验失败，再上传正向 xlsx 后前端显示校验通过和导入按钮可用；关闭弹窗后前端搜索唯一表英文名为空。"
+
+  - asset_id: UI-SMOKE-M1-001
+    module: 资源管理
+    title: M1-01 控制台代表资源列表查询可用
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M1-01
+    test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_01_resource_list_search_available
+    page_objects:
+      - pages/console/resource_mgmt_page.py
+    markers:
+      - resource
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M1-002
+    module: 资源管理
+    title: M1-02 控制台固定冒烟资源详情可打开
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M1-02
+    test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_02_resource_detail_accessible
+    page_objects:
+      - pages/console/resource_mgmt_page.py
+    markers:
+      - resource
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M1-003
+    module: 资源管理
+    title: M1-03 控制台固定冒烟资源编辑页只读检查
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M1-03
+    test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_03_resource_edit_readonly_check
+    page_objects:
+      - pages/console/resource_mgmt_page.py
+    markers:
+      - resource
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M1-004
+    module: 资源管理
+    title: M1-04 门户/服务中心可搜索并打开固定冒烟资源
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M1-04
+    test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_04_portal_search_and_open_resource
+    page_objects:
+      - pages/console/resource_mgmt_page.py
+    markers:
+      - resource
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M2-001
+    module: 订单管理
+    title: M2-01 从固定冒烟资源进入申请/订阅页
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M2-01
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_01_navigate_to_apply_page
+    page_objects:
+      - pages/console/order_mgmt_page.py
+    markers:
+      - order
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M2-002
+    module: 订单管理
+    title: M2-02 提交固定冒烟资源并生成低影响测试订单
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M2-02
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_02_submit_low_impact_test_order
+    page_objects:
+      - pages/console/order_mgmt_page.py
+    markers:
+      - order
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M2-003
+    module: 订单管理
+    title: M2-03 订单列表可查询到低影响测试订单
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M2-03
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_03_order_list_search
+    page_objects:
+      - pages/console/order_mgmt_page.py
+    markers:
+      - order
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M2-004
+    module: 订单管理
+    title: M2-04 测试订单详情核心信息和流转信息可见
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M2-04
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_04_order_detail_info_visible
+    page_objects:
+      - pages/console/order_mgmt_page.py
+    markers:
+      - order
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M3-001
+    module: 审批待办
+    title: M3-01 固定审批处理人可打开待办列表
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M3-01
+    test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
+    page_objects:
+      - pages/console/approval_center_page.py
+    markers:
+      - approval
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M3-002
+    module: 审批待办
+    title: M3-02 审批详情业务表单和流程信息可见
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M3-02
+    test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_02_approval_detail_form_visible
+    page_objects:
+      - pages/console/approval_center_page.py
+    markers:
+      - approval
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M3-003
+    module: 审批待办
+    title: M3-03 审批同意后订单状态同步更新
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M3-03
+    test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_03_approve_test_order_status_sync
+    page_objects:
+      - pages/console/approval_center_page.py
+    markers:
+      - approval
+      - regression
+      - write
+      - destructive
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M3-004
+    module: 审批待办
+    title: M3-04 消息/小铃铛/待办跳转详情可用
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M3-04
+    test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_04_message_bell_click_and_navigate
+    page_objects:
+      - pages/portal/message_center_page.py
+    markers:
+      - approval
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M4-001
+    module: 工单中心
+    title: M4-01 固定工单处理人可打开工单列表并查询
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M4-01
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_01_ticket_list_search_accessible
+    page_objects:
+      - pages/console/ticket_center_page.py
+    markers:
+      - ticket
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M4-002
+    module: 工单中心
+    title: M4-02 工单详情核心信息可见
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M4-02
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_02_ticket_detail_info_visible
+    page_objects:
+      - pages/console/ticket_center_page.py
+    markers:
+      - ticket
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M4-003
+    module: 工单中心
+    title: M4-03 低影响测试工单最小处理后状态同步
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M4-03
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_03_process_ticket_minimal_status_sync
+    page_objects:
+      - pages/console/ticket_center_page.py
+    markers:
+      - ticket
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M5-001
+    module: 移动端
+    title: M5-01 移动端冒烟账号登录和核心入口打开
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M5-01
+    test_path: tests/mobile/test_mobile_baseline.py::TestMobileBaseline::test_m5_01_mobile_login_and_home_accessible
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-SMOKE-M5-002
+    module: 移动端
+    title: M5-02 移动端消息或待办列表与详情可打开
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 生产上线冒烟Checklist
+      manual_case_id: M5-02
+    test_path: tests/mobile/test_mobile_baseline.py::TestMobileBaseline::test_m5_02_mobile_message_todo_list_accessible
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+

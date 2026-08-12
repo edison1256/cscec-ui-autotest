@@ -1,0 +1,74 @@
+# 文档中心模块测试数据
+
+# 文档分类
+categories:
+  - id: "tech_docs"
+    name: "技术文档"
+    icon: "folder"
+
+  - id: "user_manuals"
+    name: "用户手册"
+    icon: "book"
+
+  - id: "api_docs"
+    name: "API文档"
+    icon: "code"
+
+# 文档操作
+document:
+  description: 文档操作测试数据
+
+  # 新建文档
+  create:
+    title: "自动化测试文档_${TIMESTAMP}"
+    content: |
+      # 测试文档
+
+      这是自动化测试创建的文档。
+
+      ## 测试内容
+      - 项目名称: cscec-ui-autotest
+      - 创建时间: ${TIMESTAMP}
+
+    category: "tech_docs"
+    tags:
+      - "自动化测试"
+      - "Playwright"
+
+  # 搜索文档
+  search:
+    keyword: "测试"
+    expected_count_min: 1
+
+  # 编辑文档
+  edit:
+    new_title: "编辑后的文档_${TIMESTAMP}"
+    append_content: "\n\n## 更新内容\n\n已更新。"
+
+# 工作台
+workbench:
+  description: 工作台测试数据
+  recent_docs_count: 10
+  starred_docs_count: 5
+
+# 文件上传
+upload:
+  description: 文件上传测试数据
+  supported_formats:
+    - ".docx"
+    - ".pdf"
+    - ".xlsx"
+    - ".pptx"
+    - ".txt"
+    - ".md"
+
+  max_size_mb: 50
+
+  test_files:
+    - name: "test_document.docx"
+      type: "docx"
+      size_kb: 100
+
+    - name: "test_spreadsheet.xlsx"
+      type: "xlsx"
+      size_kb: 50

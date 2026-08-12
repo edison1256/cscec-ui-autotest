@@ -1,0 +1,61 @@
+# 运维巡检模块测试数据
+
+# 人工巡检
+manual_inspection:
+  description: 人工巡检测试数据
+
+  # 巡检项目列表
+  projects:
+    - name: "日常巡检"
+      type: "daily"
+    - name: "周度巡检"
+      type: "weekly"
+    - name: "月度巡检"
+      type: "monthly"
+
+  # 巡检项配置
+  items:
+    - id: "server_status"
+      name: "服务器状态"
+      options:
+        - "正常"
+        - "异常"
+        - "待检查"
+
+    - id: "network_status"
+      name: "网络状态"
+      options:
+        - "正常"
+        - "异常"
+
+    - id: "database_status"
+      name: "数据库状态"
+      options:
+        - "正常"
+        - "异常"
+        - "告警"
+
+  # 默认巡检记录
+  default_record:
+    project: "日常巡检"
+    remark: "自动化测试巡检记录 - ${TIMESTAMP}"
+    items_status: "正常"
+
+  # 巡检结果
+  result:
+    normal: "正常"
+    abnormal: "异常"
+    pending: "待处理"
+
+# 自动巡检
+auto_inspection:
+  description: 自动巡检测试数据
+  schedule:
+    daily:
+      time: "08:00"
+      enabled: true
+
+    weekly:
+      day: "周一"
+      time: "08:00"
+      enabled: true

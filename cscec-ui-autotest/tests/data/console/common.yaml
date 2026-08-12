@@ -1,0 +1,45 @@
+# 控制台模块测试数据
+
+# 导航测试
+navigation:
+  description: 控制台导航测试
+  menu_items:
+    - name: 服务供给
+      url_pattern: "service"
+      expected_title: "服务供给"
+
+    - name: 项目管理
+      url_pattern: "project"
+      expected_title: "项目管理"
+
+    - name: 流程管理
+      url_pattern: "process"
+      expected_title: "流程管理"
+
+# 服务供给模块
+service_supply:
+  description: 服务供给测试数据
+  search:
+    keyword: "测试服务"
+    expected_count_min: 0
+
+  filter:
+    status:
+      - "启用"
+      - "停用"
+    type:
+      - "API服务"
+      - "数据服务"
+      - "计算服务"
+
+# 项目管理模块
+project_management:
+  description: 项目管理测试数据
+  test_project:
+    name: "自动化测试项目_${TIMESTAMP}"
+    code: "AUTO_${TIMESTAMP}"
+    description: "Playwright 自动化测试创建"
+
+  search:
+    keyword: "测试"
+    expected_count_min: 1

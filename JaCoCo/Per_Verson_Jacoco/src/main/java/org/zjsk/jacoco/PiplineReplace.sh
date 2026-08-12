@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# 定义原文件内容
+input="RUN mkdir -p /app
+COPY irp-service/business-core/target/business-core-1.0.0-SNAPSHOT.jar /app/app.jar
+
+ENV TZ='Asia/Shanghai'
+
+EXPOSE 30004
+WORKDIR /app
+ENTRYPOINT java -server -Xss256k -Xms2g -Xmx2g -Xmn1g -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m -Djava.net.preferIPv4Stack=true -XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/jvm.hprof -Xloggc:/tmp/gc.log -Djava.security.egd=file:/dev/./urandom -jar ./app.jar"
+
+# 修改business-core内容
+output=$(echo "$input" | sed '/COPY irp-service\/business-core\/target\/business-core-1.0.0-SNAPSHOT.jar \/app\/app.jar/a COPY irp-service/business-core/src/main/resources/lib/jacocoagent.jar /app/jacocoagent.jar\nCOPY irp-service/business-core/src/main/resources/lib/jacococli.jar /app/jacococli.jar\nCOPY irp-service/business-core/src/main/resources/lib/jacoco.sh /app/jacoco.sh')
+output=$(echo "$output" | sed '/EXPOSE 30004/a EXPOSE 30090')
+output=$(echo "$output" | sed 's/-jar .\/app.jar/-javaagent:.\/jacocoagent.jar=includes=*,output=tcpserver,port=30090,address=0.0.0.0 -jar .\/app.jar/')
+
+# 打印最终结果
+echo "$output"
+
+
+
+
+sed -i '/COPY irp-service\/business-admin\/target\/business-admin-1.0.0-SNAPSHOT.jar \/app\/app.jar/a COPY irp-service/business-admin/src/main/resources/lib/jacocoagent.jar /app/jacocoagent.jar\nCOPY irp-service/business-admin/src/main/resources/lib/jacococli.jar /app/jacococli.jar\nCOPY irp-service/business-admin/src/main/resources/lib/jacoco.sh /app/jacoco.sh' irp-service/business-admin/deploy/Dockerfile
+sed -i '/EXPOSE 30003/a EXPOSE 30091' irp-service/business-admin/deploy/Dockerfile
+sed -i 's/-jar .\/app.jar/-javaagent:.\/jacocoagent.jar=includes=*,output=tcpserver,port=30091,address=0.0.0.0 -jar .\/app.jar/' irp-service/business-admin/deploy/Dockerfile
+sed -i '/ports:\n  - name: tcp-30003\n    containerPort: 30003\n    protocol: TCP/a \  - name: jacoco-30091\n    containerPort: 30091\n    protocol: TCP' irp-service/business-admin/deploy/deploy-uat.yaml
+sed -i '/spec:\n  ports:\n    - name: tcp-30003\n      protocol: TCP\n      port: 30003\n      targetPort: 30003\n      nodePort: 30103/a \    - name: jacoco-30091\n      protocol: TCP\n      port: 30091\n      targetPort: 30091\n      nodePort: 30191' irp-service/business-admin/deploy/deploy-uat.yaml
+
