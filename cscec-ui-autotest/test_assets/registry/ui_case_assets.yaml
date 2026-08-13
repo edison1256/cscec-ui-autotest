@@ -1407,3 +1407,211 @@ assets:
       prod_default: true
       prod_explicit: true
 
+  - asset_id: UI-MOBILE-HOME-001
+    module: 移动端
+    title: M-P0-HOME-001 移动端首页加载与核心容器渲染
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-HOME-001
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_home_001_container_rendering
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-MOBILE-HOME-002
+    module: 移动端
+    title: M-P0-HOME-002 移动端首页搜索栏展示与只读交互
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-HOME-002
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_home_002_search_bar_interaction
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-MOBILE-HOME-003
+    module: 移动端
+    title: M-P0-HOME-003 金刚区快捷应用图标网格展示
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-HOME-003
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_home_003_icon_grid_visible
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-MOBILE-HOME-004
+    module: 移动端
+    title: M-P0-HOME-004 轮播 Banner / 运营通知公告展示
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-HOME-004
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_home_004_banner_announcement_visible
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-MOBILE-HOME-005
+    module: 移动端
+    title: M-P0-HOME-005 待办中心 / 任务统计卡片展示
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-HOME-005
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_home_005_todo_task_cards_visible
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-MOBILE-HOME-006
+    module: 移动端
+    title: M-P0-HOME-006 精选推荐资源/服务列表展示
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-HOME-006
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_home_006_recommended_resources_visible
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-MOBILE-HOME-007
+    module: 移动端
+    title: M-P0-NAV-001 底部导航栏 (TabBar) 完整性与 Tab 切换
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-NAV-001
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_nav_001_bottom_tabbar_switch
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-MOBILE-HOME-008
+    module: 移动端
+    title: M-P0-MINE-001 个人中心（我的）页面展示与用户信息
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-MINE-001
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_mine_001_profile_page_accessible
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+  - asset_id: UI-MOBILE-HOME-009
+    module: 移动端
+    title: M-P0-RESP-001 移动端多视口响应式兼容性校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: release_smoke_checklist
+      requirement: 移动端首页走查Checklist
+      manual_case_id: M-P0-RESP-001
+    test_path: tests/mobile/test_mobile_homepage_regression.py::TestMobileHomepageRegression::test_m_p0_resp_001_multi_viewport_compatibility
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+
+
