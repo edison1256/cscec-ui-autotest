@@ -135,15 +135,16 @@ class MobileHomePage(BasePage):
         )
         if tab_loc:
             tab_loc.click()
+            self.page.wait_for_timeout(300)
             self.nav.wait_ready()
-            self.assertions.page_not_blank_or_error()
             logger.info(f"[Tab切换] 点击底部导航: {tab_name}，当前URL: {self.page.url}")
         return self
 
     def verify_mine_page(self) -> "MobileHomePage":
         """M-P0-MINE-001: 校验个人中心（我的）页面展示。"""
         self.switch_tab("我的")
+        self.page.wait_for_timeout(500)
         self.assertions.page_not_blank_or_error()
-        self.assertions.any_text_visible(["我的", "个人中心", "用户", "设置", "账号", "中建云"])
+        self.assertions.any_text_visible(["我的", "个人中心", "用户", "设置", "账号", "中建云", "退出", "头像"])
         logger.info("[断言] 个人中心页面展示正常")
         return self

@@ -53,7 +53,7 @@ class AssertionHelper:
         return self
 
     def url_contains(self, text: str) -> "AssertionHelper":
-        assert text in self.page.url.lower(), f"Expected URL to contain {text}, current URL: {self.page.url}"
+        assert text.lower() in self.page.url.lower(), f"Expected URL to contain {text}, current URL: {self.page.url}"
         return self
 
     def url_matches_any(self, patterns: list[str], page_name: str = "page") -> "AssertionHelper":
