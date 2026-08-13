@@ -97,3 +97,20 @@ git push github master
 4. **PROD 生产防护校验**：验证生产环境下 `smoke and readonly` 能否正常且安全地剥离写操作用例。
 
 可以通过 GitHub 仓库页面查看每次 Commit 的 CI 运行状态绿勾标志。
+
+---
+
+## 4. 生产上线当天必测走查套件执行 (Release Day Walkthrough)
+
+每次新版本部署上线后，必须执行全量 49 条走查套件：
+
+```powershell
+# 1. 刷新生产登录态 (如需)
+python run_tests.py --env prod --refresh-auth -p tests/login/test_login.py
+
+# 2. 一键执行 PC + 移动端 49 条必测走查套件
+python run_tests.py --env prod
+```
+
+详细规范请查阅：[`docs/prod-release-mandatory-walkthrough-suite.md`](prod-release-mandatory-walkthrough-suite.md)
+
