@@ -20,7 +20,9 @@ class NavigationHelper:
         self.page = page
 
     def goto_path(self, path: str = "") -> "NavigationHelper":
-        return self.goto_url(f"{settings.BASE_URL}{path}")
+        clean_base = settings.BASE_URL.rstrip("/")
+        clean_path = path.lstrip("/")
+        return self.goto_url(f"{clean_base}/{clean_path}" if clean_path else clean_base)
 
     def goto_url(self, url: str) -> "NavigationHelper":
         logger.info(f"[Navigation] {url}")

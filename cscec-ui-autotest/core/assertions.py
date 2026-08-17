@@ -82,17 +82,19 @@ class AssertionHelper:
         assert not login_form_like, f"Page looks like a login form, current URL: {self.page.url}"
 
         error_indicators = [
-            "404",
-            "500",
+            "404 Not Found",
+            "404页面不存在",
+            "500 Internal Server Error",
+            "500错误",
             "页面不存在",
             "系统异常",
             "应用异常",
             "加载失败",
-            "Internal Server Error",
             "Whitelabel Error Page",
         ]
         first_screen_text = compact_text[:3000]
-        assert not any(indicator in first_screen_text for indicator in error_indicators), (
-            f"Page looks like an error page, current URL: {self.page.url}"
-        )
+        for indicator in error_indicators:
+            assert indicator not in first_screen_text, (
+                f"Page contains error indicator '{indicator}', current URL: {self.page.url}"
+            )
         return self

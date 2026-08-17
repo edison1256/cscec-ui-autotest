@@ -22,5 +22,12 @@ def test_import_data_dir() -> Path:
 
 @pytest.fixture
 def layered_import_page(logged_in_page: Page) -> LayeredImportPage:
-    """初始化已登录状态下的 LayeredImportPage 页面对象。"""
-    return LayeredImportPage(logged_in_page)
+    """初始化已登录状态下的 LayeredImportPage 页面对象（自动从控制台页签进入）。"""
+    from pages.portal.portal_home_page import PortalHomePage
+    portal = PortalHomePage(logged_in_page)
+    portal.open()
+    console_page = portal.open_console_page()
+    page_obj = LayeredImportPage(console_page)
+    yield page_obj
+    if not console_page.is_closed():
+        console_page.close()

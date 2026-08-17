@@ -9,6 +9,7 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 from config.settings import settings
 from core.base_page import BasePage
 from core.logger import get_logger
+from core.navigation_helpers import EntryNotExposed, navigate_with_fallback
 
 logger = get_logger("console_home_page")
 
@@ -25,15 +26,34 @@ class ConsoleHomePage(BasePage):
     # ── 导航 ──
 
     def navigate_to_service_supply(self) -> "ConsoleHomePage":
-        """导航到服务供给"""
-        self.elements.click_candidates(
-            [
-                ("text", "服务供给"),
-                ("css", "a[href*='service']"),
-            ],
-            description="服务供给",
+        """导航到服务供给（弹性：菜单→直链兜底→入口未暴露则抛 EntryNotExposed）"""
+
+        def click_menu() -> None:
+            self.elements.click_candidates(
+                [
+                    ("text", "服务供给"),
+                    ("css", "a[href*='service']"),
+                ],
+                description="服务供给",
+            )
+            self.nav.wait_ready()
+
+        def readiness() -> bool:
+            if "service" not in self.page.url.lower():
+                return False
+            try:
+                self.assertions.any_text_visible(["服务供给", "服务列表"])
+                return True
+            except Exception:  # noqa: BLE001
+                return False
+
+        navigate_with_fallback(
+            self.page,
+            click_menu=click_menu,
+            fallback_url=settings.DEEP_LINKS.get("service_supply"),
+            readiness=readiness,
+            entry_name="服务供给",
         )
-        self.nav.wait_ready()
         return self
 
     def navigate_to_project_mgmt(self) -> "ConsoleHomePage":
@@ -74,6 +94,14 @@ class ConsoleHomePage(BasePage):
         self.assertions.page_not_blank_or_error()
         self.assertions.texts_visible(expected_texts)
         logger.info("[断言] 控制台只读页面正常展示")
+        return self
+
+    def should_be_on_service_supply(self) -> "ConsoleHomePage":
+        """断言已进入服务供给二级页面。"""
+        self.assertions.page_not_blank_or_error()
+        self.assertions.url_contains("service")
+        self.assertions.any_text_visible(["服务供给", "服务列表", "服务目录"])
+        logger.info("[断言] 当前在服务供给页")
         return self
 
     def fill_and_clear_menu_search(self, value: str = "readonly-check") -> "ConsoleHomePage":

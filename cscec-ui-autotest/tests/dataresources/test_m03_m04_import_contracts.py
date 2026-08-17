@@ -342,8 +342,14 @@ class TestM03M04ImportA3PositiveContracts:
         data_resources.should_allow_import_after_validation()
         data_resources.close_import_dialog()
 
+    # TODO(M04-009 转正): 本用例为受控监控项。后端放开「是否本系统产生的数据」的非 是/否 取值后，
+    # 该用例预期会 XPASS（strict xfail 下 XPASS 会被判为失败）。届时移除下方 @pytest.mark.xfail 装饰器，
+    # 使其转正为正式断言（验证非 是/否 取值不应拦截校验）。转正前请勿删除本注释。
     @pytest.mark.xfail(
-        reason="UAT currently rejects non yes/no values for 是否本系统产生的数据",
+        reason=(
+            "后端尚未放开「是否本系统产生的数据」的非 是/否 取值（UAT 当前仍拦截）；"
+            "后端修复后应 XPASS，需移除 @pytest.mark.xfail 转正为正式断言"
+        ),
         strict=True,
     )
     def test_m04_non_yes_no_source_system_flag_does_not_block_validation(self, data_resources, tmp_path: Path):

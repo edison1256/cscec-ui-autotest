@@ -40,19 +40,82 @@ class PortalHomePage(BasePage):
         self.nav.goto_url(url)
         return self
 
-    def navigate_to_console(self) -> "PortalHomePage":
-        """导航到控制台"""
-        self.elements.click_candidates(
-            [
-                ("text", "控制台"),
-                ("css", "a[href*='console']"),
-                ("css", ".menu-item:has-text('控制台')"),
-            ],
-            description="控制台入口",
-        )
+    def navigate_to_console(self) -> "ConsoleHomePage":
+        """导航到控制台（中建云管理后台）。
+
+        UAT 等环境的门户登录后展示为公开营销站，右上角“管理后台”下拉内含
+        “控制台”入口，点击后会在新标签页打开真正的控制台 SPA；其余环境若直接
+        可见“控制台”入口则直接点击。两种路径均兼容，最终返回绑定到控制台页面的
+        ``ConsoleHomePage``。
+        """
+        from pages.console.console_home_page import ConsoleHomePage
+
+        page = self.page
+        new_pages: list = []
+
+        try:
+            # 优先判断“管理后台”下拉入口（UAT 门户形态）
+            mgr = self.elements.find_candidates(
+                [
+                    ("text", "管理后台"),
+                    ("css", "a:has-text('管理后台')"),
+                ],
+                description="管理后台入口",
+                timeout=2500,
+            )
+            if mgr:
+                try:
+                    mgr.hover()
+                except PlaywrightTimeoutError:
+                    mgr.click()
+                self.nav.wait_ready()
+                trigger = self.elements.find_candidates(
+                    [
+                        ("text", "控制台"),
+                        ("css", "a:has-text('控制台')"),
+                    ],
+                    description="控制台入口（下拉内）",
+                    timeout=4000,
+                )
+                if not trigger:
+                    raise AssertionError("管理后台下拉中未找到“控制台”入口")
+                try:
+                    with page.context.expect_page(timeout=8000) as info:
+                        trigger.click()
+                    new_pages.append(info.value)
+                except PlaywrightTimeoutError:
+                    pass  # 同页跳转兜底
+            else:
+                # 旧环境/直接入口：直接点击“控制台”
+                try:
+                    with page.context.expect_page(timeout=5000) as info:
+                        self.elements.click_candidates(
+                            [
+                                ("text", "控制台"),
+                                ("css", "a[href*='console']"),
+                                ("css", ".menu-item:has-text('控制台')"),
+                            ],
+                            description="控制台入口",
+                        )
+                    new_pages.append(info.value)
+                except PlaywrightTimeoutError:
+                    pass  # 同页跳转兜底
+        except PlaywrightTimeoutError:
+            # 入口探测极端超时，交由下方 readiness 校验兜底
+            pass
+
         self.nav.wait_ready()
+        target = new_pages[0] if new_pages else page
+        target.wait_for_load_state("domcontentloaded", timeout=settings.NAVIGATION_TIMEOUT)
+        try:
+            target.wait_for_load_state("networkidle", timeout=15000)
+        except PlaywrightTimeoutError:
+            pass
+        target.get_by_text("控制台", exact=False).first.wait_for(
+            state="visible", timeout=settings.ACTION_TIMEOUT
+        )
         logger.info("[导航] → 控制台")
-        return self
+        return ConsoleHomePage(target)
 
     def open_console_page(self) -> Page:
         """打开控制台新页签并返回新 Page。"""

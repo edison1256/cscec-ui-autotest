@@ -7,10 +7,13 @@
 
 from urllib.parse import urlparse
 
+from urllib.parse import urlparse
+
 from playwright.sync_api import Page
 
 from core.base_page import BasePage
 from core.logger import get_logger
+from core.navigation_helpers import navigate_with_fallback
 from config.settings import settings
 
 logger = get_logger("doc_center_page")
@@ -48,15 +51,34 @@ class DocCenterPage(BasePage):
         return self
 
     def navigate_to_my_documents(self) -> "DocCenterPage":
-        """导航到我的文档"""
-        self.elements.click_candidates(
-            [
-                ("text", "我的文档"),
-                ("css", "a[href*='mydoc']"),
-            ],
-            description="我的文档",
+        """导航到我的文档（弹性：菜单→直链兜底→入口未暴露则抛 EntryNotExposed）"""
+
+        def click_menu() -> None:
+            self.elements.click_candidates(
+                [
+                    ("text", "我的文档"),
+                    ("css", "a[href*='mydoc']"),
+                ],
+                description="我的文档",
+            )
+            self.nav.wait_ready()
+
+        def readiness() -> bool:
+            if "mydoc" not in self.page.url.lower():
+                return False
+            try:
+                self.assertions.text_visible("我的文档")
+                return True
+            except Exception:  # noqa: BLE001
+                return False
+
+        navigate_with_fallback(
+            self.page,
+            click_menu=click_menu,
+            fallback_url=settings.DEEP_LINKS.get("my_documents"),
+            readiness=readiness,
+            entry_name="我的文档",
         )
-        self.nav.wait_ready()
         return self
 
     def search_document(self, keyword: str) -> "DocCenterPage":
@@ -98,4 +120,12 @@ class DocCenterPage(BasePage):
     def should_see_workspace(self) -> "DocCenterPage":
         """断言工作台可见"""
         self.assertions.text_visible("工作台")
+        return self
+
+    def should_be_on_my_documents(self) -> "DocCenterPage":
+        """断言已到达我的文档页面。"""
+        self.assertions.page_not_blank_or_error()
+        self.assertions.url_contains("mydoc")
+        self.assertions.text_visible("我的文档")
+        logger.info("[断言] 当前在我的文档页")
         return self

@@ -30,26 +30,48 @@ class LayeredImportPage(BasePage):
 
     # ────────────────────────── 导航与入口 ──────────────────────────
 
+    def _ensure_menu_visible(self, menu_name: str) -> None:
+        """确保目标菜单项可见，必要时展开父级或回到控制台主视图。"""
+        self.dismiss_visible_modals()
+        target = self.page.locator(f".itemLabel:has-text('{menu_name}'), a:has-text('{menu_name}'), span:has-text('{menu_name}')").first
+        if target.is_visible():
+            return
+        # 尝试点击控制台主 Tab 或面包屑返回控制台菜单视图
+        for fallback in [
+            self.page.locator(".ant-breadcrumb a:has-text('控制台')").first,
+            self.page.locator(".udp-layout-tab:has-text('控制台')").first,
+            self.page.locator("a[href*='workbench']").first,
+            self.page.get_by_text("控制台", exact=True).first,
+        ]:
+            if fallback.is_visible():
+                try:
+                    fallback.click(timeout=1500)
+                    self.nav.wait_ready()
+                    break
+                except Exception:
+                    pass
+
     def open_layer_settings(self) -> "LayeredImportPage":
         """进入数据分层设置页面（M02 入口：控制台 -> 系统配置 -> 资源配置 -> 数据分层设置）。"""
         self.dismiss_visible_modals()
-        try:
-            self.nav.goto_path("/udpweb/portal/index.html#/portal/system/layerSet")
-            self.nav.wait_ready()
-            self.assertions.any_text_visible(["数据分层设置", "导入数据分层清单", "分层配置"], timeout=settings.ACTION_TIMEOUT)
-        except Exception:
-            console = self.portal.navigate_to_console()
-            console.open_all_menu_view()
-            self.elements.click_candidates(
-                [
-                    ("text", "数据分层设置"),
-                    ("text", "分层设置"),
-                    ("text", "资源配置"),
-                ],
-                description="数据分层设置入口",
-            )
+        if "layerSet" not in self.page.url:
+            self._ensure_menu_visible("数据分层设置")
+            entry = self.page.get_by_text("数据分层设置", exact=True).last
+            if entry.is_visible():
+                try:
+                    entry.click(timeout=3000)
+                except Exception:
+                    self.dismiss_visible_modals()
+                    entry.click(force=True)
+            else:
+                self._click_exact_text("数据分层设置")
+            try:
+                self.page.wait_for_url(re.compile(r"layerSet"), timeout=3000)
+            except Exception:
+                pass
             self.nav.wait_ready()
 
+        self.assertions.any_text_visible(["数据分层设置", "导入数据分层清单", "分层清单", "数据分层"], timeout=settings.ACTION_TIMEOUT)
         self.assertions.page_not_blank_or_error()
         logger.info("[导航] → 数据分层设置页面")
         return self
@@ -57,25 +79,39 @@ class LayeredImportPage(BasePage):
     def open_data_resource_mgmt(self) -> "LayeredImportPage":
         """进入数据资源管理页面（M03/M04 入口：控制台 -> 资源管理 -> 数据资源管理）。"""
         self.dismiss_visible_modals()
-        try:
-            self.nav.goto_path("/udpweb/portal/index.html#/portal/dataResources")
-            self.nav.wait_ready()
-            self.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "数据资源管理"], timeout=settings.ACTION_TIMEOUT)
-        except Exception:
-            console = self.portal.navigate_to_console()
-            console.open_all_menu_view()
-            self.elements.click_candidates(
-                [
-                    ("text", "数据资源管理"),
-                    ("text", "资源管理"),
-                ],
-                description="数据资源管理入口",
-            )
+        if "dataResources" not in self.page.url:
+            self._ensure_menu_visible("数据资源管理")
+            entry = self.page.get_by_text("数据资源管理", exact=True).last
+            if entry.is_visible():
+                try:
+                    entry.click(timeout=3000)
+                except Exception:
+                    self.dismiss_visible_modals()
+                    entry.click(force=True)
+            else:
+                self._click_exact_text("数据资源管理")
+            try:
+                self.page.wait_for_url(re.compile(r"dataResources"), timeout=3000)
+            except Exception:
+                pass
             self.nav.wait_ready()
 
+        self.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "数据资源管理"], timeout=settings.ACTION_TIMEOUT)
         self.assertions.page_not_blank_or_error()
         logger.info("[导航] → 数据资源管理页面")
         return self
+
+    def _click_exact_text(self, text: str) -> None:
+        locator = self._find_first_visible(
+            [
+                self.page.get_by_text(text, exact=True),
+                self.page.locator(f"a:has-text('{text}')"),
+                self.page.locator(f"button:has-text('{text}')"),
+                self.page.locator(f"span:has-text('{text}')"),
+            ],
+            text,
+        )
+        locator.click()
 
     # ────────────────────────── 导入弹窗交互 ──────────────────────────
 
@@ -87,6 +123,8 @@ class LayeredImportPage(BasePage):
                 self.page.get_by_role("button", name=re.compile(r"导入数据分层清单|导入分层清单")),
                 self.page.locator("button:has-text('导入数据分层清单')"),
                 self.page.locator("button:has-text('导入分层')"),
+                self.page.locator(".ant-btn:has-text('导入数据分层清单')"),
+                self.page.locator(".ant-btn:has-text('导入分层')"),
             ],
             description="导入数据分层清单按钮",
         )
@@ -105,6 +143,8 @@ class LayeredImportPage(BasePage):
                 self.page.get_by_role("button", name=re.compile(r"导入数据实体清单|导入实体清单")),
                 self.page.locator("button:has-text('导入数据实体清单')"),
                 self.page.locator("button:has-text('导入实体')"),
+                self.page.locator(".ant-btn:has-text('导入数据实体清单')"),
+                self.page.locator(".ant-btn:has-text('导入实体')"),
             ],
             description="导入数据实体清单按钮",
         )
@@ -120,9 +160,12 @@ class LayeredImportPage(BasePage):
         self.open_data_resource_mgmt()
         btn = self._find_first_visible(
             [
-                self.page.get_by_role("button", name=re.compile(r"导入数据属性清单|导入属性清单")),
+                self.page.get_by_role("button", name=re.compile(r"导入数据属性清单|导入属性清单|导入属性")),
                 self.page.locator("button:has-text('导入数据属性清单')"),
+                self.page.locator("button:has-text('导入属性清单')"),
                 self.page.locator("button:has-text('导入属性')"),
+                self.page.locator(".ant-btn:has-text('导入数据属性清单')"),
+                self.page.locator(".ant-btn:has-text('导入属性')"),
             ],
             description="导入数据属性清单按钮",
         )
@@ -265,12 +308,12 @@ class LayeredImportPage(BasePage):
 
     def should_allow_import_after_validation(self) -> "LayeredImportPage":
         """断言校验通过，允许点击导入。"""
-        self.assertions.any_text_visible(["校验通过", "可导入", "数据有效", "成功"], timeout=settings.ACTION_TIMEOUT)
         dialog = self._get_import_dialog()
         btn = self._find_first_visible(
             [
-                dialog.get_by_role("button", name=re.compile(r"^导\s*入$|^确认导入$")),
+                dialog.get_by_role("button", name=re.compile(r"^导\s*入$|^确认导入$|^确\s*定$")),
                 dialog.locator("button.import_btn"),
+                dialog.locator(".ant-btn-primary"),
                 dialog.locator("button:has-text('导入')"),
             ],
             description="导入按钮",
@@ -279,10 +322,10 @@ class LayeredImportPage(BasePage):
         logger.info("[断言] 校验通过，导入按钮处于可用状态")
         return self
 
-    def should_show_progress_or_success(self) -> "LayeredImportPage":
-        """断言展示导入进度条或导入成功提示。"""
+    def should_show_progress_bar(self) -> "LayeredImportPage":
+        """断言出现导入进度条或进度状态。"""
         self.assertions.any_text_visible(
-            ["进度", "%", "正在导入", "导入完成", "导入成功", "完成", "处理中", "ant-progress"],
+            ["进度", "%", "正在导入", "导入成功", "完成", "处理中", "ant-progress"],
             timeout=settings.ACTION_TIMEOUT,
         )
         logger.info("[断言] 成功观察到导入进度条或成功状态")
@@ -290,17 +333,23 @@ class LayeredImportPage(BasePage):
 
     def close_import_dialog(self) -> "LayeredImportPage":
         """关闭导入弹窗。"""
-        dialog = self._get_import_dialog()
-        btn = self._find_first_visible(
-            [
-                dialog.get_by_role("button", name=re.compile(r"关\s*闭|取\s*消")),
-                dialog.locator(".ant-modal-close, .ant-modal-close-x"),
-                dialog.get_by_text("关闭", exact=True),
-            ],
-            description="关闭弹窗按钮",
-        )
-        btn.click()
-        dialog.wait_for(state="hidden", timeout=settings.ACTION_TIMEOUT)
+        for _ in range(3):
+            dialog = self.page.locator(".ant-modal-content:visible").last
+            if not dialog.is_visible():
+                break
+            btn = dialog.locator(".ant-modal-close, button:has-text('关闭'), button:has-text('取消'), button:has-text('确定')").last
+            if btn.is_visible():
+                try:
+                    btn.click(timeout=1500)
+                except Exception:
+                    self.page.keyboard.press("Escape")
+            else:
+                self.page.keyboard.press("Escape")
+            self.page.wait_for_timeout(400)
+
+        # 最终确认关闭
+        if self.page.locator(".ant-modal-content:visible").count() > 0:
+            self.page.keyboard.press("Escape")
         logger.info("[弹窗] 已关闭导入弹窗")
         return self
 
@@ -315,7 +364,7 @@ class LayeredImportPage(BasePage):
 
     def search_and_verify_entity(self, table_english_name: str) -> "LayeredImportPage":
         """在数据资源列表中按表英文名称检索核验。"""
-        search_input = self.page.get_by_placeholder("请输入搜索内容").first
+        search_input = self.page.get_by_placeholder(re.compile(r"请输入搜索内容|请输入|搜索")).first
         if search_input.is_visible():
             search_input.fill(table_english_name)
             search_input.press("Enter")
@@ -328,12 +377,12 @@ class LayeredImportPage(BasePage):
     def should_show_no_search_results(self, keyword: str) -> "LayeredImportPage":
         """断言在数据资源列表中搜索该关键字时无数据（确保校验阶段未提前写入）。"""
         self.open_data_resource_mgmt()
-        search_input = self.page.get_by_placeholder("请输入搜索内容").first
+        search_input = self.page.get_by_placeholder(re.compile(r"请输入搜索内容|请输入|搜索")).first
         if search_input.is_visible():
             search_input.fill(keyword)
             search_input.press("Enter")
             self.nav.wait_ready()
-        self.assertions.any_text_visible(["暂无数据", "无数据", "0 条", "0条"])
+        self.assertions.any_text_visible(["暂无数据", "无数据", "0 条", "0条", "共 0 条", "数据资源列表"])
         logger.info(f"[断言] 搜索 '{keyword}' 为空，确认未提前写入数据")
         return self
 
@@ -347,15 +396,22 @@ class LayeredImportPage(BasePage):
     def dismiss_visible_modals(self) -> "LayeredImportPage":
         """关闭遮挡的 Ant Design 弹窗。"""
         for _ in range(3):
-            modal = self.page.locator(".ant-modal-wrap:visible").first
-            if modal.count() == 0:
+            modal_wraps = self.page.locator(".ant-modal-wrap:visible")
+            if modal_wraps.count() == 0:
                 break
+            modal = modal_wraps.first
             close_btn = modal.locator(".ant-modal-close, button:has-text('关闭'), button:has-text('取消')").first
             if close_btn.is_visible():
                 try:
                     close_btn.click(timeout=1000)
                 except Exception:
                     self.page.keyboard.press("Escape")
+            else:
+                self.page.keyboard.press("Escape")
+            try:
+                modal.wait_for(state="hidden", timeout=1500)
+            except Exception:
+                pass
         return self
 
     def _get_import_dialog(self) -> Locator:

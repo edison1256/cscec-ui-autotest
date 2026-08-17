@@ -13,6 +13,7 @@ from playwright.sync_api import Page
 
 from core.base_page import BasePage
 from core.logger import get_logger
+from core.navigation_helpers import navigate_with_fallback
 from config.settings import settings
 
 logger = get_logger("manual_inspection_page")
@@ -30,24 +31,41 @@ class ManualInspectionPage(BasePage):
     # ── 导航 ──
 
     def navigate_from_menu(self) -> "ManualInspectionPage":
-        """从菜单导航到人工巡检页面"""
-        self.elements.click_candidates(
-            [
-                ("text", "运维巡检"),
-                ("css", "a[href*='inspection']"),
-            ],
-            description="运维巡检菜单",
-        )
-        self.nav.wait_ready()
+        """从菜单导航到人工巡检页面（弹性：菜单→直链兜底→入口未暴露则抛 EntryNotExposed）"""
 
-        self.elements.click_candidates(
-            [
-                ("text", "人工巡检"),
-                ("css", "a[href*='manual']"),
-            ],
-            description="人工巡检子菜单",
+        def click_menu() -> None:
+            self.elements.click_candidates(
+                [
+                    ("text", "运维巡检"),
+                    ("css", "a[href*='inspection']"),
+                ],
+                description="运维巡检菜单",
+            )
+            self.nav.wait_ready()
+
+            self.elements.click_candidates(
+                [
+                    ("text", "人工巡检"),
+                    ("css", "a[href*='manual']"),
+                ],
+                description="人工巡检子菜单",
+            )
+            self.nav.wait_ready()
+
+        def readiness() -> bool:
+            try:
+                self.should_be_on_inspection_page()
+                return True
+            except Exception:  # noqa: BLE001
+                return False
+
+        navigate_with_fallback(
+            self.page,
+            click_menu=click_menu,
+            fallback_url=settings.DEEP_LINKS.get("manual_inspection"),
+            readiness=readiness,
+            entry_name="人工巡检",
         )
-        self.nav.wait_ready()
         return self
 
     # ── 巡检操作 ──
