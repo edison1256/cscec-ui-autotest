@@ -269,7 +269,7 @@ assets:
       prod_explicit: true
     evidence:
       uat: ""
-    notes: "已从 smoke 降级到 regression；需单独稳定二级页面断言后再晋级。"
+    notes: "弹性导航已接入：菜单点击→直链兜底(DEEP_LINKS)→入口未暴露自动 pytest.skip，运行结果保持纯洁。2026-08-13 门户控制台入口已修复：navigate_to_console() 现兼容“管理后台”下拉→“控制台”新标签页路径（UAT 实测 PASSED）；服务供给二级入口在 UAT 仍不暴露，对应 UI-REG-CONSOLE-001 的 service_supply 用例保持安全 SKIP，待入口暴露后自动晋级。"
 
   - asset_id: UI-REG-DOCCENTER-001
     module: 文档中心
@@ -294,7 +294,7 @@ assets:
       prod_explicit: true
     evidence:
       uat: ""
-    notes: "当前 UAT 页面未暴露“我的文档”入口，需确认入口或调整定位。"
+    notes: "弹性导航已接入：菜单点击→直链兜底→入口未暴露自动 skip。2026-08-13 UAT 验证：我的文档入口未暴露，已安全 skip；待确认入口或填入 config DEEP_LINKS['my_documents'] 后晋级。"
 
   - asset_id: UI-REG-OPS-001
     module: 运维巡检
@@ -319,7 +319,7 @@ assets:
       prod_explicit: true
     evidence:
       uat: ""
-    notes: "当前门户首页未暴露“运维巡检”菜单，需确认入口路径。"
+    notes: "弹性导航已接入：菜单点击→直链兜底→入口未暴露自动 skip。2026-08-13 UAT 验证：运维巡检菜单未暴露，已安全 skip；待确认入口路径或填入 config DEEP_LINKS['manual_inspection'] 后晋级。"
 
   - asset_id: UI-WRITE-OPS-001
     module: 运维巡检
@@ -344,7 +344,7 @@ assets:
       prod_explicit: false
     evidence:
       uat: ""
-    notes: "写入类用例，默认仅 UAT/PRE；需确认巡检项目测试数据和入口后再执行。"
+    notes: "写入类用例，默认仅 UAT/PRE；弹性导航已接入，入口未暴露时自动 skip 避免脏写；需确认巡检项目测试数据和入口后再执行。"
 
   - asset_id: UI-REQ-DATARESOURCE-M03-001
     module: 数据资源导入功能优化
@@ -876,7 +876,7 @@ assets:
       prod_explicit: false
     evidence:
       uat: "2026-08-11 UAT strict xfail: 当前弹窗返回“是否本系统产生的数据的值不正确”，与“不拦截”预期不一致"
-    notes: "保留 strict xfail 监控；如果后续 UAT 修复为校验通过，该用例会 XPASS 并触发转正处理。"
+    notes: "受控监控项（strict xfail）。根因：后端尚未放开「是否本系统产生的数据」的非 是/否 取值。转正条件 = UAT 放开后该用例 XPASS（strict xfail 下 XPASS 判失败），届时移除 test_m03_m04_import_contracts.py 中该用例的 @pytest.mark.xfail 装饰器，转正为正式断言。prod_default/prod_explicit 均关闭，不参与生产套件。"
 
   - asset_id: UI-REQ-DATARESOURCE-M04-010
     module: 数据资源导入功能优化
@@ -1613,5 +1613,423 @@ assets:
       pre: true
       prod_default: true
       prod_explicit: true
+
+  # ─────────────────────────────────────────────────────────────
+  # 分层数据资源导入新需求 (M02 / M03 / M04 及性能优化)
+  # ─────────────────────────────────────────────────────────────
+  - asset_id: UI-LAYERED-IMPORT-001
+    module: 分层数据资源导入
+    title: M02-01 数据分层导入弹窗与模板下载入口校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M02-01
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02LayeringImport::test_m02_01_import_dialog_and_template_check
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-002
+    module: 分层数据资源导入
+    title: M02-02 模板列名不符业务校验与拦截
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M02-02
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02LayeringImport::test_m02_02_column_name_mismatch_blocked
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-003
+    module: 分层数据资源导入
+    title: M02-03 一级应用域与必填层级缺失多行错误识别与拦截
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M02-03
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02LayeringImport::test_m02_03_missing_domain_and_layers_shows_error_rows
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-004
+    module: 分层数据资源导入
+    title: M02-04 重复分层数据「跳过」冲突模式校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M02-04
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02LayeringImport::test_m02_04_duplicate_rows_skip_mode
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-005
+    module: 分层数据资源导入
+    title: M02-05 重复分层数据「覆盖」冲突模式校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M02-05
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02LayeringImport::test_m02_05_duplicate_rows_overwrite_mode
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-006
+    module: 分层数据资源导入
+    title: M02-06 标准分层清单导入与分层树结构节点呈现
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M02-06
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02LayeringImport::test_m02_06_valid_import_and_tree_verify
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-007
+    module: 分层数据资源导入
+    title: M03-01 数据实体清单导入弹窗与模板下载校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M03-01
+    test_path: tests/layered_data_resource_import/test_m03_entity_import.py::TestM03EntityImport::test_m03_01_import_dialog_and_template_check
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-008
+    module: 分层数据资源导入
+    title: M03-02 引用数据不匹配与必填字段缺失多行报错拦截
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M03-02
+    test_path: tests/layered_data_resource_import/test_m03_entity_import.py::TestM03EntityImport::test_m03_02_multiple_error_rows_shows_error
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-009
+    module: 分层数据资源导入
+    title: M03-03 数据实体重复「跳过」冲突模式校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M03-03
+    test_path: tests/layered_data_resource_import/test_m03_entity_import.py::TestM03EntityImport::test_m03_03_duplicate_entities_skip_mode
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-010
+    module: 分层数据资源导入
+    title: M03-04 数据实体重复「覆盖」冲突模式校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M03-04
+    test_path: tests/layered_data_resource_import/test_m03_entity_import.py::TestM03EntityImport::test_m03_04_duplicate_entities_overwrite_mode
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-011
+    module: 分层数据资源导入
+    title: M03-05 标准实体清单导入校验与数据资源列表英文名检索
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M03-05
+    test_path: tests/layered_data_resource_import/test_m03_entity_import.py::TestM03EntityImport::test_m03_05_valid_import_and_search_entity
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-012
+    module: 分层数据资源导入
+    title: M04-01 数据属性清单导入弹窗与模板下载入口校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M04-01
+    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04AttributeImport::test_m04_01_import_dialog_and_template_check
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-013
+    module: 分层数据资源导入
+    title: M04-02 属性清单模板下载与 18 个属性核心列字段核验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M04-02
+    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04AttributeImport::test_m04_02_template_download_and_headers_check
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-014
+    module: 分层数据资源导入
+    title: M04-03 属性清单必填字段缺失与枚举值非法校验拦截
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M04-03
+    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04AttributeImport::test_m04_03_invalid_attribute_shows_error
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-015
+    module: 分层数据资源导入
+    title: M04-04 可选字段为空放行校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M04-04
+    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04AttributeImport::test_m04_04_optional_fields_pass_validation
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-016
+    module: 分层数据资源导入
+    title: M5-01 导入过程进度条与状态提示展示与页面防卡死校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M5-01
+    test_path: tests/layered_data_resource_import/test_import_performance.py::TestImportPerformanceProgress::test_m5_01_import_progress_bar_visible
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-017
+    module: 分层数据资源导入
+    title: M5-02 导入行数统计与表头/空行过滤准确性校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M5-02
+    test_path: tests/layered_data_resource_import/test_import_performance.py::TestImportPerformanceProgress::test_m5_02_import_row_count_statistics_accurate
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-IMPORT-018
+    module: 分层数据资源导入
+    title: M5-03 连续多次导入校验容错与状态重置校验
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M5-03
+    test_path: tests/layered_data_resource_import/test_import_performance.py::TestImportPerformanceProgress::test_m5_03_continuous_reupload_robustness
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
 
 
