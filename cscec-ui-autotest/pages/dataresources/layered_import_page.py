@@ -16,7 +16,9 @@ from pages.portal.portal_home_page import PortalHomePage
 
 logger = get_logger("layered_import_page")
 
-DEFAULT_TEST_DATA_DIR = Path(r"C:\Users\CFD\Desktop\260812")
+PROJECT_DATASET_DIR = Path(__file__).resolve().parent.parent.parent / "test_assets" / "datasets" / "layered_import"
+FALLBACK_DESKTOP_DIR = Path(r"C:\Users\CFD\Desktop\260812")
+DEFAULT_TEST_DATA_DIR = PROJECT_DATASET_DIR
 
 
 class LayeredImportPage(BasePage):
@@ -57,13 +59,11 @@ class LayeredImportPage(BasePage):
         if "layerSet" not in self.page.url:
             self._ensure_menu_visible("数据分层设置")
             entry = self.page.get_by_text("数据分层设置", exact=True).last
-            if entry.is_visible():
-                try:
-                    entry.click(timeout=3000)
-                except Exception:
-                    self.dismiss_visible_modals()
-                    entry.click(force=True)
-            else:
+            try:
+                entry.wait_for(state="visible", timeout=5000)
+                entry.click(timeout=3000)
+            except Exception:
+                self.dismiss_visible_modals()
                 self._click_exact_text("数据分层设置")
             try:
                 self.page.wait_for_url(re.compile(r"layerSet"), timeout=3000)
@@ -82,13 +82,11 @@ class LayeredImportPage(BasePage):
         if "dataResources" not in self.page.url:
             self._ensure_menu_visible("数据资源管理")
             entry = self.page.get_by_text("数据资源管理", exact=True).last
-            if entry.is_visible():
-                try:
-                    entry.click(timeout=3000)
-                except Exception:
-                    self.dismiss_visible_modals()
-                    entry.click(force=True)
-            else:
+            try:
+                entry.wait_for(state="visible", timeout=5000)
+                entry.click(timeout=3000)
+            except Exception:
+                self.dismiss_visible_modals()
                 self._click_exact_text("数据资源管理")
             try:
                 self.page.wait_for_url(re.compile(r"dataResources"), timeout=3000)
@@ -203,7 +201,11 @@ class LayeredImportPage(BasePage):
         """上传指定测试 Excel 文件到当前导入弹窗。"""
         path = Path(file_name_or_path)
         if not path.is_absolute():
-            path = DEFAULT_TEST_DATA_DIR / file_name_or_path
+            candidate = PROJECT_DATASET_DIR / file_name_or_path
+            if candidate.exists():
+                path = candidate
+            else:
+                path = FALLBACK_DESKTOP_DIR / file_name_or_path
         if not path.exists():
             raise FileNotFoundError(f"测试导入文件不存在: {path}")
 

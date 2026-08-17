@@ -64,11 +64,18 @@ python run_tests.py --env uat --dry-run
 ```
 
 ### 步骤 4：标准化 Git 提交 (Commit)
-使用 Angular/Conventional Commit 格式提交：
+> **作用域约束**：本工程是 `D:/Automation` 更大 git 仓库的子目录。所有 git 操作必须限定到本工程子树，绝不可在父目录作用域执行 `git add` / `git commit` / `git push`。定义 `$PROJECT_DIR = D:/Automation/cscec-ui-autotest`。
+
+使用 Angular/Conventional Commit 格式提交（仅暂存受监控的 6 个目录，绝不使用 `git add .` 或 `git add -A`）：
 
 ```powershell
-git add .
-git commit -m "feat(scope): 描述本次修改的关键业务功能/用例"
+# 提交前护栏：确认暂存路径全部位于本工程子树内
+git -C "$PROJECT_DIR" diff --cached --name-only | Where-Object { $_ -notmatch '^cscec-ui-autotest/' } | ForEach-Object { throw "越界文件: $_" }
+
+# 仅暂存受监控目录
+git -C "$PROJECT_DIR" add pages tests core config test_assets docs
+
+git -C "$PROJECT_DIR" commit -m "feat(scope): 描述本次修改的关键业务功能/用例"
 ```
 
 **Common Commit Prefixes**:
@@ -81,8 +88,8 @@ git commit -m "feat(scope): 描述本次修改的关键业务功能/用例"
 ### 步骤 5：推送至 Git 远程仓库 (Push)
 
 ```powershell
-# 推送到 GitHub
-git push github master
+# 推送到 GitHub（限定本工程子树）
+git -C "$PROJECT_DIR" push github master
 ```
 
 ---
