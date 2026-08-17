@@ -16,7 +16,6 @@ from pages.portal.portal_home_page import PortalHomePage
 
 logger = get_logger("layered_import_page")
 
-# 测试数据文件夹默认路径
 DEFAULT_TEST_DATA_DIR = Path(r"C:\Users\CFD\Desktop\260812")
 
 
@@ -29,7 +28,7 @@ class LayeredImportPage(BasePage):
         super().__init__(page)
         self.portal = PortalHomePage(page)
 
-    # ────────────────────────── 导航进入模块 ──────────────────────────
+    # ────────────────────────── 导航与入口 ──────────────────────────
 
     def open_layer_settings(self) -> "LayeredImportPage":
         """进入数据分层设置页面（M02 入口：控制台 -> 系统配置 -> 资源配置 -> 数据分层设置）。"""
@@ -39,7 +38,6 @@ class LayeredImportPage(BasePage):
             self.nav.wait_ready()
             self.assertions.any_text_visible(["数据分层设置", "导入数据分层清单", "分层配置"], timeout=settings.ACTION_TIMEOUT)
         except Exception:
-            # 回退：通过控制台工作台/侧边栏导航进入
             console = self.portal.navigate_to_console()
             console.open_all_menu_view()
             self.elements.click_candidates(
@@ -64,7 +62,6 @@ class LayeredImportPage(BasePage):
             self.nav.wait_ready()
             self.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "数据资源管理"], timeout=settings.ACTION_TIMEOUT)
         except Exception:
-            # 回退：通过控制台工作台导航进入
             console = self.portal.navigate_to_console()
             console.open_all_menu_view()
             self.elements.click_candidates(
@@ -136,6 +133,29 @@ class LayeredImportPage(BasePage):
         logger.info("[弹窗] 已打开 M04 数据属性清单导入弹窗")
         return self
 
+    def download_template(self, output_dir: Path) -> Path:
+        """从当前可见导入弹窗下载模板文件，并返回本地保存路径。"""
+        output_dir.mkdir(parents=True, exist_ok=True)
+        dialog = self._get_import_dialog()
+        download_trigger = self._find_first_visible(
+            [
+                dialog.get_by_role("button", name=re.compile(r"下载模板|下载模版")),
+                dialog.get_by_role("link", name=re.compile(r"下载模板|下载模版")),
+                dialog.locator("button:has-text('下载模板'), button:has-text('下载模版')"),
+                dialog.locator("a:has-text('下载模板'), a:has-text('下载模版')"),
+            ],
+            description="下载模板按钮",
+        )
+        with self.page.expect_download(timeout=settings.ACTION_TIMEOUT) as download_info:
+            download_trigger.click()
+        download = download_info.value
+        target = output_dir / download.suggested_filename
+        if target.exists():
+            target = output_dir / f"{target.stem}_{int(time.time())}{target.suffix}"
+        download.save_as(str(target))
+        logger.info(f"[模板下载] 成功下载导入模板: {target}")
+        return target
+
     def upload_file(self, file_name_or_path: str | Path) -> "LayeredImportPage":
         """上传指定测试 Excel 文件到当前导入弹窗。"""
         path = Path(file_name_or_path)
@@ -148,15 +168,15 @@ class LayeredImportPage(BasePage):
         file_input = dialog.locator("input[type='file']").first
         file_input.wait_for(state="attached", timeout=settings.ACTION_TIMEOUT)
         file_input.set_input_files(str(path))
-        self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(600)
         self.nav.wait_ready()
         logger.info(f"[上传文件] 成功选择文件: {path.name}")
         return self
 
     def click_validate_table(self) -> "LayeredImportPage":
         """点击导入弹窗中的「校验表格」或「校验」按钮。"""
-        # 如果上传后已自动返回校验结果，则无需重复点击
-        if self._has_any_text(["列名与模板不符", "校验失败", "错误行号", "校验通过", "可导入"], timeout=1200):
+        # 如果上传后已自动返回明确校验结果，直接记录
+        if self._has_any_text(["列名与模板不符", "校验失败", "错误行号", "校验通过", "可导入", "重复"], timeout=1200):
             logger.info("[校验] 上传后已自动触发校验并获得结果")
             return self
 
@@ -219,13 +239,18 @@ class LayeredImportPage(BasePage):
 
     def should_show_import_errors(self, expected_snippets: list[str]) -> "LayeredImportPage":
         """断言弹窗内展示了预期的校验错误行或错误原因。"""
-        dialog_text = self.get_dialog_text()
-        for snippet in expected_snippets:
-            assert snippet in dialog_text or snippet.replace(" ", "") in dialog_text.replace(" ", ""), (
-                f"导入弹窗未包含预期错误片段: '{snippet}'; 弹窗内容: {dialog_text[:300]}"
-            )
-        logger.info(f"[断言] 导入校验错误提示匹配成功: {expected_snippets}")
-        return self
+        deadline = time.monotonic() + (settings.ACTION_TIMEOUT / 1000)
+        last_text = ""
+        while time.monotonic() < deadline:
+            last_text = self.get_dialog_text()
+            normalized = re.sub(r"\s+", "", last_text)
+            if all(snippet in last_text or re.sub(r"\s+", "", snippet) in normalized for snippet in expected_snippets):
+                logger.info(f"[断言] 导入校验错误提示匹配成功: {expected_snippets}")
+                return self
+            self.page.wait_for_timeout(300)
+
+        missing = [s for s in expected_snippets if s not in last_text and re.sub(r"\s+", "", s) not in re.sub(r"\s+", "", last_text)]
+        raise AssertionError(f"导入弹窗未包含预期错误片段: {missing}; 当前弹窗内容: {last_text[:300]}")
 
     def should_not_allow_import(self) -> "LayeredImportPage":
         """断言校验不通过时，不展示导入按钮或导入按钮被禁用。"""
@@ -257,7 +282,7 @@ class LayeredImportPage(BasePage):
     def should_show_progress_or_success(self) -> "LayeredImportPage":
         """断言展示导入进度条或导入成功提示。"""
         self.assertions.any_text_visible(
-            ["进度", "%", "正在导入", "导入完成", "导入成功", "完成", "处理中"],
+            ["进度", "%", "正在导入", "导入完成", "导入成功", "完成", "处理中", "ant-progress"],
             timeout=settings.ACTION_TIMEOUT,
         )
         logger.info("[断言] 成功观察到导入进度条或成功状态")
@@ -298,6 +323,18 @@ class LayeredImportPage(BasePage):
         self.assertions.page_not_blank_or_error()
         self.assertions.any_text_visible([table_english_name, "数据资源列表", "暂无数据"])
         logger.info(f"[检索] 数据实体检索完成: {table_english_name}")
+        return self
+
+    def should_show_no_search_results(self, keyword: str) -> "LayeredImportPage":
+        """断言在数据资源列表中搜索该关键字时无数据（确保校验阶段未提前写入）。"""
+        self.open_data_resource_mgmt()
+        search_input = self.page.get_by_placeholder("请输入搜索内容").first
+        if search_input.is_visible():
+            search_input.fill(keyword)
+            search_input.press("Enter")
+            self.nav.wait_ready()
+        self.assertions.any_text_visible(["暂无数据", "无数据", "0 条", "0条"])
+        logger.info(f"[断言] 搜索 '{keyword}' 为空，确认未提前写入数据")
         return self
 
     # ────────────────────────── 内部辅助方法 ──────────────────────────
