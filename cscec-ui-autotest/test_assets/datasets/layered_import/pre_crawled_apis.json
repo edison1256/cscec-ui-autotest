@@ -1,0 +1,50 @@
+{
+  "https://irp-pre.cscec.com/irp-api/irp-portal-public/cart/list": {
+    "code": 0,
+    "message": "操作成功",
+    "data": {
+      "apps": [],
+      "clouds": [],
+      "components": [],
+      "dataAssets": []
+    },
+    "ok": true
+  },
+  "https://irp-pre.cscec.com/irp-api/irp-portal-public/banner/listForPortalNoAuth": {
+    "code": 0,
+    "message": "操作成功",
+    "data": [
+      {
+        "name": "首页",
+        "img": "8a698c9f96b4803a01995f97a8ce021c",
+        "url": "https://irp.cscec.com/#/",
+        "num": 1
+      },
+      {
+        "name": "服务中心",
+        "img": "8a69873e96b4801501995f98152e03c0",
+        "url": "https://irp.cscec.com/#/service-center/3",
+        "num": 2
+      },
+      {
+        "name": "开发者平台",
+        "img": "8a69873e96b4801501995f98402c03c4",
+        "url": "https://irp.cscec.com/#/developer-platform",
+        "num": 3
+      },
+      {
+        "name": "解决方案",
+        "img": "8a698c9f96b4803a01995f987c580220",
+        "url": "https://irp.cscec.com/#/solution",
+        "num": 4
+      },
+      {
+        "name": "应用运营运维",
+        "img": "8a698c9f96b4803a01995f98a88e0224",
+        "url": "",
+        "num": 5
+      }
+    ],
+    "ok": true
+  }
+}

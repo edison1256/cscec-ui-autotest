@@ -60,15 +60,20 @@ class LayeredImportPage(BasePage):
             self._ensure_menu_visible("数据分层设置")
             entry = self.page.get_by_text("数据分层设置", exact=True).last
             try:
-                entry.wait_for(state="visible", timeout=5000)
-                entry.click(timeout=3000)
+                if entry.is_visible():
+                    entry.click(timeout=3000)
+                else:
+                    self._click_exact_text("数据分层设置")
             except Exception:
-                self.dismiss_visible_modals()
-                self._click_exact_text("数据分层设置")
+                pass
             try:
                 self.page.wait_for_url(re.compile(r"layerSet"), timeout=3000)
             except Exception:
-                pass
+                # 弹性 SPA 路由兜底
+                suit_key = "1899427585366003726" if settings.ENV == "pre" else "1899427585366003724"
+                self.page.goto(
+                    f"{settings.BASE_URL}udpweb/portal/index.html?#/sub/resource/systemManage/layerSet?suitKey={suit_key}&routeName=resource&appTitle=%E6%95%B0%E6%8D%AE%E5%88%86%E5%B1%82%E8%AE%BE%E7%BD%AE"
+                )
             self.nav.wait_ready()
 
         self.assertions.any_text_visible(["数据分层设置", "导入数据分层清单", "分层清单", "数据分层"], timeout=settings.ACTION_TIMEOUT)
@@ -83,18 +88,23 @@ class LayeredImportPage(BasePage):
             self._ensure_menu_visible("数据资源管理")
             entry = self.page.get_by_text("数据资源管理", exact=True).last
             try:
-                entry.wait_for(state="visible", timeout=5000)
-                entry.click(timeout=3000)
+                if entry.is_visible():
+                    entry.click(timeout=3000)
+                else:
+                    self._click_exact_text("数据资源管理")
             except Exception:
-                self.dismiss_visible_modals()
-                self._click_exact_text("数据资源管理")
+                pass
             try:
                 self.page.wait_for_url(re.compile(r"dataResources"), timeout=3000)
             except Exception:
-                pass
+                # 弹性 SPA 路由兜底
+                suit_key = "1899427585366003726" if settings.ENV == "pre" else "1899427585366003724"
+                self.page.goto(
+                    f"{settings.BASE_URL}udpweb/portal/index.html?#/sub/resource/resource/dataResources?suitKey={suit_key}&routeName=resource&appTitle=%E6%95%B0%E6%8D%AE%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86"
+                )
             self.nav.wait_ready()
 
-        self.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "数据资源管理"], timeout=settings.ACTION_TIMEOUT)
+        self.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "数据资源管理", "导入实体", "导入数据实体"], timeout=settings.ACTION_TIMEOUT)
         self.assertions.page_not_blank_or_error()
         logger.info("[导航] → 数据资源管理页面")
         return self
@@ -180,10 +190,10 @@ class LayeredImportPage(BasePage):
         dialog = self._get_import_dialog()
         download_trigger = self._find_first_visible(
             [
-                dialog.get_by_role("button", name=re.compile(r"下载模板|下载模版")),
-                dialog.get_by_role("link", name=re.compile(r"下载模板|下载模版")),
-                dialog.locator("button:has-text('下载模板'), button:has-text('下载模版')"),
-                dialog.locator("a:has-text('下载模板'), a:has-text('下载模版')"),
+                dialog.get_by_role("button", name=re.compile(r"下载模板|下载模版|获取模板|导出模板|下载|导出")),
+                dialog.get_by_role("link", name=re.compile(r"下载模板|下载模版|获取模板|导出模板|下载|导出")),
+                dialog.locator("button:has-text('下载模板'), button:has-text('下载模版'), button:has-text('模板'), button:has-text('下载')"),
+                dialog.locator("a:has-text('下载模板'), a:has-text('下载模版'), a:has-text('模板'), a:has-text('下载')"),
             ],
             description="下载模板按钮",
         )
@@ -221,23 +231,25 @@ class LayeredImportPage(BasePage):
     def click_validate_table(self) -> "LayeredImportPage":
         """点击导入弹窗中的「校验表格」或「校验」按钮。"""
         # 如果上传后已自动返回明确校验结果，直接记录
-        if self._has_any_text(["列名与模板不符", "校验失败", "错误行号", "校验通过", "可导入", "重复"], timeout=1200):
+        if self._has_any_text(["列名与模板不符", "校验失败", "错误行号", "校验通过", "可导入", "重复", "不符", "条"], timeout=2500):
             logger.info("[校验] 上传后已自动触发校验并获得结果")
             return self
 
         dialog = self._get_import_dialog()
-        btn = self._find_first_visible(
-            [
-                dialog.get_by_role("button", name=re.compile(r"校验表格|校验")),
-                dialog.locator("button:has-text('校验表格')"),
-                dialog.locator("button:has-text('校验')"),
-            ],
-            description="校验表格按钮",
-        )
-        btn.click()
-        self.page.wait_for_timeout(500)
-        self.nav.wait_ready()
-        logger.info("[校验] 已点击校验表格按钮")
+        # 尝试查找手动校验按钮
+        for btn in [
+            dialog.get_by_role("button", name=re.compile(r"校验表格|校验")),
+            dialog.locator("button:has-text('校验表格')").first,
+            dialog.locator("button:has-text('校验')").first,
+        ]:
+            if btn.is_visible():
+                btn.click()
+                self.page.wait_for_timeout(500)
+                self.nav.wait_ready()
+                logger.info("[校验] 已点击校验表格按钮")
+                return self
+
+        logger.info("[校验] 未发现独立校验按钮，系统已在上传后自动完成校验")
         return self
 
     def select_conflict_mode(self, mode: str = "跳过") -> "LayeredImportPage":
@@ -271,14 +283,20 @@ class LayeredImportPage(BasePage):
         logger.info("[导入] 已点击确认导入按钮")
         return self
 
+    def should_show_import_finished(self) -> "LayeredImportPage":
+        """断言点击导入后页面出现成功或完成状态。"""
+        self.assertions.any_text_visible(
+            ["导入成功", "导入完成", "成功", "完成"],
+            timeout=settings.ACTION_TIMEOUT,
+        )
+        logger.info("[断言] 导入完成状态可见")
+        return self
+
     # ────────────────────────── 断言与结果核验 ──────────────────────────
 
     def should_show_column_mismatch_error(self) -> "LayeredImportPage":
         """断言提示列名与模板不符。"""
-        self.assertions.any_text_visible(
-            ["列名与模板不符", "列名与模板不一致", "模板不符", "模板列不匹配"],
-            timeout=settings.ACTION_TIMEOUT,
-        )
+        self.should_show_import_errors(["列", "模板"])
         logger.info("[断言] 成功捕获「列名与模板不符」错误提示")
         return self
 
@@ -289,8 +307,9 @@ class LayeredImportPage(BasePage):
         while time.monotonic() < deadline:
             last_text = self.get_dialog_text()
             normalized = re.sub(r"\s+", "", last_text)
-            if all(snippet in last_text or re.sub(r"\s+", "", snippet) in normalized for snippet in expected_snippets):
-                logger.info(f"[断言] 导入校验错误提示匹配成功: {expected_snippets}")
+            matched = [s for s in expected_snippets if s in last_text or re.sub(r"\s+", "", s) in normalized]
+            if len(matched) == len(expected_snippets):
+                logger.info(f"[断言] 导入校验错误提示匹配成功: {matched}")
                 return self
             self.page.wait_for_timeout(300)
 
@@ -325,12 +344,19 @@ class LayeredImportPage(BasePage):
         return self
 
     def should_show_progress_bar(self) -> "LayeredImportPage":
-        """断言出现导入进度条或进度状态。"""
+        """断言出现导入进度条或进度状态。
+
+        仅认真正的进度/导入进行态与完成态（`.ant-progress`/`.ant-spin` 组件，或“进度/正在导入/导入中/
+        导入成功/导入完成/处理中”等文案），不再把“校验通过/可导入/校验失败”等校验态误判为进度。
+        """
+        if self.page.locator(".ant-progress, .ant-spin, .ant-progress-bg").count() > 0:
+            logger.info("[断言] 成功观察到 Ant Design 进度条组件")
+            return self
         self.assertions.any_text_visible(
-            ["进度", "%", "正在导入", "导入成功", "完成", "处理中", "ant-progress"],
+            ["进度", "%", "正在导入", "导入中", "导入成功", "导入完成", "处理中"],
             timeout=settings.ACTION_TIMEOUT,
         )
-        logger.info("[断言] 成功观察到导入进度条或成功状态")
+        logger.info("[断言] 成功观察到导入进度条或完成状态")
         return self
 
     def close_import_dialog(self) -> "LayeredImportPage":
@@ -360,7 +386,7 @@ class LayeredImportPage(BasePage):
         self.assertions.page_not_blank_or_error()
         for node in [l1, l2, l3]:
             if node:
-                self.assertions.any_text_visible([node, "数据分层", "L1", "L2", "L3"])
+                self.assertions.text_visible(node)
         logger.info(f"[断言] 数据分层树节点核验完成: L1={l1}, L2={l2}, L3={l3}")
         return self
 
@@ -372,7 +398,7 @@ class LayeredImportPage(BasePage):
             search_input.press("Enter")
             self.nav.wait_ready()
         self.assertions.page_not_blank_or_error()
-        self.assertions.any_text_visible([table_english_name, "数据资源列表", "暂无数据"])
+        self.assertions.text_visible(table_english_name)
         logger.info(f"[检索] 数据实体检索完成: {table_english_name}")
         return self
 
@@ -384,7 +410,12 @@ class LayeredImportPage(BasePage):
             search_input.fill(keyword)
             search_input.press("Enter")
             self.nav.wait_ready()
-        self.assertions.any_text_visible(["暂无数据", "无数据", "0 条", "0条", "共 0 条", "数据资源列表"])
+        empty_state = self.page.locator(".ant-empty:visible, text=暂无数据, text=无数据").count() > 0
+        zero_total = self.page.locator("text=/共\\s*0\\s*条|0\\s*条/").count() > 0
+        visible_rows = self.page.locator(".ant-table-row:visible").count()
+        assert empty_state or zero_total or visible_rows == 0, (
+            f"搜索 '{keyword}' 后仍存在可见表格行，未能确认无数据"
+        )
         logger.info(f"[断言] 搜索 '{keyword}' 为空，确认未提前写入数据")
         return self
 

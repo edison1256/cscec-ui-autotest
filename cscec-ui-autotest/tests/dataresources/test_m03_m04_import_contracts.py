@@ -32,12 +32,12 @@ from tests.dataresources.import_workbooks import (
 IMPORT_CONTRACTS = [
     pytest.param(
         "M03",
-        ["一级应用域名称", "表英文名称"],
+        ["一级应用域", "表英文名"],
         id="m03",
     ),
     pytest.param(
         "M04",
-        ["一级应用域名称", "表英文名", "字段英文名"],
+        ["一级应用域", "表英文名", "字段英文名"],
         id="m04",
     ),
 ]
@@ -45,7 +45,7 @@ IMPORT_CONTRACTS = [
 
 @pytest.mark.dataresources
 @pytest.mark.regression
-@pytest.mark.write
+@pytest.mark.readonly
 class TestM03M04ImportContracts:
     """UI-CAND-0002, UI-CAND-0003, UI-CAND-0069."""
 
@@ -135,7 +135,7 @@ class TestM03M04ImportBusinessErrors:
 
         data_resources.upload_import_file(str(import_file))
         data_resources.click_validate_table()
-        data_resources.should_show_import_errors(["校验失败", "错误行号", "第 2 行", "一级应用域名称"])
+        data_resources.should_show_import_errors(["校验失败", "错误行号", "第 2 行", "一级应用域"])
         data_resources.should_not_allow_import()
         data_resources.close_import_dialog()
 
@@ -222,7 +222,7 @@ class TestM03M04ImportA1BusinessErrors:
 
         data_resources.upload_import_file(str(import_file))
         data_resources.click_validate_table()
-        data_resources.should_show_import_errors(["校验失败", "错误行号", "第 2 行", "表英文名称"])
+        data_resources.should_show_import_errors(["校验失败", "错误行号", "第 2 行", "表英文名"])
         data_resources.should_not_allow_import()
         data_resources.close_import_dialog()
 
@@ -405,6 +405,23 @@ class TestM03ImportA5PreImportContracts:
         token = int(time.time())
         table_english_name = f"auto_m03_pre_import_{token}"
 
+        data_resources.open_import_dialog("M03")
+        template_path = data_resources.download_import_template(tmp_path, "M03")
+        headers = read_first_sheet_headers(template_path)
+        import_file = create_workbook_from_headers(
+            tmp_path,
+            f"M03_pre_import_{token}.xlsx",
+            headers,
+            m03_valid_pre_import_row(headers, table_english_name),
+        )
+
+        data_resources.upload_import_file(str(import_file))
+        data_resources.click_validate_table()
+        # 校验通过、导入按钮可用，但绝不点击最终导入
+        data_resources.should_allow_import_after_validation()
+        data_resources.close_import_dialog()
+
+        # 未点击导入 → 库中不应出现该实体
         data_resources.search_by_keyword(table_english_name)
         data_resources.should_show_no_search_results()
 

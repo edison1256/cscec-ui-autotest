@@ -11,7 +11,7 @@ from tests.dataresources.import_workbooks import read_first_sheet_headers
 
 @pytest.mark.dataresources
 @pytest.mark.regression
-@pytest.mark.write
+@pytest.mark.readonly
 class TestM02ImportContracts:
     """UI-CAND-0001 and UI-CAND-0068."""
 

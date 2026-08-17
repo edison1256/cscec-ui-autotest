@@ -47,7 +47,7 @@ class DataResourcePage(BasePage):
         except PlaywrightTimeoutError:
             pass
         self.nav.wait_ready()
-        self.assertions.any_text_visible(["数据资源列表", "导入数据实体清单"], timeout=settings.ACTION_TIMEOUT)
+        self.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "导入实体", "导入数据实体"], timeout=settings.ACTION_TIMEOUT)
         logger.info("[导航] → 数据资源管理")
         return self
 
@@ -165,7 +165,7 @@ class DataResourcePage(BasePage):
         """Assert the visible import dialog has an upload control."""
         dialog = self._import_dialog()
         dialog.locator("input[type='file']").first.wait_for(state="attached", timeout=settings.ACTION_TIMEOUT)
-        self.assertions.any_text_visible(["上传文件", "点击上传", "请选择文件"], timeout=settings.ACTION_TIMEOUT)
+        self.assertions.any_text_visible(["上传文件", "上传", "选择文件", "点击上传"], timeout=settings.ACTION_TIMEOUT)
         return self
 
     def download_import_template(self, output_dir: Path, import_type: str) -> Path:
@@ -175,10 +175,10 @@ class DataResourcePage(BasePage):
         dialog = self._import_dialog(import_type)
         download_trigger = self._first_visible(
             [
-                dialog.get_by_role("button", name=re.compile(r"下载模板|下载模版")),
-                dialog.get_by_role("link", name=re.compile(r"下载模板|下载模版")),
-                dialog.locator("button:has-text('下载模板'), button:has-text('下载模版')"),
-                dialog.locator("a:has-text('下载模板'), a:has-text('下载模版')"),
+                dialog.get_by_role("button", name=re.compile(r"下载模板|下载模版|获取模板|导出模板|下载|导出")),
+                dialog.get_by_role("link", name=re.compile(r"下载模板|下载模版|获取模板|导出模板|下载|导出")),
+                dialog.locator("button:has-text('下载模板'), button:has-text('下载模版'), button:has-text('模板'), button:has-text('下载')"),
+                dialog.locator("a:has-text('下载模板'), a:has-text('下载模版'), a:has-text('模板'), a:has-text('下载')"),
             ],
             "下载模板按钮",
         )

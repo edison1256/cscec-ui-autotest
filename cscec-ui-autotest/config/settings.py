@@ -37,6 +37,7 @@ class Settings:
     ENV: str = "uat"
     BASE_URL: str = ""
     DOC_CENTER_URL: str = ""
+    DEEP_LINKS: dict = field(default_factory=dict)
 
     USERNAME: str = ""
     PASSWORD: str = ""
@@ -73,6 +74,7 @@ class Settings:
             ENV=env,
             BASE_URL=env_urls["BASE_URL"],
             DOC_CENTER_URL=env_urls["DOC_CENTER_URL"],
+            DEEP_LINKS=env_urls.get("DEEP_LINKS", {}),
             USERNAME=_read_setting("USERNAME", ""),
             PASSWORD=_read_setting("PASSWORD", ""),
             UAT_PASSWORD=_read_setting("UAT_PASSWORD", ""),

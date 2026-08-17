@@ -10,7 +10,7 @@ from playwright.sync_api import Page
 from pages.dataresources.layered_import_page import LayeredImportPage
 
 # 测试数据文件夹
-TEST_DATA_DIR = Path(r"C:\Users\CFD\Desktop\260812")
+TEST_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "test_assets" / "datasets" / "layered_import"
 
 
 @pytest.fixture(scope="session")

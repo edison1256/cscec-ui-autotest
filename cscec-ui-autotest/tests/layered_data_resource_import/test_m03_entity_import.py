@@ -14,13 +14,19 @@ from pathlib import Path
 import pytest
 
 from pages.dataresources.layered_import_page import LayeredImportPage
-from tests.dataresources.import_workbooks import read_first_sheet_headers
-from tests.layered_data_resource_import.data_provider import get_m03_dataset
+from tests.dataresources.import_workbooks import (
+    create_workbook_from_headers,
+    m03_duplicate_entity_rows,
+    m03_valid_like_row,
+    read_first_sheet_headers,
+)
+from tests.layered_data_resource_import.data_provider import get_m03_dataset, import_run_id
 
 
 @pytest.mark.dataresources
 @pytest.mark.layered_import
 @pytest.mark.regression
+@pytest.mark.readonly
 class TestM03EntryAndTemplate:
     """M03 模板与入口结构测试。"""
 
@@ -29,7 +35,7 @@ class TestM03EntryAndTemplate:
         layered_import_page.open_m03_entity_import_dialog()
         dialog_text = layered_import_page.get_dialog_text()
         assert "导入数据实体清单" in dialog_text or "导入数据实体" in dialog_text, f"未出现导入实体弹窗标题，当前文本: {dialog_text}"
-        layered_import_page.assertions.any_text_visible(["上传文件", "点击上传", "选择文件"])
+        assert any(k in dialog_text for k in ["上传文件", "点击上传", "选择文件", "下载模板", "下载模版"]), f"未出现上传或模板提示，弹窗文本: {dialog_text}"
         layered_import_page.close_import_dialog()
 
     def test_m03_02_template_download_and_field_headers(self, layered_import_page: LayeredImportPage, tmp_path: Path):
@@ -51,6 +57,7 @@ class TestM03EntryAndTemplate:
 @pytest.mark.dataresources
 @pytest.mark.layered_import
 @pytest.mark.regression
+@pytest.mark.write
 class TestM03ReferenceDataErrors:
     """M03 引用数据校验测试（数据驱动）。"""
 
@@ -58,7 +65,7 @@ class TestM03ReferenceDataErrors:
         """M03-03: B列一级应用域名称在库中不存在，断言业务校验不通过并输出错误数据行。"""
         ds = get_m03_dataset("reference_and_required_errors")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        layered_import_page.upload_file(ds["file_path"])
         layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["校验失败", "错误", "行"])
         layered_import_page.should_not_allow_import()
@@ -68,7 +75,7 @@ class TestM03ReferenceDataErrors:
         """M03-04: D列应用系统名称在库中不存在，断言业务校验不通过并输出错误数据行。"""
         ds = get_m03_dataset("reference_and_required_errors")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        layered_import_page.upload_file(ds["file_path"])
         layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["系统", "错误", "行", "校验失败"])
         layered_import_page.should_not_allow_import()
@@ -78,7 +85,7 @@ class TestM03ReferenceDataErrors:
         """M03-05: B列一级应用域与D列应用系统不对应，断言业务校验不通过并输出错误数据行。"""
         ds = get_m03_dataset("reference_and_required_errors")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        layered_import_page.upload_file(ds["file_path"])
         layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["对应", "不匹配", "错误", "校验失败"])
         layered_import_page.should_not_allow_import()
@@ -88,7 +95,7 @@ class TestM03ReferenceDataErrors:
         """M03-06: L1~L3分层在库中不存在或与系统不匹配，断言业务校验不通过并输出错误数据行。"""
         ds = get_m03_dataset("reference_and_required_errors")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        layered_import_page.upload_file(ds["file_path"])
         layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["分层", "L1", "L2", "L3", "错误", "校验失败"])
         layered_import_page.should_not_allow_import()
@@ -98,6 +105,7 @@ class TestM03ReferenceDataErrors:
 @pytest.mark.dataresources
 @pytest.mark.layered_import
 @pytest.mark.regression
+@pytest.mark.write
 class TestM03RequiredAndOptionalFields:
     """M03 必填字段与非必填字段校验测试。"""
 
@@ -105,16 +113,24 @@ class TestM03RequiredAndOptionalFields:
         """M03-07: 表中文名/表英文名/表描述/存储周期/项目组任一为空，断言业务校验不通过。"""
         ds = get_m03_dataset("reference_and_required_errors")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        layered_import_page.upload_file(ds["file_path"])
         layered_import_page.click_validate_table()
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
 
-    def test_m03_08_optional_fields_pass(self, layered_import_page: LayeredImportPage):
+    def test_m03_08_optional_fields_pass(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M03-08: 一级应用域编码、应用系统编码、数据责任部门为空时，断言不拦截校验。"""
-        ds = get_m03_dataset("standard_valid")
+        run_id = import_run_id("m03_optional")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        template_file = layered_import_page.download_template(tmp_path)
+        headers = read_first_sheet_headers(template_file)
+        row = m03_valid_like_row(headers, f"auto_{run_id}")
+        row["一级应用域编号"] = ""
+        row["应用系统编码"] = ""
+        row["数据责任部门"] = ""
+        import_file = create_workbook_from_headers(tmp_path, f"{run_id}.xlsx", headers, row)
+
+        layered_import_page.upload_file(import_file)
         layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.close_import_dialog()
@@ -123,48 +139,80 @@ class TestM03RequiredAndOptionalFields:
 @pytest.mark.dataresources
 @pytest.mark.layered_import
 @pytest.mark.regression
+@pytest.mark.write
 class TestM03DuplicateAndConflictModes:
     """M03 重复判定规则与跳过/覆盖冲突模式测试（数据驱动）。"""
 
-    def test_m03_09_duplicate_entities_skip_mode(self, layered_import_page: LayeredImportPage):
-        """M03-09: 实体全元组相同判定重复，选择「重复跳过」并断言允许继续导入。"""
-        ds = get_m03_dataset("duplicate_entities")
+    def test_m03_09_duplicate_entities_skip_mode(self, layered_import_page: LayeredImportPage, tmp_path: Path):
+        """M03-09: 实体全元组相同判定重复，选择「重复跳过」并真实提交导入，断言导入完成。"""
+        run_id = import_run_id("m03_dup_skip")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        template_file = layered_import_page.download_template(tmp_path)
+        headers = read_first_sheet_headers(template_file)
+        import_file = create_workbook_from_headers(
+            tmp_path,
+            f"{run_id}.xlsx",
+            headers,
+            m03_duplicate_entity_rows(headers, f"auto_{run_id}"),
+        )
+
+        layered_import_page.upload_file(import_file)
         layered_import_page.click_validate_table()
         layered_import_page.select_conflict_mode("跳过")
         layered_import_page.should_allow_import_after_validation()
+        layered_import_page.click_confirm_import()
+        layered_import_page.should_show_import_finished()
         layered_import_page.close_import_dialog()
 
-    def test_m03_10_duplicate_entities_overwrite_mode(self, layered_import_page: LayeredImportPage):
-        """M03-10: 实体全元组相同判定重复，选择「重复覆盖」并断言允许继续导入。"""
-        ds = get_m03_dataset("duplicate_entities")
+    def test_m03_10_duplicate_entities_overwrite_mode(self, layered_import_page: LayeredImportPage, tmp_path: Path):
+        """M03-10: 实体全元组相同判定重复，选择「重复覆盖」并真实提交导入，断言导入完成。"""
+        run_id = import_run_id("m03_dup_overwrite")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        template_file = layered_import_page.download_template(tmp_path)
+        headers = read_first_sheet_headers(template_file)
+        import_file = create_workbook_from_headers(
+            tmp_path,
+            f"{run_id}.xlsx",
+            headers,
+            m03_duplicate_entity_rows(headers, f"auto_{run_id}"),
+        )
+
+        layered_import_page.upload_file(import_file)
         layered_import_page.click_validate_table()
         layered_import_page.select_conflict_mode("覆盖")
         layered_import_page.should_allow_import_after_validation()
+        layered_import_page.click_confirm_import()
+        layered_import_page.should_show_import_finished()
         layered_import_page.close_import_dialog()
 
 
 @pytest.mark.dataresources
 @pytest.mark.layered_import
 @pytest.mark.regression
+@pytest.mark.write
 class TestM03ImportResultAndList:
     """M03 导入结果与数据资源列表检索测试。"""
 
-    def test_m03_11_valid_import_and_search_entity(self, layered_import_page: LayeredImportPage):
-        """M03-11: 导入标准 M03 文件，在数据资源列表中按表英文名称检索核验。"""
-        ds = get_m03_dataset("standard_valid")
+    def test_m03_11_valid_import_and_search_entity(self, layered_import_page: LayeredImportPage, tmp_path: Path):
+        """M03-11: 标准 M03 文件导入前校验通过后，在数据资源列表中按已存在表英文名称检索核验。"""
+        run_id = import_run_id("m03_entity")
+        table_english_name = f"auto_{run_id}"
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["filename"])
+        template_file = layered_import_page.download_template(tmp_path)
+        headers = read_first_sheet_headers(template_file)
+        row = m03_valid_like_row(headers, table_english_name)
+        import_file = create_workbook_from_headers(tmp_path, f"{run_id}.xlsx", headers, row)
+
+        layered_import_page.upload_file(import_file)
         layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
+        layered_import_page.click_confirm_import()
+        layered_import_page.should_show_import_finished()
         layered_import_page.close_import_dialog()
-        layered_import_page.search_and_verify_entity(ds.get("table_english_name", "test0813table1"))
+        layered_import_page.search_and_verify_entity(table_english_name)
 
     def test_m03_12_entity_details_columns_verify(self, layered_import_page: LayeredImportPage):
         """M03-12: 在数据资源列表中核验表中文名、表英文名、系统名、描述列展示完整。"""
         ds = get_m03_dataset("standard_valid")
         layered_import_page.open_data_resource_mgmt()
-        layered_import_page.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "表中文名", "表英文名", "应用系统"])
+        layered_import_page.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "数据资源管理", "表中文名", "表英文名", "应用系统"])

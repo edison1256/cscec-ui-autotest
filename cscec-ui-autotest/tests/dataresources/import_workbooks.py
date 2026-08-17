@@ -11,6 +11,7 @@ from xml.sax.saxutils import escape
 
 _MAIN_NS = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 _VALID_APP_DOMAIN = "测试test"
+_VALID_LAYER_APP_DOMAIN = "测试test260812"
 _MISMATCH_APP_DOMAIN = "测试2"
 _VALID_APP_SYSTEM = "测试test123"
 _VALID_EXISTING_TABLE_ENGLISH_NAME = "shujuzichanceSHI"
@@ -118,10 +119,65 @@ def create_m03_column_mismatch_workbook(tmp_path: Path, table_english_name: str)
     )
 
 
+def m02_unique_layer_row(headers: list[str], run_id: str) -> dict[str, str]:
+    """Build one unique M02 row that should not conflict with prior imports."""
+    token = _safe_token(run_id)
+    row = _default_row(headers)
+    row.update(
+        {
+            "一级应用域名称": _VALID_LAYER_APP_DOMAIN,
+            "L1": f"auto_l1_{token}",
+            "L1定义": f"auto_l1_def_{token}",
+            "L2": f"auto_l2_{token}",
+            "L2定义": f"auto_l2_def_{token}",
+            "L3": f"auto_l3_{token}",
+            "L3定义": f"auto_l3_def_{token}",
+        }
+    )
+    return row
+
+
+def m02_duplicate_layer_rows(headers: list[str], run_id: str) -> list[dict[str, str]]:
+    """Build two M02 rows with the same unique business key for in-file duplicate checks."""
+    first = m02_unique_layer_row(headers, run_id)
+    second = dict(first)
+    second["L3定义"] = f"{first['L3定义']}_second"
+    return [first, second]
+
+
+def m02_diff_l1_same_l2_pass_rows(headers: list[str], run_id: str) -> list[dict[str, str]]:
+    """Build two M02 rows sharing the same L2 name under different L1 (should NOT be duplicate).
+
+    对应大纲「不同一级应用域/不同 L1 下出现相同 L2，期望允许通过校验」——
+    重复判定键为完整路径（域+L1+L2+L3 名称），仅 L2 同名不构成重复。
+    """
+    token = _safe_token(run_id)
+    domain = _VALID_LAYER_APP_DOMAIN
+    shared_l2 = f"auto_shared_l2_{token}"
+
+    def _row(l1: str) -> dict[str, str]:
+        row = _default_row(headers)
+        row.update(
+            {
+                "一级应用域名称": domain,
+                "L1": l1,
+                "L1定义": f"{l1}_def",
+                "L2": shared_l2,
+                "L2定义": f"{shared_l2}_def",
+                "L3": f"auto_l3_{token}_{l1}",
+                "L3定义": f"auto_l3_{token}_{l1}_def",
+            }
+        )
+        return row
+
+    return [_row(f"auto_l1_a_{token}"), _row(f"auto_l1_b_{token}")]
+
+
 def m03_missing_app_domain_row(headers: list[str], table_english_name: str) -> dict[str, str]:
     """Build one M03 row that should fail business validation in the UI."""
     base = m03_valid_like_row(headers, table_english_name)
     base["一级应用域名称"] = "自动化不存在应用域"
+    base["一级应用域"] = "自动化不存在应用域"
     return base
 
 
@@ -129,6 +185,7 @@ def m03_missing_app_system_row(headers: list[str], table_english_name: str) -> d
     """Build one M03 row with a missing app system name."""
     base = m03_valid_like_row(headers, table_english_name)
     base["应用系统名称"] = "自动化不存在系统"
+    base["应用系统"] = "自动化不存在系统"
     return base
 
 
@@ -136,7 +193,9 @@ def m03_app_domain_system_mismatch_row(headers: list[str], table_english_name: s
     """Build one M03 row where app domain and app system should not correspond."""
     base = m03_valid_like_row(headers, table_english_name)
     base["一级应用域名称"] = _MISMATCH_APP_DOMAIN
+    base["一级应用域"] = _MISMATCH_APP_DOMAIN
     base["应用系统名称"] = _VALID_APP_SYSTEM
+    base["应用系统"] = _VALID_APP_SYSTEM
     return base
 
 
@@ -151,6 +210,7 @@ def m03_missing_required_field_row(headers: list[str], table_english_name: str) 
     """Build one M03 row with a required field left empty."""
     base = m03_valid_like_row(headers, table_english_name)
     base["表英文名称"] = ""
+    base["表英文名"] = ""
     return base
 
 
@@ -161,12 +221,37 @@ def m03_multiple_error_rows(headers: list[str], table_english_name: str) -> list
     return [missing_domain, missing_system]
 
 
+def m03_duplicate_entity_rows(headers: list[str], table_english_name: str) -> list[dict[str, str]]:
+    """Build two M03 rows with the same entity key and different payload for duplicate-mode checks."""
+    first = m03_valid_like_row(headers, table_english_name)
+    second = dict(first)
+    second["表中文名称"] = f"{first.get('表中文名称', '自动化实体')}覆盖"
+    second["表中文名"] = f"{first.get('表中文名', '自动化实体')}覆盖"
+    second["表描述"] = f"{first.get('表描述', '自动化描述')} second"
+    return [first, second]
+
+
 def m03_valid_pre_import_row(headers: list[str], table_english_name: str) -> dict[str, str]:
     """Build one M03 row that should pass validation without clicking final import."""
     base = m03_valid_like_row(headers, table_english_name)
     base["表中文名称"] = f"自动化导入前校验{table_english_name[-10:]}"
+    base["表中文名"] = f"自动化导入前校验{table_english_name[-10:]}"
     base["表描述"] = "自动化导入前校验通过，不点击最终导入"
     return base
+
+
+def m03_many_valid_rows(headers: list[str], table_english_name: str, count: int) -> list[dict[str, str]]:
+    """Build ``count`` valid M03 rows for representative medium/large-file capacity checks.
+
+    每条行使用唯一表英文名后缀，确保互不重复、可整体导入。用于 M5「较大文件导入完成且列表可查询」。
+    """
+    rows: list[dict[str, str]] = []
+    for i in range(count):
+        row = m03_valid_like_row(headers, f"{table_english_name}_{i}")
+        row["表中文名称"] = f"容量测试表{i}"
+        row["表中文名"] = f"容量测试表{i}"
+        rows.append(row)
+    return rows
 
 
 def m03_valid_like_row(headers: list[str], table_english_name: str) -> dict[str, str]:
@@ -176,15 +261,22 @@ def m03_valid_like_row(headers: list[str], table_english_name: str) -> dict[str,
         {
             "一级应用域编号": "",
             "一级应用域名称": _VALID_APP_DOMAIN,
+            "一级应用域": _VALID_APP_DOMAIN,
             "应用系统编码": "",
             "应用系统名称": _VALID_APP_SYSTEM,
+            "应用系统": _VALID_APP_SYSTEM,
             "L1": _VALID_L1,
             "L2": _VALID_L2,
             "L3": _VALID_L3,
             "表中文名称": "自动化业务错误测试表",
+            "表中文名": "自动化业务错误测试表",
             "表英文名称": table_english_name,
+            "表英文名": table_english_name,
             "表描述": "自动化业务错误负向校验",
             "存储周期": "永久",
+            "存储类型": "永久",
+            "业务类型": "预发项目组",
+            "系统环境类型": "测试环境",
             "数据责任部门": "自动化测试部",
             "系统项目组": "自动化测试组",
         }
@@ -198,11 +290,11 @@ def m04_invalid_attribute_row(headers: list[str], table_english_name: str, field
     for header in headers:
         if header == "一级应用域编号":
             row[header] = ""
-        elif header == "一级应用域名称":
+        elif header in {"一级应用域名称", "一级应用域"}:
             row[header] = "自动化不存在应用域"
         elif header == "应用系统编码":
             row[header] = ""
-        elif header == "应用系统名称":
+        elif header in {"应用系统名称", "应用系统"}:
             row[header] = "自动化不存在系统"
         elif header in {"L1", "L2", "L3"}:
             row[header] = f"自动化{header}"
@@ -234,6 +326,8 @@ def m04_missing_required_field_row(
     row = m04_invalid_attribute_row(headers, table_english_name, field_english_name)
     if "一级应用域名称" in row:
         row["一级应用域名称"] = ""
+    if "一级应用域" in row:
+        row["一级应用域"] = ""
     return row
 
 
@@ -262,6 +356,15 @@ def m04_empty_boolean_flags_row(headers: list[str], field_english_name: str) -> 
     """Build one M04 row with required boolean flags left empty."""
     row = m04_valid_like_row(headers, _VALID_EXISTING_TABLE_ENGLISH_NAME, field_english_name)
     for key in ("是否主键", "是否可空", "是否外键"):
+        if key in row:
+            row[key] = ""
+    return row
+
+
+def m04_missing_security_classification_row(headers: list[str], field_english_name: str) -> dict[str, str]:
+    """Build one M04 row with required data security classification fields left empty."""
+    row = m04_valid_like_row(headers, _VALID_EXISTING_TABLE_ENGLISH_NAME, field_english_name)
+    for key in ("数据安全分类", "数据安全分级"):
         if key in row:
             row[key] = ""
     return row
@@ -302,6 +405,46 @@ def m04_optional_fields_empty_row(headers: list[str], field_english_name: str) -
     return row
 
 
+def m04_valid_attribute_row(headers: list[str], field_english_name: str) -> dict[str, str]:
+    """Build one M04 row against a known-existing entity that should pass validation and be importable."""
+    return m04_valid_like_row(headers, _VALID_EXISTING_TABLE_ENGLISH_NAME, field_english_name)
+
+
+def m04_missing_field_cn_name_row(headers: list[str], field_english_name: str) -> dict[str, str]:
+    """Build one M04 row with 字段中文名称 empty (required field)."""
+    row = m04_valid_attribute_row(headers, field_english_name)
+    for key in ("字段中文名称", "字段中文名"):
+        if key in row:
+            row[key] = ""
+    return row
+
+
+def m04_missing_field_en_name_row(headers: list[str], field_english_name: str) -> dict[str, str]:
+    """Build one M04 row with 字段英文名称 empty (required field)."""
+    row = m04_valid_attribute_row(headers, field_english_name)
+    for key in ("字段英文名称", "字段英文名"):
+        if key in row:
+            row[key] = ""
+    return row
+
+
+def m04_missing_field_definition_row(headers: list[str], field_english_name: str) -> dict[str, str]:
+    """Build one M04 row with 字段类型 empty (one of the required definition fields)."""
+    row = m04_valid_attribute_row(headers, field_english_name)
+    if "字段类型" in row:
+        row["字段类型"] = ""
+    return row
+
+
+def m04_boolean_flags_wrong_value_row(headers: list[str], field_english_name: str) -> dict[str, str]:
+    """Build one M04 row with 是否主键/是否可空/是否外键 set to a non 是/否 value."""
+    row = m04_valid_attribute_row(headers, field_english_name)
+    for key in ("是否主键", "是否可空", "是否外键"):
+        if key in row:
+            row[key] = "错误"
+    return row
+
+
 def m04_locator_mismatch_row(
     headers: list[str],
     table_english_name: str,
@@ -309,7 +452,10 @@ def m04_locator_mismatch_row(
 ) -> dict[str, str]:
     """Build one M04 row where app domain and app system should not correspond."""
     row = m04_valid_like_row(headers, table_english_name, field_english_name)
-    row["一级应用域名称"] = _MISMATCH_APP_DOMAIN
+    if "一级应用域名称" in row:
+        row["一级应用域名称"] = _MISMATCH_APP_DOMAIN
+    if "一级应用域" in row:
+        row["一级应用域"] = _MISMATCH_APP_DOMAIN
     _set_first_existing_key(row, {"表英文名称", "表英文名"}, _VALID_EXISTING_TABLE_ENGLISH_NAME)
     return row
 
@@ -320,11 +466,11 @@ def m04_valid_like_row(headers: list[str], table_english_name: str, field_englis
     for header in headers:
         if header == "一级应用域编号":
             row[header] = ""
-        elif header == "一级应用域名称":
+        elif header in {"一级应用域名称", "一级应用域"}:
             row[header] = _VALID_APP_DOMAIN
         elif header == "应用系统编码":
             row[header] = ""
-        elif header == "应用系统名称":
+        elif header in {"应用系统名称", "应用系统"}:
             row[header] = _VALID_APP_SYSTEM
         elif header == "L1":
             row[header] = _VALID_L1
@@ -408,6 +554,10 @@ def _default_value_for_header(header: str) -> str:
 def _ascii_token(value: str) -> str:
     normalized = re.sub(r"[^A-Za-z0-9]+", "_", value).strip("_").lower()
     return normalized or "auto_value"
+
+
+def _safe_token(value: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_]+", "_", value).strip("_").lower() or "auto"
 
 
 def _worksheet_xml(rows: list[list[str]]) -> str:

@@ -1635,6 +1635,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - readonly
     env_policy:
       uat: true
       pre: true
@@ -1658,6 +1659,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - readonly
     env_policy:
       uat: true
       pre: true
@@ -1681,6 +1683,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1697,13 +1700,14 @@ assets:
       requirement: 数据资源导入功能优化以及性能优化V2
       source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
       manual_case_id: M02-04
-    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02RequiredFieldsAndDomainErrors::test_m02_04_missing_domain_in_db_shows_error
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02RequiredFieldsAndDomainErrors::test_m02_04_parametrized_validation_errors
     page_objects:
       - pages/dataresources/layered_import_page.py
     markers:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1727,6 +1731,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1750,6 +1755,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1773,6 +1779,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1796,6 +1803,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1812,13 +1820,14 @@ assets:
       requirement: 数据资源导入功能优化以及性能优化V2
       source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
       manual_case_id: M02-09
-    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02DuplicateRulesAndModes::test_m02_09_cross_domain_same_layer_name_passes
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02DuplicateRulesAndModes::test_m02_09_compliant_variants_pass
     page_objects:
       - pages/dataresources/layered_import_page.py
     markers:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1842,6 +1851,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1858,13 +1868,14 @@ assets:
       requirement: 数据资源导入功能优化以及性能优化V2
       source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
       manual_case_id: M02-11
-    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02DuplicateRulesAndModes::test_m02_11_duplicate_rows_skip_mode
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02DuplicateRulesAndModes::test_m02_11_duplicate_modes_selection[跳过]
     page_objects:
       - pages/dataresources/layered_import_page.py
     markers:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1881,13 +1892,14 @@ assets:
       requirement: 数据资源导入功能优化以及性能优化V2
       source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
       manual_case_id: M02-12
-    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02DuplicateRulesAndModes::test_m02_12_duplicate_rows_overwrite_mode
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02DuplicateRulesAndModes::test_m02_11_duplicate_modes_selection[覆盖]
     page_objects:
       - pages/dataresources/layered_import_page.py
     markers:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1911,6 +1923,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1934,6 +1947,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -1958,6 +1972,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - readonly
     env_policy:
       uat: true
       pre: true
@@ -1981,6 +1996,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - readonly
     env_policy:
       uat: true
       pre: true
@@ -2004,6 +2020,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2027,6 +2044,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2050,6 +2068,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2073,6 +2092,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2096,6 +2116,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2119,6 +2140,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2142,6 +2164,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2165,6 +2188,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2188,6 +2212,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2211,6 +2236,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2235,6 +2261,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - readonly
     env_policy:
       uat: true
       pre: true
@@ -2258,6 +2285,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - readonly
     env_policy:
       uat: true
       pre: true
@@ -2281,6 +2309,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2290,8 +2319,8 @@ assets:
   - asset_id: UI-LAYERED-M04-004
     module: 分层数据资源导入
     title: M04-04 表英文名实体在库中不存在输出错误数据行
-    lifecycle: uat_automated
-    automation_status: automated
+    lifecycle: candidate
+    automation_status: needs_stabilization
     source:
       source_type: requirement
       requirement: 数据资源导入功能优化以及性能优化V2
@@ -2304,6 +2333,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2313,8 +2343,8 @@ assets:
   - asset_id: UI-LAYERED-M04-005
     module: 分层数据资源导入
     title: M04-05 是否主键/可空/外键非是否或为空校验拦截
-    lifecycle: uat_automated
-    automation_status: automated
+    lifecycle: candidate
+    automation_status: needs_stabilization
     source:
       source_type: requirement
       requirement: 数据资源导入功能优化以及性能优化V2
@@ -2327,6 +2357,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2336,8 +2367,8 @@ assets:
   - asset_id: UI-LAYERED-M04-006
     module: 分层数据资源导入
     title: M04-06 数据安全分类与安全分级为空校验拦截
-    lifecycle: uat_automated
-    automation_status: automated
+    lifecycle: candidate
+    automation_status: needs_stabilization
     source:
       source_type: requirement
       requirement: 数据资源导入功能优化以及性能优化V2
@@ -2350,6 +2381,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2359,8 +2391,8 @@ assets:
   - asset_id: UI-LAYERED-M04-007
     module: 分层数据资源导入
     title: M04-07 是否本系统产生的数据为空放行校验
-    lifecycle: uat_automated
-    automation_status: automated
+    lifecycle: candidate
+    automation_status: needs_stabilization
     source:
       source_type: requirement
       requirement: 数据资源导入功能优化以及性能优化V2
@@ -2373,6 +2405,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2382,8 +2415,8 @@ assets:
   - asset_id: UI-LAYERED-M04-008
     module: 分层数据资源导入
     title: M04-08 编码/长度/外键关联/来源系统等非必填放行
-    lifecycle: uat_automated
-    automation_status: automated
+    lifecycle: candidate
+    automation_status: needs_stabilization
     source:
       source_type: requirement
       requirement: 数据资源导入功能优化以及性能优化V2
@@ -2396,6 +2429,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2404,7 +2438,7 @@ assets:
 
   - asset_id: UI-LAYERED-M04-009
     module: 分层数据资源导入
-    title: M04-09 数据项属性列表字段中英文名与安全分级核验
+    title: M04-09 数据项属性导入与字段英文名检索核验
     lifecycle: uat_automated
     automation_status: automated
     source:
@@ -2412,13 +2446,14 @@ assets:
       requirement: 数据资源导入功能优化以及性能优化V2
       source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
       manual_case_id: M04-09
-    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04ImportResultAndAttributes::test_m04_09_attribute_list_details_verify
+    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04ImportResultAndAttributes::test_m04_09_attribute_import_and_search
     page_objects:
       - pages/dataresources/layered_import_page.py
     markers:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2443,6 +2478,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2466,6 +2502,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2489,6 +2526,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2512,6 +2550,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2535,6 +2574,7 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
@@ -2558,12 +2598,156 @@ assets:
       - dataresources
       - layered_import
       - regression
+      - write
     env_policy:
       uat: true
       pre: true
       prod_default: false
       prod_explicit: false
 
+  - asset_id: UI-LAYERED-M5-004
+    module: 分层数据资源导入
+    title: M5-04 较大文件容量代表性导入完成且列表可查询
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M5-04
+    test_path: tests/layered_data_resource_import/test_import_performance.py::TestImportProgressAndVolume::test_m5_04_medium_file_import_and_search
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-M06-001
+    module: 分层数据资源导入
+    title: M06-01 数据分层设置页推送门户入口可达（只读）
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M06-01
+    test_path: tests/layered_data_resource_import/test_m06_portal_push.py::TestM06PortalPush::test_m06_01_portal_push_entry_reachable
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - readonly
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-M02-015
+    module: 分层数据资源导入
+    title: M02-10b 不同 L1 下出现相同 L2 名称不判重复（重复键为完整路径）
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M02-10b
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02DuplicateRulesAndModes::test_m02_10b_diff_l1_same_l2_passes
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-M04-010
+    module: 分层数据资源导入
+    title: M04-10 字段中文名/英文名为空校验拦截
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M04-10
+    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04RequiredAndEnumValidation::test_m04_field_name_required_blocked
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-M04-011
+    module: 分层数据资源导入
+    title: M04-11 字段业务规则/缺省值/类型/取值范围为空校验拦截
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M04-11
+    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04RequiredAndEnumValidation::test_m04_field_definition_required_blocked
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+
+  - asset_id: UI-LAYERED-M04-012
+    module: 分层数据资源导入
+    title: M04-12 是否主键/可空/外键填写非是/否校验拦截
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 数据资源导入功能优化以及性能优化V2
+      source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
+      manual_case_id: M04-12
+    test_path: tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04RequiredAndEnumValidation::test_m04_boolean_flags_wrong_value_blocked
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
 
 
 

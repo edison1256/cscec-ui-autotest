@@ -1,41 +1,41 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-08-17 10:31。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-08-17 16:12。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：123
-- **生产默认收集（smoke + readonly）**：49 / 123
-- **被默认排除（write / destructive）**：74
+- **总用例数**：141
+- **生产默认收集（smoke + readonly）**：49 / 141
+- **被默认排除（write / destructive）**：92
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：103
+- **登记资产总数**：109
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
-| uat_automated | 90 |
+| uat_automated | 91 |
+| candidate | 10 |
 | prod_regression | 8 |
-| candidate | 5 |
 
 ### 按自动化状态（automation_status）
 
 | automation_status | 数量 |
 | --- | --- |
-| automated | 98 |
-| needs_stabilization | 5 |
+| automated | 99 |
+| needs_stabilization | 10 |
 
 ### 按模块（module）
 
 | module | 数量 |
 | --- | --- |
-| 分层数据资源导入 | 41 |
+| 分层数据资源导入 | 47 |
 | 数据资源导入功能优化 | 24 |
 | 移动端 | 11 |
 | 控制台 | 4 |
@@ -50,7 +50,7 @@
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **5** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **10** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -59,6 +59,11 @@
 | UI-REG-OPS-001 | 运维巡检 | 人工巡检页面可访问 | `tests/ops/test_manual_inspection.py::TestManualInspection::test_inspection_page_accessible` | 弹性导航已接入：菜单点击→直链兜底→入口未暴露自动 skip。2026-08-13 UAT 验证：运维巡检菜单未暴露，已安全 skip；待确认入口路径或填入 config DEEP_LINKS['manual_inspection'] 后晋级。 |
 | UI-WRITE-OPS-001 | 运维巡检 | 执行人工巡检保存流程 | `tests/ops/test_manual_inspection.py::TestManualInspection::test_do_inspection` | 写入类用例，默认仅 UAT/PRE；弹性导航已接入，入口未暴露时自动 skip 避免脏写；需确认巡检项目测试数据和入口后再执行。 |
 | UI-REQ-DATARESOURCE-M04-009 | 数据资源导入功能优化 | M04 是否本系统产生的数据非是/否当前 UAT 仍拦截 | `tests/dataresources/test_m03_m04_import_contracts.py::TestM03M04ImportA3PositiveContracts::test_m04_non_yes_no_source_system_flag_does_not_block_validation` | 受控监控项（strict xfail）。根因：后端尚未放开「是否本系统产生的数据」的非 是/否 取值。转正条件 = UAT 放开后该用例 XPASS（strict xfail 下 XPASS 判失败），届时移除 test_m03_m04_import_contracts.py 中该用例的 @pytest.mark.xfail 装饰器，转正为正式断言。prod_default/prod_explicit 均关闭，不参与生产套件。 |
+| UI-LAYERED-M04-004 | 分层数据资源导入 | M04-04 表英文名实体在库中不存在输出错误数据行 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04EntityLocatorErrors::test_m04_04_missing_entity_shows_error` |  |
+| UI-LAYERED-M04-005 | 分层数据资源导入 | M04-05 是否主键/可空/外键非是否或为空校验拦截 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04RequiredAndEnumValidation::test_m04_05_boolean_flags_enum_validation` |  |
+| UI-LAYERED-M04-006 | 分层数据资源导入 | M04-06 数据安全分类与安全分级为空校验拦截 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04RequiredAndEnumValidation::test_m04_06_security_classification_required` |  |
+| UI-LAYERED-M04-007 | 分层数据资源导入 | M04-07 是否本系统产生的数据为空放行校验 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04PassAndOptionalValidation::test_m04_07_source_system_flag_empty_passes` |  |
+| UI-LAYERED-M04-008 | 分层数据资源导入 | M04-08 编码/长度/外键关联/来源系统等非必填放行 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04PassAndOptionalValidation::test_m04_08_optional_fields_pass` |  |
 
 ## 4. 复用与维护约定
 

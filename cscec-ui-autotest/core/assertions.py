@@ -29,19 +29,19 @@ class AssertionHelper:
         return self
 
     def any_text_visible(self, texts: list[str], timeout: int | None = None) -> "AssertionHelper":
-        last_error: Exception | None = None
-        deadline = self.page.evaluate("Date.now()") + (timeout or settings.ACTION_TIMEOUT)
-
+        # 1. 先快速检查已有可见项
         for text in texts:
-            remaining = max(int(deadline - self.page.evaluate("Date.now()")), 1000)
-            try:
-                self.page.wait_for_selector(f"text={text}", timeout=remaining)
+            if self.page.locator(f"text={text}").first.is_visible():
                 logger.debug(f"[Assert] text visible: {text}")
                 return self
-            except Exception as exc:
-                last_error = exc
 
-        raise AssertionError(f"None of these texts are visible: {texts}. Last error: {last_error}")
+        # 2. 结合联合 locator 等待任意一个可见
+        combined_selector = ", ".join([f"text={t}" for t in texts])
+        try:
+            self.page.locator(combined_selector).first.wait_for(state="visible", timeout=timeout or settings.ACTION_TIMEOUT)
+            return self
+        except Exception as exc:
+            raise AssertionError(f"None of these texts are visible: {texts}. Last error: {exc}")
 
     def text_hidden(self, text: str) -> "AssertionHelper":
         assert not self.page.locator(f"text={text}").first.is_visible(), f"Text should be hidden: {text}"
