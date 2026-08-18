@@ -2,22 +2,56 @@
 
 from __future__ import annotations
 
+import os
 import re
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree
 from xml.sax.saxutils import escape
 
+from config.settings import settings
+
 
 _MAIN_NS = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
-_VALID_APP_DOMAIN = "测试test"
-_VALID_LAYER_APP_DOMAIN = "测试test260812"
-_MISMATCH_APP_DOMAIN = "测试2"
-_VALID_APP_SYSTEM = "测试test123"
-_VALID_EXISTING_TABLE_ENGLISH_NAME = "shujuzichanceSHI"
-_VALID_L1 = "测试使用"
-_VALID_L2 = "测试"
-_VALID_L3 = "主线程1"
+
+
+def _current_env() -> str:
+    return (os.getenv("ENV") or settings.ENV or "uat").lower()
+
+
+# 环境参考值：UAT 与 PRE 库数据不同，动态构造器需按环境取合法的域/系统/分层/已存在实体。
+# PRE 值取自 datasets/pre/layered_import/manifest.yaml 与 pre_hierarchy.json 基线；
+# 其中 mismatch_domain / existing_table_en 两处仍需对照真实 PRE 库确认。
+_UAT_REFS = {
+    "layer_app_domain": "测试test260812",
+    "app_domain": "测试test",
+    "app_system": "测试test123",
+    "l1": "测试使用",
+    "l2": "测试",
+    "l3": "主线程1",
+    "mismatch_domain": "测试2",
+    "existing_table_en": "shujuzichanceSHI",
+}
+_PRE_REFS = {
+    "layer_app_domain": "建造一体化",
+    "app_domain": "人力资源",
+    "app_system": "中国建筑科技管理系统",
+    "l1": "组织管理",
+    "l2": "单位管理",
+    "l3": "组织信息集管理",
+    "mismatch_domain": "建造一体化",  # TODO 待确认 PRE 下与「人力资源」域不对应的系统所属域
+    "existing_table_en": "pre_test_table_01",  # TODO 待确认 PRE 库中已存在的实体表英文名
+}
+_REFS = _PRE_REFS if _current_env() == "pre" else _UAT_REFS
+
+_VALID_APP_DOMAIN = _REFS["app_domain"]
+_VALID_LAYER_APP_DOMAIN = _REFS["layer_app_domain"]
+_MISMATCH_APP_DOMAIN = _REFS["mismatch_domain"]
+_VALID_APP_SYSTEM = _REFS["app_system"]
+_VALID_EXISTING_TABLE_ENGLISH_NAME = _REFS["existing_table_en"]
+_VALID_L1 = _REFS["l1"]
+_VALID_L2 = _REFS["l2"]
+_VALID_L3 = _REFS["l3"]
 
 
 def read_first_sheet_headers(workbook_path: Path) -> list[str]:

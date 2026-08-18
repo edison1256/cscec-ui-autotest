@@ -45,7 +45,7 @@ def test_get_dataset_file_path_uses_desktop_original_file_when_explicitly_enable
 
 def test_get_dataset_file_path_prefers_pre_dataset_for_pre(tmp_path: Path, monkeypatch):
     project_root = tmp_path / "datasets"
-    pre_dir = project_root / "pre"
+    pre_dir = project_root / "pre" / "layered_import"
     desktop_dir = tmp_path / "desktop"
     pre_dir.mkdir(parents=True)
     desktop_dir.mkdir()

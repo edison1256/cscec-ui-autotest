@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from pathlib import Path
@@ -16,9 +17,9 @@ from pages.portal.portal_home_page import PortalHomePage
 
 logger = get_logger("layered_import_page")
 
-PROJECT_DATASET_DIR = Path(__file__).resolve().parent.parent.parent / "test_assets" / "datasets" / "layered_import"
+BASE_DATASET_DIR = Path(__file__).resolve().parent.parent.parent / "test_assets" / "datasets"
 FALLBACK_DESKTOP_DIR = Path(r"C:\Users\CFD\Desktop\260812")
-DEFAULT_TEST_DATA_DIR = PROJECT_DATASET_DIR
+DEFAULT_TEST_DATA_DIR = BASE_DATASET_DIR / "layered_import"
 
 
 class LayeredImportPage(BasePage):
@@ -211,11 +212,7 @@ class LayeredImportPage(BasePage):
         """上传指定测试 Excel 文件到当前导入弹窗。"""
         path = Path(file_name_or_path)
         if not path.is_absolute():
-            candidate = PROJECT_DATASET_DIR / file_name_or_path
-            if candidate.exists():
-                path = candidate
-            else:
-                path = FALLBACK_DESKTOP_DIR / file_name_or_path
+            path = self._resolve_dataset_file(str(file_name_or_path))
         if not path.exists():
             raise FileNotFoundError(f"测试导入文件不存在: {path}")
 
@@ -227,6 +224,19 @@ class LayeredImportPage(BasePage):
         self.nav.wait_ready()
         logger.info(f"[上传文件] 成功选择文件: {path.name}")
         return self
+
+    def _resolve_dataset_file(self, filename: str) -> Path:
+        """按环境解析数据文件名：pre→pre/layered_import，uat→layered_import，最后桌面兜底。"""
+        env = (os.getenv("ENV") or settings.ENV or "uat").lower()
+        candidates: list[Path] = []
+        if env == "pre":
+            candidates.append(BASE_DATASET_DIR / "pre" / "layered_import" / filename)
+        candidates.append(BASE_DATASET_DIR / "layered_import" / filename)
+        candidates.append(FALLBACK_DESKTOP_DIR / filename)
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+        return candidates[0]
 
     def click_validate_table(self) -> "LayeredImportPage":
         """点击导入弹窗中的「校验表格」或「校验」按钮。"""

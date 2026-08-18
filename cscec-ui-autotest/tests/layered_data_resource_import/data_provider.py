@@ -22,7 +22,7 @@ def get_current_dataset_dir() -> Path:
     """Return dataset directory for current environment."""
     env = (os.getenv("ENV") or settings.ENV or "uat").lower()
     if env == "pre":
-        pre_dir = BASE_DATASET_DIR / "pre"
+        pre_dir = BASE_DATASET_DIR / "pre" / "layered_import"
         if pre_dir.exists():
             return pre_dir
     return BASE_DATASET_DIR / "layered_import"
