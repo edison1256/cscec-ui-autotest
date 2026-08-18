@@ -156,6 +156,18 @@ self.antd.click_save_button()
 - `test_assets/incoming/`：新需求黑盒用例转换出的候选清单。
 - `test_assets/schema/ui-case-asset.schema.json`：资产字段约束。
 
+## 导入测试数据策略
+
+UAT/PRE 写入类导入用例默认使用项目内 `test_assets/datasets/` 数据，并优先在运行时根据下载模板动态生成唯一 Excel，避免第二次执行时被历史数据触发重复校验。
+
+固定桌面目录 `C:\Users\CFD\Desktop\260812` 仅作为本机调试兜底；需要临时启用时显式设置：
+
+```powershell
+$env:UI_IMPORT_USE_DESKTOP_DATASETS="true"
+```
+
+重复校验用例不依赖历史环境数据：表内重复在同一个 Excel 内构造重复行，库内重复应在同一个测试内先导入唯一基线，再用相同业务 key 二次导入触发重复。
+
 ## 清理策略
 
 可直接清理的运行产物：

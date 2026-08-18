@@ -13,6 +13,7 @@ build/
 
 # Playwright
 auth_state.json
+auth_states/
 auth_states/*.json
 .playwright/
 

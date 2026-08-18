@@ -20,8 +20,11 @@ def _current_env() -> str:
 
 
 # 环境参考值：UAT 与 PRE 库数据不同，动态构造器需按环境取合法的域/系统/分层/已存在实体。
-# PRE 值取自 datasets/pre/layered_import/manifest.yaml 与 pre_hierarchy.json 基线；
-# 其中 mismatch_domain / existing_table_en 两处仍需对照真实 PRE 库确认。
+# PRE 值来源：2026-08-18 实测 irp-pre.cscec.com（数据资源列表 + 数据分层设置树 + test0001 编辑表单）。
+# 实测结论：PRE 的「人力资源」域为空、「中国建筑科技管理系统」系统不存在；
+# PRE 实际有「测试test」域 +「测试test123」系统 + 实体「test0001」（与 UAT 同源），
+# 另有「建造一体化」域 +「数字建造生产线」系统（生产类数据）。
+# test0001 分层归属（编辑表单实测）：一级应用域=测试test，L1=test001，L2=test002，L3=test003。
 _UAT_REFS = {
     "layer_app_domain": "测试test260812",
     "app_domain": "测试test",
@@ -33,14 +36,14 @@ _UAT_REFS = {
     "existing_table_en": "shujuzichanceSHI",
 }
 _PRE_REFS = {
-    "layer_app_domain": "建造一体化",
-    "app_domain": "人力资源",
-    "app_system": "中国建筑科技管理系统",
-    "l1": "组织管理",
-    "l2": "单位管理",
-    "l3": "组织信息集管理",
-    "mismatch_domain": "建造一体化",  # TODO 待确认 PRE 下与「人力资源」域不对应的系统所属域
-    "existing_table_en": "pre_test_table_01",  # TODO 待确认 PRE 库中已存在的实体表英文名
+    "layer_app_domain": "测试test",        # PRE 无「测试test260812」，M02 分层域用「测试test」
+    "app_domain": "测试test",              # PRE「人力资源」域为空，改用有实体的「测试test」
+    "app_system": "测试test123",           # PRE「中国建筑科技管理系统」不存在，改用「测试test123」
+    "l1": "test001",                       # 实测 test0001 编辑表单 L1
+    "l2": "test002",                       # 实测 test0001 编辑表单 L2
+    "l3": "test003",                       # 实测 test0001 编辑表单 L3
+    "mismatch_domain": "建造一体化",       # PRE 真实域，测试test123 不属其
+    "existing_table_en": "test0001",       # 实测存在（测试test/测试test123 下）
 }
 _REFS = _PRE_REFS if _current_env() == "pre" else _UAT_REFS
 

@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import ast
+import re
 import sys
 from pathlib import Path
 
@@ -41,6 +43,45 @@ STATUSES = {
 }
 
 ENV_FIELDS = {"uat", "pre", "prod_default", "prod_explicit"}
+PROJECT_DIR = Path(__file__).resolve().parent.parent
+
+
+def _strip_param_suffix(node_id: str) -> str:
+    return re.sub(r"\[.*\]$", "", node_id)
+
+
+def _validate_test_path(test_path: str) -> str | None:
+    node_id = _strip_param_suffix(test_path)
+    parts = node_id.split("::")
+    file_path = PROJECT_DIR / parts[0]
+    if not file_path.exists():
+        return f"test_path file does not exist: {test_path}"
+    if file_path.suffix != ".py" or len(parts) == 1:
+        return None
+
+    try:
+        tree = ast.parse(file_path.read_text(encoding="utf-8"))
+    except SyntaxError as exc:
+        return f"test_path file cannot be parsed: {test_path}: {exc}"
+
+    classes = {
+        node.name: {item.name for item in node.body if isinstance(item, ast.FunctionDef)}
+        for node in tree.body
+        if isinstance(node, ast.ClassDef)
+    }
+    module_functions = {node.name for node in tree.body if isinstance(node, ast.FunctionDef)}
+
+    if len(parts) == 2:
+        target = parts[1]
+        if target in classes or target in module_functions:
+            return None
+        return f"test_path target does not exist: {test_path}"
+
+    class_name = parts[1]
+    function_name = parts[2]
+    if function_name in classes.get(class_name, set()):
+        return None
+    return f"test_path function does not exist: {test_path}"
 
 
 def parse_args() -> argparse.Namespace:
@@ -89,6 +130,15 @@ def main() -> int:
             status = asset.get("automation_status")
             if status not in STATUSES:
                 errors.append(f"{asset_id}: invalid automation_status {status}")
+
+            test_path = asset.get("test_path")
+            if status == "automated":
+                if not isinstance(test_path, str) or not test_path.strip():
+                    errors.append(f"{asset_id}: automated assets must include test_path")
+                else:
+                    test_path_error = _validate_test_path(test_path)
+                    if test_path_error:
+                        errors.append(f"{asset_id}: {test_path_error}")
 
             markers = asset.get("markers")
             if not isinstance(markers, list) or not markers:
