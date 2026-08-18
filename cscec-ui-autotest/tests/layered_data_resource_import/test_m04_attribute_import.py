@@ -15,7 +15,6 @@ import pytest
 
 from pages.dataresources.layered_import_page import LayeredImportPage
 from tests.dataresources.import_workbooks import (
-    create_workbook_from_headers,
     m04_boolean_flags_wrong_value_row,
     m04_empty_boolean_flags_row,
     m04_missing_entity_row,
@@ -29,6 +28,7 @@ from tests.dataresources.import_workbooks import (
     read_first_sheet_headers,
 )
 from tests.layered_data_resource_import.data_provider import import_run_id
+from tests.layered_data_resource_import.workflow_helpers import build_upload_validate
 
 
 @pytest.mark.dataresources
@@ -83,17 +83,10 @@ class TestM04EntityLocatorErrors:
         """M04-04: 表英文名称对应实体在库中不存在，断言输出错误数据行。"""
         run_id = import_run_id("m04_missing_entity")
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m04_missing_entity_row(headers, f"auto_table_{run_id}", f"auto_field_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m04_missing_entity_row(h, f"auto_table_{run_id}", f"auto_field_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["校验失败", "错误", "行"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
@@ -110,17 +103,10 @@ class TestM04RequiredAndEnumValidation:
         """M04-05: 是否主键、是否可空、是否外键填写非“是/否”或为空，断言业务校验不通过。"""
         run_id = import_run_id("m04_bool")
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m04_empty_boolean_flags_row(headers, f"auto_field_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m04_empty_boolean_flags_row(h, f"auto_field_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["校验失败", "错误", "行", "是否主键"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
@@ -129,17 +115,10 @@ class TestM04RequiredAndEnumValidation:
         """M04-06: 数据安全分类、数据安全分级为空，断言业务校验不通过。"""
         run_id = import_run_id("m04_security")
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m04_missing_security_classification_row(headers, f"auto_field_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m04_missing_security_classification_row(h, f"auto_field_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["校验失败", "错误", "行"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
@@ -153,17 +132,10 @@ class TestM04RequiredAndEnumValidation:
         """M04: 字段中文名/英文名为空，断言业务校验不通过并禁止导入。"""
         run_id = import_run_id("m04_fieldname")
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            builder(headers, f"auto_field_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: builder(h, f"auto_field_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["校验失败", "错误", "行"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
@@ -172,17 +144,10 @@ class TestM04RequiredAndEnumValidation:
         """M04: 字段类型为空（业务规则/缺省值/类型/取值范围之一），断言业务校验不通过。"""
         run_id = import_run_id("m04_fieldtype")
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m04_missing_field_definition_row(headers, f"auto_field_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m04_missing_field_definition_row(h, f"auto_field_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["校验失败", "错误", "行"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
@@ -191,17 +156,10 @@ class TestM04RequiredAndEnumValidation:
         """M04: 是否主键/是否可空/是否外键填写非“是/否”，断言业务校验不通过。"""
         run_id = import_run_id("m04_boolval")
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m04_boolean_flags_wrong_value_row(headers, f"auto_field_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m04_boolean_flags_wrong_value_row(h, f"auto_field_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_show_import_errors(["校验失败", "错误", "行"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
@@ -218,17 +176,10 @@ class TestM04PassAndOptionalValidation:
         """M04-07: 是否本系统产生的数据为空，断言不因空值业务校验不通过。"""
         run_id = import_run_id("m04_source_empty")
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m04_source_system_flag_empty_row(headers, f"auto_field_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m04_source_system_flag_empty_row(h, f"auto_field_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.close_import_dialog()
 
@@ -236,17 +187,10 @@ class TestM04PassAndOptionalValidation:
         """M04-08: 一级应用域编码、应用系统编码、数据长度、外键关联信息、数据来源等为空不拦截导入。"""
         run_id = import_run_id("m04_optional")
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m04_optional_fields_empty_row(headers, f"auto_field_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m04_optional_fields_empty_row(h, f"auto_field_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.close_import_dialog()
 
@@ -267,17 +211,10 @@ class TestM04ImportResultAndAttributes:
         run_id = import_run_id("m04_attr")
         field_english_name = f"auto_field_{run_id}"
         layered_import_page.open_m04_attribute_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m04_valid_attribute_row(headers, field_english_name),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m04_valid_attribute_row(h, field_english_name),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.click_confirm_import()
         layered_import_page.should_show_import_finished()

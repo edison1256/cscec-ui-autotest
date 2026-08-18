@@ -14,13 +14,13 @@ import pytest
 
 from pages.dataresources.layered_import_page import LayeredImportPage
 from tests.dataresources.import_workbooks import (
-    create_workbook_from_headers,
     m02_diff_l1_same_l2_pass_rows,
     m02_duplicate_layer_rows,
     m02_unique_layer_row,
     read_first_sheet_headers,
 )
 from tests.layered_data_resource_import.data_provider import get_m02_dataset, import_run_id
+from tests.layered_data_resource_import.workflow_helpers import build_upload_validate
 
 
 @pytest.mark.dataresources
@@ -140,17 +140,10 @@ class TestM02DuplicateRulesAndModes:
         """M02-08: 校验表格时，如果一级应用域名称+L1+L2+L3全部相同，系统判定为重复数据。"""
         run_id = import_run_id("m02_dup")
         layered_import_page.open_m02_layer_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m02_duplicate_layer_rows(headers, run_id),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m02_duplicate_layer_rows(h, run_id),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         dialog_text = layered_import_page.get_dialog_text()
         assert any(k in dialog_text for k in ["重复", "覆盖", "跳过"]), f"未识别重复数据，当前内容: {dialog_text}"
         layered_import_page.close_import_dialog()
@@ -181,17 +174,10 @@ class TestM02DuplicateRulesAndModes:
         """M02: 不同 L1 下出现相同 L2 名称，断言不判重复、允许通过校验（重复键为完整路径）。"""
         run_id = import_run_id("m02_l2pass")
         layered_import_page.open_m02_layer_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m02_diff_l1_same_l2_pass_rows(headers, run_id),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m02_diff_l1_same_l2_pass_rows(h, run_id),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.close_import_dialog()
 
@@ -204,17 +190,10 @@ class TestM02DuplicateRulesAndModes:
         """
         run_id = import_run_id(f"m02_{mode}")
         layered_import_page.open_m02_layer_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m02_duplicate_layer_rows(headers, run_id),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m02_duplicate_layer_rows(h, run_id),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.select_conflict_mode(mode)
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.click_confirm_import()
@@ -233,13 +212,10 @@ class TestM02ImportResultAndTree:
         """M02-13: 标准 M02 文件导入前校验通过后，验证当前分层树中基线 L1/L2/L3 层级可见。"""
         run_id = import_run_id("m02_tree")
         layered_import_page.open_m02_layer_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        row = m02_unique_layer_row(headers, run_id)
-        import_file = create_workbook_from_headers(tmp_path, f"{run_id}.xlsx", headers, row)
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
+        _, row = build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m02_unique_layer_row(h, run_id),
+        )
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.click_confirm_import()
         layered_import_page.should_show_import_finished()

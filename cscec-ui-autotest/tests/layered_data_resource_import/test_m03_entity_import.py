@@ -21,6 +21,7 @@ from tests.dataresources.import_workbooks import (
     read_first_sheet_headers,
 )
 from tests.layered_data_resource_import.data_provider import get_m03_dataset, import_run_id
+from tests.layered_data_resource_import.workflow_helpers import build_upload_validate
 
 
 @pytest.mark.dataresources
@@ -147,17 +148,10 @@ class TestM03DuplicateAndConflictModes:
         """M03-09: 实体全元组相同判定重复，选择「重复跳过」并真实提交导入，断言导入完成。"""
         run_id = import_run_id("m03_dup_skip")
         layered_import_page.open_m03_entity_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m03_duplicate_entity_rows(headers, f"auto_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m03_duplicate_entity_rows(h, f"auto_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.select_conflict_mode("跳过")
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.click_confirm_import()
@@ -168,17 +162,10 @@ class TestM03DuplicateAndConflictModes:
         """M03-10: 实体全元组相同判定重复，选择「重复覆盖」并真实提交导入，断言导入完成。"""
         run_id = import_run_id("m03_dup_overwrite")
         layered_import_page.open_m03_entity_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m03_duplicate_entity_rows(headers, f"auto_{run_id}"),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m03_duplicate_entity_rows(h, f"auto_{run_id}"),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.select_conflict_mode("覆盖")
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.click_confirm_import()
@@ -198,13 +185,10 @@ class TestM03ImportResultAndList:
         run_id = import_run_id("m03_entity")
         table_english_name = f"auto_{run_id}"
         layered_import_page.open_m03_entity_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        row = m03_valid_like_row(headers, table_english_name)
-        import_file = create_workbook_from_headers(tmp_path, f"{run_id}.xlsx", headers, row)
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m03_valid_like_row(h, table_english_name),
+        )
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.click_confirm_import()
         layered_import_page.should_show_import_finished()

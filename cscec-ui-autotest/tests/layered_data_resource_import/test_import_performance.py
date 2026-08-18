@@ -14,13 +14,12 @@ import pytest
 
 from pages.dataresources.layered_import_page import LayeredImportPage
 from tests.dataresources.import_workbooks import (
-    create_workbook_from_headers,
     m02_unique_layer_row,
     m03_many_valid_rows,
     m03_valid_like_row,
-    read_first_sheet_headers,
 )
 from tests.layered_data_resource_import.data_provider import get_m02_dataset, get_m03_dataset, import_run_id
+from tests.layered_data_resource_import.workflow_helpers import build_upload_validate
 
 
 @pytest.mark.dataresources
@@ -35,17 +34,10 @@ class TestImportCommonBehaviors:
         run_id = import_run_id("m1_no_write")
         table_english_name = f"auto_{run_id}"
         layered_import_page.open_m03_entity_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m03_valid_like_row(headers, table_english_name),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m03_valid_like_row(h, table_english_name),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.close_import_dialog()
 
@@ -90,17 +82,10 @@ class TestImportProgressAndVolume:
         """M5-01: 校验通过后点击导入，断言导入过程中展示进度条/进度状态且页面保持响应无白屏卡死。"""
         run_id = import_run_id("m5_progress")
         layered_import_page.open_m02_layer_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m02_unique_layer_row(headers, run_id),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m02_unique_layer_row(h, run_id),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.click_confirm_import()
         layered_import_page.should_show_progress_bar()
@@ -112,17 +97,10 @@ class TestImportProgressAndVolume:
         run_id = import_run_id("m5_rows")
         expected_rows = 3
         layered_import_page.open_m03_entity_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m03_many_valid_rows(headers, f"auto_{run_id}", expected_rows),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m03_many_valid_rows(h, f"auto_{run_id}", expected_rows),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         dialog_text = layered_import_page.get_dialog_text()
         counts = [int(m) for m in re.findall(r"(\d+)\s*(?:行|条)", dialog_text)]
         assert any(c == expected_rows for c in counts), (
@@ -151,17 +129,10 @@ class TestImportProgressAndVolume:
         table_prefix = f"auto_{run_id}"
         row_count = 200
         layered_import_page.open_m03_entity_import_dialog()
-        template_file = layered_import_page.download_template(tmp_path)
-        headers = read_first_sheet_headers(template_file)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}.xlsx",
-            headers,
-            m03_many_valid_rows(headers, table_prefix, row_count),
+        build_upload_validate(
+            layered_import_page, tmp_path, run_id,
+            lambda h: m03_many_valid_rows(h, table_prefix, row_count),
         )
-
-        layered_import_page.upload_file(import_file)
-        layered_import_page.click_validate_table()
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.click_confirm_import()
         layered_import_page.should_show_import_finished()
