@@ -74,10 +74,15 @@ class TestImportCommonBehaviors:
 @pytest.mark.dataresources
 @pytest.mark.layered_import
 @pytest.mark.regression
-@pytest.mark.write
 class TestImportProgressAndVolume:
-    """M5 性能优化、进度条与稳定性测试（数据驱动）。"""
+    """M5 性能优化、进度条与稳定性测试（数据驱动）。
 
+    落库策略（2026-08-18 明确）：性能/容量类不实际落库，业务功能类可实际落库。
+    - test_m5_01 进度条：业务功能验证（进度反馈），落库 1 条分层，write。
+    - test_m5_02/03/04：不点击最终导入，readonly。
+    """
+
+    @pytest.mark.write
     def test_m5_01_progress_bar_visible_during_import(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M5-01: 校验通过后点击导入，断言导入过程中展示进度条/进度状态且页面保持响应无白屏卡死。"""
         run_id = import_run_id("m5_progress")
@@ -92,6 +97,7 @@ class TestImportProgressAndVolume:
         layered_import_page.should_show_import_finished()
         layered_import_page.close_import_dialog()
 
+    @pytest.mark.readonly
     def test_m5_02_row_count_statistics_accurate(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M5-02: 断言导入弹窗解析的有效数据行数准确（排除表头与空行，统计有效数据行）。"""
         run_id = import_run_id("m5_rows")
@@ -108,6 +114,7 @@ class TestImportProgressAndVolume:
         )
         layered_import_page.close_import_dialog()
 
+    @pytest.mark.readonly
     def test_m5_03_continuous_reupload_robustness(self, layered_import_page: LayeredImportPage):
         """M5-03: 连续多次重传切换不同数据文件，断言页面状态正常重置无重复提交。"""
         ds1 = get_m02_dataset("standard_valid")
@@ -119,11 +126,12 @@ class TestImportProgressAndVolume:
         layered_import_page.should_allow_import_after_validation()
         layered_import_page.close_import_dialog()
 
-    def test_m5_04_medium_file_import_and_search(self, layered_import_page: LayeredImportPage, tmp_path: Path):
-        """M5-04（容量代表性）: 较大文件（数百行）导入完成且列表可查询。
+    @pytest.mark.readonly
+    def test_m5_04_medium_file_validation_only(self, layered_import_page: LayeredImportPage, tmp_path: Path):
+        """M5-04（容量代表性，不实际落库）: 较大文件（200 行）通过批量解析与校验、显示可导入，但不点击最终导入。
 
-        注：需求大纲的「十几万条」量级不进 UI 自动化——会导致用例超时、污染 UAT 数据，
-        容量/性能压测应走 JMeter 或后端专项。本用例用 200 行作为「较大文件」代表性覆盖。
+        注：性能/容量类测试不实际落库（避免每次 200 条实体污染 UAT/PRE）。本用例只验证
+        「较大文件能通过批量解析与校验」，真实导入完成与容量/性能压测走 JMeter 或后端专项。
         """
         run_id = import_run_id("m5_capacity")
         table_prefix = f"auto_{run_id}"
@@ -134,7 +142,4 @@ class TestImportProgressAndVolume:
             lambda h: m03_many_valid_rows(h, table_prefix, row_count),
         )
         layered_import_page.should_allow_import_after_validation()
-        layered_import_page.click_confirm_import()
-        layered_import_page.should_show_import_finished()
         layered_import_page.close_import_dialog()
-        layered_import_page.search_and_verify_entity(f"{table_prefix}_0")

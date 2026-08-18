@@ -2574,7 +2574,7 @@ assets:
       - dataresources
       - layered_import
       - regression
-      - write
+      - readonly
     env_policy:
       uat: true
       pre: true
@@ -2598,7 +2598,7 @@ assets:
       - dataresources
       - layered_import
       - regression
-      - write
+      - readonly
     env_policy:
       uat: true
       pre: true
@@ -2607,7 +2607,7 @@ assets:
 
   - asset_id: UI-LAYERED-M5-004
     module: 分层数据资源导入
-    title: M5-04 较大文件容量代表性导入完成且列表可查询
+    title: M5-04 较大文件通过批量解析与校验（不实际落库）
     lifecycle: uat_automated
     automation_status: automated
     source:
@@ -2615,14 +2615,14 @@ assets:
       requirement: 数据资源导入功能优化以及性能优化V2
       source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
       manual_case_id: M5-04
-    test_path: tests/layered_data_resource_import/test_import_performance.py::TestImportProgressAndVolume::test_m5_04_medium_file_import_and_search
+    test_path: tests/layered_data_resource_import/test_import_performance.py::TestImportProgressAndVolume::test_m5_04_medium_file_validation_only
     page_objects:
       - pages/dataresources/layered_import_page.py
     markers:
       - dataresources
       - layered_import
       - regression
-      - write
+      - readonly
     env_policy:
       uat: true
       pre: true
