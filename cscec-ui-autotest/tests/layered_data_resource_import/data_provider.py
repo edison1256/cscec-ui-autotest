@@ -80,36 +80,31 @@ def get_dataset_file_path(filename: str, original_filename: str | None = None) -
     return project_path
 
 
-def get_m02_dataset(key: str) -> dict[str, Any]:
-    """Retrieve M02 dataset entry by key."""
+def get_dataset(module: str, key: str) -> dict[str, Any]:
+    """Retrieve a dataset entry by module (m02/m03) and key, resolving env-specific file path."""
+    module = module.lower()
+    section = f"{module}_datasets"
     manifest = load_manifest()
-    datasets = manifest.get("m02_datasets", {})
+    datasets = manifest.get(section, {})
     if key not in datasets:
         # Fallback to UAT manifest
         uat_manifest_path = BASE_DATASET_DIR / "layered_import" / "manifest.yaml"
         if uat_manifest_path.exists():
             with uat_manifest_path.open(encoding="utf-8") as f:
                 uat_manifest = yaml.safe_load(f) or {}
-                datasets = uat_manifest.get("m02_datasets", {})
+                datasets = uat_manifest.get(section, {})
     if key not in datasets:
-        raise KeyError(f"M02 dataset '{key}' not found for env '{settings.ENV}'")
+        raise KeyError(f"{module.upper()} dataset '{key}' not found for env '{settings.ENV}'")
     entry = dict(datasets[key])
     entry["file_path"] = get_dataset_file_path(entry["filename"], entry.get("original_filename"))
     return entry
+
+
+def get_m02_dataset(key: str) -> dict[str, Any]:
+    """Retrieve M02 dataset entry by key (backward-compatible alias)."""
+    return get_dataset("m02", key)
 
 
 def get_m03_dataset(key: str) -> dict[str, Any]:
-    """Retrieve M03 dataset entry by key."""
-    manifest = load_manifest()
-    datasets = manifest.get("m03_datasets", {})
-    if key not in datasets:
-        uat_manifest_path = BASE_DATASET_DIR / "layered_import" / "manifest.yaml"
-        if uat_manifest_path.exists():
-            with uat_manifest_path.open(encoding="utf-8") as f:
-                uat_manifest = yaml.safe_load(f) or {}
-                datasets = uat_manifest.get("m03_datasets", {})
-    if key not in datasets:
-        raise KeyError(f"M03 dataset '{key}' not found for env '{settings.ENV}'")
-    entry = dict(datasets[key])
-    entry["file_path"] = get_dataset_file_path(entry["filename"], entry.get("original_filename"))
-    return entry
+    """Retrieve M03 dataset entry by key (backward-compatible alias)."""
+    return get_dataset("m03", key)

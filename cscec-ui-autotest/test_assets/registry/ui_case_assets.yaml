@@ -1932,7 +1932,7 @@ assets:
 
   - asset_id: UI-LAYERED-M02-014
     module: 分层数据资源导入
-    title: M02-14 数据分层设置页推送门户操作走查
+    title: M02-14 数据分层设置页推送门户入口可达（只读，原 test_m02_14 并入 M06）
     lifecycle: uat_automated
     automation_status: automated
     source:
@@ -1940,14 +1940,14 @@ assets:
       requirement: 数据资源导入功能优化以及性能优化V2
       source_file: D:\Doc\一体化\用例\数据资源导入功能优化以及性能优化V2.xmind
       manual_case_id: M02-14
-    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02ImportResultAndTree::test_m02_14_portal_push_action_check
+    test_path: tests/layered_data_resource_import/test_m06_portal_push.py::TestM06PortalPush::test_m06_01_portal_push_entry_reachable
     page_objects:
       - pages/dataresources/layered_import_page.py
     markers:
       - dataresources
       - layered_import
       - regression
-      - write
+      - readonly
     env_policy:
       uat: true
       pre: true

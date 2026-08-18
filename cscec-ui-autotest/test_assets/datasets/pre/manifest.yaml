@@ -31,13 +31,6 @@ m02_datasets:
     expected_error_snippets: ["不存在", "不能为空", "错误", "第 2 行"]
     block_import: true
 
-  missing_required_fields:
-    filename: "m02_error_missing_required.xlsx"
-    description: "PRE 必填字段缺失异常拦截"
-    expected_status: "error"
-    expected_error_snippets: ["不能为空", "必填", "错误"]
-    block_import: true
-
   missing_l1_l2_l3:
     filename: "m02_error_missing_l1_l2_l3.xlsx"
     description: "PRE L1/L2/L3 层级名称为空异常拦截"
@@ -50,22 +43,10 @@ m02_datasets:
     description: "PRE 不同一级应用域（建造一体化 vs 企业管理协同）下相同层级，判定合规允许通过"
     expected_status: "valid"
 
-  duplicate_same_all_layers:
-    filename: "m02_duplicate_same_all_layers.xlsx"
-    description: "PRE 真实库中已有分层（人力资源-组织管理-单位管理-组织信息集管理）重复判定"
-    expected_status: "duplicate"
-    has_conflict: true
-
   same_def_diff_name:
     filename: "m02_same_def_diff_name.xlsx"
     description: "PRE 定义相同但层级名称不同，判定合规放行"
     expected_status: "valid"
-
-  duplicate_modes:
-    filename: "m02_duplicate_modes_skip_overwrite.xlsx"
-    description: "PRE 重复分层数据，用于测试跳过与覆盖模式"
-    expected_status: "duplicate"
-    has_conflict: true
 
 m03_datasets:
   standard_valid:
@@ -77,12 +58,6 @@ m03_datasets:
     table_chinese_name: "预发测试实体表1"
     app_domain: "人力资源"
     app_system: "中国建筑科技管理系统"
-
-  duplicate_entities:
-    filename: "m03_duplicate_entities.xlsx"
-    description: "PRE 实体重复数据，用于验证实体重复跳过与覆盖模式"
-    expected_status: "duplicate"
-    has_conflict: true
 
   reference_and_required_errors:
     filename: "m03_error_reference_and_required.xlsx"

@@ -50,8 +50,8 @@ class LayeredImportPage(BasePage):
                     fallback.click(timeout=1500)
                     self.nav.wait_ready()
                     break
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug(f"[导航] 控制台回退入口点击失败，继续尝试下一个: {exc}")
 
     def open_layer_settings(self) -> "LayeredImportPage":
         """进入数据分层设置页面（M02 入口：控制台 -> 系统配置 -> 资源配置 -> 数据分层设置）。"""
@@ -64,8 +64,8 @@ class LayeredImportPage(BasePage):
                     entry.click(timeout=3000)
                 else:
                     self._click_exact_text("数据分层设置")
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug(f"[导航] 数据分层设置菜单点击失败，将走 URL 兜底: {exc}")
             try:
                 self.page.wait_for_url(re.compile(r"layerSet"), timeout=3000)
             except Exception:
@@ -92,8 +92,8 @@ class LayeredImportPage(BasePage):
                     entry.click(timeout=3000)
                 else:
                     self._click_exact_text("数据资源管理")
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug(f"[导航] 数据资源管理菜单点击失败，将走 URL 兜底: {exc}")
             try:
                 self.page.wait_for_url(re.compile(r"dataResources"), timeout=3000)
             except Exception:
@@ -443,8 +443,8 @@ class LayeredImportPage(BasePage):
                 self.page.keyboard.press("Escape")
             try:
                 modal.wait_for(state="hidden", timeout=1500)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug(f"[弹窗] 弹窗关闭确认超时，忽略继续: {exc}")
         return self
 
     def _get_import_dialog(self) -> Locator:

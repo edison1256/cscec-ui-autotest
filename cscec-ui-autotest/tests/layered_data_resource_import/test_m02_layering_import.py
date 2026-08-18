@@ -245,8 +245,3 @@ class TestM02ImportResultAndTree:
         layered_import_page.should_show_import_finished()
         layered_import_page.close_import_dialog()
         layered_import_page.verify_layer_tree_nodes(l1=row["L1"], l2=row["L2"], l3=row["L3"])
-
-    def test_m02_14_portal_push_action_check(self, layered_import_page: LayeredImportPage):
-        """M02-14: 数据分层设置完成后，核验页面「推送门户」按钮状态与响应。"""
-        layered_import_page.open_layer_settings()
-        layered_import_page.assertions.any_text_visible(["推送门户", "数据分层设置", "导入数据分层清单"])
