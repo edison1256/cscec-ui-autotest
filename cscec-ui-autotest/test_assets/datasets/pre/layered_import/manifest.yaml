@@ -51,13 +51,13 @@ m02_datasets:
 m03_datasets:
   standard_valid:
     filename: "m03_standard_valid.xlsx"
-    description: "PRE 标准有效数据实体清单（域: 人力资源, 系统: 中国建筑科技管理系统, 分层: 组织管理/单位管理/组织信息集管理）"
+    description: "PRE 标准有效数据实体清单（域: 测试test, 系统: 测试test123, 分层: test001/test002/test003, 已存在实体: test0001）"
     expected_status: "valid"
     expected_headers: ["一级应用域", "应用系统", "L1", "L2", "L3", "表中文名", "表英文名", "表描述", "存储类型", "业务类型", "系统环境类型"]
-    table_english_name: "pre_test_table_01"
-    table_chinese_name: "预发测试实体表1"
-    app_domain: "人力资源"
-    app_system: "中国建筑科技管理系统"
+    table_english_name: "test0001"
+    table_chinese_name: "测试表0001"
+    app_domain: "测试test"
+    app_system: "测试test123"
 
   reference_and_required_errors:
     filename: "m03_error_reference_and_required.xlsx"
