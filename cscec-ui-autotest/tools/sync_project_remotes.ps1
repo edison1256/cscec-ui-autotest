@@ -21,8 +21,8 @@ function Invoke-Git {
 
 function Test-GitBranch {
     param([string]$RepoRoot, [string]$BranchName)
-    & git -C $RepoRoot show-ref --verify --quiet "refs/heads/$BranchName"
-    return $LASTEXITCODE -eq 0
+    $branchRef = & git -C $RepoRoot show-ref --verify "refs/heads/$BranchName" 2>$null
+    return -not [string]::IsNullOrWhiteSpace($branchRef)
 }
 
 $projectDir = Split-Path -Parent $PSScriptRoot
@@ -55,11 +55,6 @@ if (-not $SkipGithub) {
 }
 
 if (-not $SkipDevops) {
-    if (Test-GitBranch -RepoRoot $repoRoot -BranchName $SubtreeBranch) {
-        Invoke-Git -C $repoRoot branch -D $SubtreeBranch
-    }
-    Invoke-Git -C $repoRoot subtree split --prefix=$ProjectPrefix -b $SubtreeBranch
-
     $mirrorDir = Join-Path $repoRoot "$ProjectPrefix-devops-mirror"
     if (Test-Path -LiteralPath $mirrorDir) {
         $mirrorStatus = & git -C $mirrorDir status --short
@@ -70,6 +65,11 @@ if (-not $SkipDevops) {
         }
         Invoke-Git -C $repoRoot worktree remove --force $mirrorDir
     }
+
+    if (Test-GitBranch -RepoRoot $repoRoot -BranchName $SubtreeBranch) {
+        Invoke-Git -C $repoRoot branch -D $SubtreeBranch
+    }
+    Invoke-Git -C $repoRoot subtree split --prefix=$ProjectPrefix -b $SubtreeBranch
 
     if (Test-GitBranch -RepoRoot $repoRoot -BranchName $DevopsBranch) {
         Invoke-Git -C $repoRoot branch -D $DevopsBranch
