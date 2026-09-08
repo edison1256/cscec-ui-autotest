@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from typing import Optional
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from config.settings import settings
 from core.base_page import BasePage
 from core.logger import get_logger
+from core.navigation_helpers import EntryNotExposed
 
 logger = get_logger("approval_center_page")
 
@@ -115,4 +116,61 @@ class ApprovalCenterPage(BasePage):
             agree_btn.click()
             self.nav.wait_ready()
             logger.info(f"[审批同意提交] 意见: {remark}")
+        return self
+
+    def switch_to_done_tab(self) -> "ApprovalCenterPage":
+        """M3-SUPP-001: 切换到“已办/已处理”Tab 验证历史数据查询可用性。"""
+        done_tab = self.elements.find_candidates(
+            [
+                ("text", "已办"),
+                ("text", "已处理"),
+                ("text", "已审批"),
+            ],
+            description="已办Tab",
+            timeout=3000
+        )
+        
+        if done_tab:
+            done_tab.click()
+            self.nav.wait_ready()
+            self.assertions.page_not_blank_or_error()
+            self.assertions.any_text_visible(["已办", "单号", "暂无数据"])
+            logger.info("[断言] 已办(历史)审批列表查询正常，未超时")
+        else:
+            raise EntryNotExposed("审批列表未暴露已办/已处理 Tab")
+            
+        return self
+
+    def open_approval_history_drawer(self) -> "ApprovalCenterPage":
+        """M3-SUPP-002: 在审批详情内拉起历史/流程图抽屉并验证。"""
+        history_btn = self.elements.find_candidates(
+            [
+                ("text", "审批历史"),
+                ("text", "流转历史"),
+                ("text", "查看流程"),
+                ("text", "流程图"),
+            ],
+            description="流转历史按钮",
+            timeout=3000
+        )
+        
+        if not history_btn:
+            raise EntryNotExposed("审批详情未暴露审批历史/流程图入口")
+            
+        history_btn.click()
+        self.page.wait_for_timeout(1000) # 等待抽屉弹出动画
+        
+        # 断言 Drawer 或 Modal 成功弹起
+        try:
+            drawer = self.page.locator(".ant-drawer-content, .el-drawer, .ant-modal-content, .el-dialog").first
+            drawer.wait_for(state="visible", timeout=5000)
+            logger.info("[断言] 审批历史/流程图弹窗成功渲染")
+            
+            # 尝试关闭它以清理现场
+            close_btn = drawer.locator(".ant-drawer-close, .el-drawer__close-btn, .ant-modal-close, .el-dialog__headerbtn").first
+            if close_btn.is_visible():
+                close_btn.click()
+        except PlaywrightTimeoutError:
+            raise AssertionError("点击流转历史后，审批历史/流程图弹窗未能成功渲染") from None
+            
         return self

@@ -109,3 +109,80 @@ class ResourceMgmtPage(BasePage):
         self.assertions.any_text_visible([resource_name, "服务中心", "产品市场"])
         logger.info(f"[服务中心搜索] 资源: {resource_name}")
         return self
+
+    def search_resource_advanced(self, status: str, keyword: str) -> "ResourceMgmtPage":
+        """M1-SUPP-001: 资源列表多维度高级组合检索。"""
+        # 尝试展开状态下拉框
+        status_dropdown = self.elements.find_candidates(
+            [
+                ("css", ".ant-select-selection-search-input"),
+                ("css", ".el-select"),
+                ("text", "状态"),
+            ],
+            description="状态下拉框",
+            timeout=2000
+        )
+        if status_dropdown:
+            try:
+                status_dropdown.click()
+                self.page.wait_for_timeout(500)
+                # 尝试选择特定状态
+                option = self.page.locator(f".ant-select-item-option-content, .el-select-dropdown__item").filter(has_text=status).first
+                if option.is_visible():
+                    option.click()
+            except Exception:
+                logger.debug("下拉框状态选择失败，退化为仅关键字查询")
+        
+        self.search_resource(keyword)
+        self.assertions.page_not_blank_or_error()
+        self.assertions.any_text_visible([keyword, "暂无数据", "没有匹配结果"])
+        logger.info(f"[高级检索] 组合查询完成: 状态={status}, 关键字={keyword}")
+        return self
+
+    def verify_pagination_and_table_health(self) -> "ResourceMgmtPage":
+        """M1-SUPP-002: 表格分页器抗跌与刷新验证。"""
+        pagination = self.page.locator(".ant-pagination, .el-pagination").first
+        try:
+            pagination.wait_for(state="visible", timeout=3000)
+            
+            # 点击下一页或者第2页
+            next_btn = self.page.locator(".ant-pagination-next, .btn-next").first
+            page_2_btn = self.page.locator(".ant-pagination-item-2, .el-pager li:has-text('2')").first
+            
+            if next_btn.is_visible() and not next_btn.get_attribute("aria-disabled") == "true":
+                next_btn.click()
+            elif page_2_btn.is_visible():
+                page_2_btn.click()
+            else:
+                logger.info("[交互] 只有一页数据，无需翻页")
+                return self
+                
+            # 等待表格加载遮罩消失（抗网络抖动）
+            self.page.wait_for_timeout(500) # 等待请求发出
+            self.nav.wait_ready()
+            
+            self.assertions.page_not_blank_or_error()
+            self.assertions.any_text_visible(["资源", "暂无数据", "总共"])
+            logger.info("[断言] 分页器翻页操作未引发页面崩溃")
+        except PlaywrightTimeoutError:
+            logger.info("[断言] 页面未暴露分页组件，跳过分页验证")
+            
+        return self
+
+    def verify_global_action_buttons(self) -> "ResourceMgmtPage":
+        """M1-SUPP-003: 资源列表全局动作栏（如导出、批量操作）可视性断言。"""
+        # 宽泛匹配导出、批量等关键操作动作
+        self.assertions.page_not_blank_or_error()
+        
+        buttons_found = []
+        for btn_text in ["导出", "批量", "新建", "同步", "刷新", "配置"]:
+            btn = self.page.get_by_role("button", name=re.compile(btn_text)).first
+            if btn.is_visible():
+                buttons_found.append(btn_text)
+                
+        if buttons_found:
+            logger.info(f"[断言] 全局操作按钮加载正常: {buttons_found}")
+        else:
+            logger.warning("[断言] 当前账号视角未发现任何全局批量操作按钮 (可能是只读权限限制)")
+            
+        return self

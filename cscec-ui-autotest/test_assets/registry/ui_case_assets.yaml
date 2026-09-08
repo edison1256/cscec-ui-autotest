@@ -3037,3 +3037,188 @@ assets:
       prod_probe: "2026-09-04 reports/prod-hidden-surface-probe-20260904-profile-topbar.json: 顶部返回图标进入 https://cloud.cscec.com/ 且无 404/500"
       prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k topbar_return_to_portal -v --no-html: passed"
     notes: "覆盖图标型全局头部入口；只校验控制台到 cloud 门户的导航和错误响应。"
+
+  - asset_id: UI-PROD-SUPP-CONSOLE-001
+    module: 控制台
+    title: 生产控制台补充深层只读探活候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产补充只读深层探活
+      manual_case_id: P0-CONSOLE-SUPP-001~004
+    test_path: tests/console/test_console_p0_readonly_supp.py::TestConsoleP0ReadonlySupp
+    page_objects:
+      - pages/console/console_home_page.py
+      - pages/portal/portal_home_page.py
+    markers:
+      - console
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    notes: "候选补充探活，不进入生产默认 smoke；入口未暴露按 skip，入口存在但页面/弹窗异常按失败处理。"
+
+  - asset_id: UI-PROD-SUPP-ORDER-001
+    module: 订单管理
+    title: 生产订单链路补充只读探活候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产补充只读深层探活
+      manual_case_id: M2-SUPP-001~003
+    test_path: tests/console/test_order_subscription_chain_supp.py::TestOrderSubscriptionChainSupp
+    page_objects:
+      - pages/console/order_mgmt_page.py
+    markers:
+      - order
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    notes: "覆盖订单状态 Tab、搜索重置、订单详情审批节点渲染；仅显式执行，稳定后再评估是否晋级 smoke。"
+
+  - asset_id: UI-PROD-SUPP-RESOURCE-001
+    module: 资源管理
+    title: 生产资源管理补充只读探活候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产补充只读深层探活
+      manual_case_id: M1-SUPP-001~003
+    test_path: tests/console/test_resource_baseline_supp.py::TestResourceBaselineSupp
+    page_objects:
+      - pages/console/resource_mgmt_page.py
+    markers:
+      - resource
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    notes: "覆盖高级检索、分页健康和全局动作按钮可见性；只验证展示和查询，不点击新增、保存、删除等动作。"
+
+  - asset_id: UI-PROD-SUPP-APPROVAL-001
+    module: 审批待办
+    title: 生产审批链路补充只读探活候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产补充只读深层探活
+      manual_case_id: M3-SUPP-001~002
+    test_path: tests/console/test_approval_todo_chain_supp.py::TestApprovalTodoChainSupp
+    page_objects:
+      - pages/console/approval_center_page.py
+    markers:
+      - approval
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    notes: "覆盖已办列表和审批历史/流程图只读查看；不点击同意、驳回、提交等流转动作。"
+
+  - asset_id: UI-PROD-SUPP-TICKET-001
+    module: 工单中心
+    title: 生产工单链路补充只读探活候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产补充只读深层探活
+      manual_case_id: M4-SUPP-001~002
+    test_path: tests/console/test_ticket_basic_chain_supp.py::TestTicketBasicChainSupp
+    page_objects:
+      - pages/console/ticket_center_page.py
+    markers:
+      - ticket
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    notes: "仅允许点击工单历史、操作日志、流转日志等只读入口；转派、回复、挂起等流程动作不纳入 readonly。"
+
+  - asset_id: UI-PROD-SUPP-DOCCENTER-001
+    module: 文档中心
+    title: 生产文档中心补充只读探活候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产补充只读深层探活
+      manual_case_id: M0-D-SUPP-001~002
+    test_path: tests/doccenter/test_doc_center_supp.py::TestDocCenterSupp
+    page_objects:
+      - pages/doccenter/doc_center_page.py
+    markers:
+      - doccenter
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    notes: "覆盖文档中心搜索和详情渲染；断言失败不再吞掉，入口未暴露按 skip 处理。"
+
+  - asset_id: UI-PROD-SUPP-MOBILE-001
+    module: 移动端
+    title: 生产移动端补充只读探活候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产补充只读深层探活
+      manual_case_id: M5-SUPP-001~002
+    test_path: tests/mobile/test_mobile_baseline_supp.py::TestMobileBaselineSupp
+    page_objects:
+      - pages/mobile/mobile_home_page.py
+    markers:
+      - mobile
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    notes: "移动端金刚区穿透只允许点击服务、消息、公告、帮助、文档、知识、工作台等只读白名单入口。"
+
+  - asset_id: UI-PROD-SUPP-PORTAL-001
+    module: 门户
+    title: 生产门户补充只读探活候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产补充只读深层探活
+      manual_case_id: P0-PORTAL-SUPP-001~004
+    test_path: tests/portal/test_portal_p0_readonly_supp.py::TestPortalP0ReadonlySupp
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - portal
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    notes: "覆盖门户链接、用户浮层、未授权拦截和图片渲染；候选阶段不进入生产默认 smoke。"

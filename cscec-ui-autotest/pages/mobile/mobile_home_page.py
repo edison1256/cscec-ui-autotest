@@ -10,6 +10,7 @@ from playwright.sync_api import Locator, Page, TimeoutError as PlaywrightTimeout
 from config.settings import settings
 from core.base_page import BasePage
 from core.logger import get_logger
+from core.navigation_helpers import EntryNotExposed
 
 logger = get_logger("mobile_home_page")
 
@@ -147,4 +148,33 @@ class MobileHomePage(BasePage):
         self.assertions.page_not_blank_or_error()
         self.assertions.any_text_visible(["我的", "个人中心", "用户", "设置", "账号", "中建云", "退出", "头像"])
         logger.info("[断言] 个人中心页面展示正常")
+        return self
+
+    def switch_tab_and_verify_stability(self) -> "MobileHomePage":
+        """M5-SUPP-001: 底部 TabBar 柔性切换抗跌测试。"""
+        tabs = ["我的", "首页"] # 先切出去，再切回来
+        for tab in tabs:
+            self.switch_tab(tab)
+            self.assertions.page_not_blank_or_error()
+        logger.info("[断言] 移动端 TabBar 路由切换无白屏/闪退")
+        return self
+
+    def verify_grid_app_clickthrough(self) -> "MobileHomePage":
+        """M5-SUPP-002: 金刚区只读白名单入口穿透触达测试。"""
+        safe_entry = self.page.locator(
+            ".van-grid-item, .grid-item, .app-item, .icon-item"
+        ).filter(
+            has_text=re.compile(r"服务|消息|公告|帮助|文档|知识|工作台")
+        )
+        try:
+            safe_entry.first.wait_for(state="visible", timeout=3000)
+            app_node = safe_entry.first
+            app_name = app_node.inner_text().strip() or "白名单入口"
+            app_node.click()
+            self.nav.wait_ready()
+            self.assertions.page_not_blank_or_error()
+            logger.info(f"[断言] 移动端金刚区只读白名单入口下钻成功: {app_name}")
+        except PlaywrightTimeoutError:
+            raise EntryNotExposed("移动端金刚区未暴露可安全点击的只读白名单入口") from None
+            
         return self

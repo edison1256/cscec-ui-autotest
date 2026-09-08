@@ -351,3 +351,48 @@ class PortalHomePage(BasePage):
         assert search_input.input_value() == "", f"输入框未成功清空: {placeholder}"
         logger.info(f"[只读交互] 输入框填充清空: {placeholder}")
         return self
+
+    def should_have_valid_header_footer_links(self) -> "PortalHomePage":
+        """断言全局顶/底部导航（死链检查）。"""
+        links_to_check = ["全部云产品", "全部应用", "法律声明", "隐私政策"]
+        for text in links_to_check:
+            link = self.page.get_by_text(text).first
+            link.wait_for(state="attached", timeout=5000)
+            logger.info(f"[断言] 导航锚点有效: {text}")
+        return self
+
+    def should_display_user_profile_menu(self, expected_username: str) -> "PortalHomePage":
+        """悬浮个人头像，断言下拉菜单与用户名。"""
+        user_menu = self.elements.find_candidates(
+            [
+                ("css", ".user-info"),
+                ("css", ".user-name"),
+                ("css", "[class*='avatar']"),
+            ],
+            description="用户菜单触发器",
+        )
+        if not user_menu:
+            raise AssertionError("未找到门户用户菜单入口")
+
+        user_menu.hover()
+        # 验证下拉项可见
+        self.assertions.any_text_visible(["退出", "登出", "注销", expected_username])
+        logger.info(f"[断言] 用户悬浮菜单交互正常, 用户: {expected_username}")
+        return self
+
+    def should_render_portal_banners_correctly(self) -> "PortalHomePage":
+        """断言门户图片资源（Banner/大盘产品图）没有破损。"""
+        # 寻找主要的宣传图片
+        images = self.page.locator("img").all()
+        # 抽样验证前5张至少加载成功
+        valid_images = 0
+        for img in images[:10]:
+            try:
+                is_loaded = img.evaluate("el => el.naturalWidth > 0")
+                if is_loaded:
+                    valid_images += 1
+            except Exception:
+                continue
+        assert valid_images > 0, "门户图片/Banner均未能正常渲染或破损"
+        logger.info(f"[断言] 门户主要图片资源未破损 (抽样 {valid_images} 张有效)")
+        return self

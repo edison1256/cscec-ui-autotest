@@ -5,11 +5,12 @@ from __future__ import annotations
 import time
 from typing import Optional
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from config.settings import settings
 from core.base_page import BasePage
 from core.logger import get_logger
+from core.navigation_helpers import EntryNotExposed
 
 logger = get_logger("order_mgmt_page")
 
@@ -147,4 +148,78 @@ class OrderMgmtPage(BasePage):
         self.assertions.page_not_blank_or_error()
         self.assertions.any_text_visible(["订单编号", "申请人", "状态", "流程节点", "资源名称", "订单详情", "订单列表", "订单管理", "暂无数据", "创建时间"])
         logger.info("[断言] 订单详情核心与流转信息展示正常")
+        return self
+
+    def switch_order_status_tabs(self) -> "OrderMgmtPage":
+        """M2-SUPP-001: 订单状态 Tab 页签快速切换防抖断言。"""
+        tabs = self.page.locator(".ant-tabs-tab, .el-tabs__item").all()
+        if not tabs or len(tabs) < 2:
+            raise EntryNotExposed("订单列表未暴露状态 Tab")
+            
+        for i, tab in enumerate(tabs[:3]): # 最多切前3个状态
+            tab_name = tab.inner_text()
+            tab.click()
+            self.nav.wait_ready()
+            self.assertions.page_not_blank_or_error()
+            self.assertions.any_text_visible(["订单", "暂无数据"])
+            logger.info(f"[断言] 订单状态 Tab 切换安全: {tab_name}")
+        
+        return self
+
+    def verify_search_reset_logic(self, keyword: str = "P0-Readonly-Garbage-Search") -> "OrderMgmtPage":
+        """M2-SUPP-002: 表单搜索区重置功能鲁棒性。"""
+        input_el = self.elements.find_candidates(
+            [
+                ("placeholder", "请输入订单编号"),
+                ("placeholder", "搜索订单"),
+                ("css", "input.ant-input"),
+            ],
+            description="订单搜索框",
+            timeout=2000
+        )
+        if not input_el:
+            logger.info("[重置逻辑] 未找到订单搜索输入框，跳过")
+            return self
+            
+        input_el.fill(keyword)
+        assert input_el.input_value() == keyword
+        
+        reset_btn = self.elements.find_candidates(
+            [
+                ("text", "重置"),
+                ("role", "button[name='重置']"),
+            ],
+            description="重置按钮",
+            timeout=2000
+        )
+        
+        if reset_btn:
+            reset_btn.click()
+            self.nav.wait_ready()
+            assert input_el.input_value() == "", "重置按钮未能清空输入框"
+            logger.info("[断言] 搜索面板表单重置逻辑正确执行")
+        else:
+            logger.info("[重置逻辑] 未找到重置按钮，跳过")
+            
+        return self
+
+    def verify_approval_steps_rendered(self) -> "OrderMgmtPage":
+        """M2-SUPP-003: 断言订单详情中的工作流审批节点(Steps/Timeline)组件完整渲染。"""
+        # 进入第一条有详情的订单（如果有的话）
+        detail_btn = self.page.get_by_text("详情").first
+        try:
+            detail_btn.wait_for(state="visible", timeout=3000)
+            detail_btn.click()
+            self.nav.wait_ready()
+        except PlaywrightTimeoutError:
+            raise EntryNotExposed("订单列表未暴露可点击的详情样本") from None
+
+        try:
+            # 兼容 Antd Steps 或 Element Timeline
+            steps_container = self.page.locator(".ant-steps, .el-steps, .el-timeline").first
+            steps_container.wait_for(state="visible", timeout=5000)
+            logger.info("[断言] 审批工作流 Timeline 组件成功渲染，BPM 接口连接正常")
+        except PlaywrightTimeoutError:
+            raise AssertionError("订单详情中未暴露审批节点 Steps/Timeline 组件") from None
+            
         return self

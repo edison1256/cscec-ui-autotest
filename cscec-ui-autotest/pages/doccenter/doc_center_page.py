@@ -10,7 +10,7 @@ from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from core.base_page import BasePage
 from core.logger import get_logger
-from core.navigation_helpers import navigate_with_fallback
+from core.navigation_helpers import EntryNotExposed, navigate_with_fallback
 from config.settings import settings
 
 logger = get_logger("doc_center_page")
@@ -147,12 +147,54 @@ class DocCenterPage(BasePage):
             return False
 
 
+    def search_and_assert_results(self, keyword: str) -> "DocCenterPage":
+        """M0-D-SUPP-001: 验证全局搜索及结果渲染。"""
+        self.search_document(keyword)
+        # 宽泛匹配，可以是列表容器，或是兜底文案
+        self.nav.wait_ready()
+        self.assertions.page_not_blank_or_error()
+        self.assertions.any_text_visible([keyword, "未搜", "暂无数据", "没有找", "0条", "文档", "列表"])
+        logger.info(f"[断言] 文档中心搜索引擎返回正常: {keyword}")
+        return self
+
+    def verify_doc_detail_rendering(self) -> "DocCenterPage":
+        """M0-D-SUPP-002: 深入文档详情，验证富文本渲染容器。"""
+        # 找一个文档链接点进去
+        doc_link = self.elements.find_candidates(
+            [
+                ("css", ".doc-list-item a"),
+                ("css", ".hot-list a"),
+                ("css", ".article-list a"),
+                ("text", "新手指南"),
+                ("text", "操作指南"),
+                ("text", "了解更多"),
+            ],
+            description="文档详情链接",
+            timeout=3000
+        )
+        
+        if not doc_link:
+            raise EntryNotExposed("文档中心首页未暴露可点击的文档详情链接")
+            
+        doc_link.click()
+        self.nav.wait_ready()
+            
+        # 断言富文本容器
+        try:
+            # Markdown 渲染器或富文本容器常见的 class
+            viewer = self.page.locator(".doc-viewer, .editor-content, .vditor, .markdown-body, .article-content, [class*='content']").first
+            viewer.wait_for(state="visible", timeout=5000)
+            logger.info("[断言] 文档详情富文本/Markdown 渲染器挂载成功")
+        except PlaywrightTimeoutError:
+            raise AssertionError("进入文档详情后，核心文本容器未在规定时间内暴露") from None
+            
+        return self
+
 def _doc_center_hosts() -> set[str]:
     hosts = {urlparse(settings.DOC_CENTER_URL).netloc.lower()}
     if settings.DOC_CENTER_FALLBACK_URL:
         hosts.add(urlparse(settings.DOC_CENTER_FALLBACK_URL).netloc.lower())
     return hosts
-
 
 def _is_login_like_url(url: str) -> bool:
     parsed = urlparse(url)

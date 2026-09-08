@@ -1,35 +1,35 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-08 11:52。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-08 15:06。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：226
-- **生产默认收集（smoke + readonly）**：68 / 226
-- **被默认排除（write / destructive）**：158
+- **总用例数**：248
+- **生产默认收集（smoke + readonly）**：68 / 248
+- **被默认排除（write / destructive）**：180
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：120
+- **登记资产总数**：128
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
+| candidate | 19 |
 | prod_regression | 13 |
-| candidate | 11 |
 
 ### 按自动化状态（automation_status）
 
 | automation_status | 数量 |
 | --- | --- |
 | automated | 110 |
-| needs_stabilization | 10 |
+| needs_stabilization | 18 |
 
 ### 按模块（module）
 
@@ -37,21 +37,21 @@
 | --- | --- |
 | 分层数据资源导入 | 53 |
 | 数据资源导入功能优化 | 24 |
-| 移动端 | 11 |
-| 控制台 | 7 |
-| 资源管理 | 4 |
-| 订单管理 | 4 |
-| 审批待办 | 4 |
-| 文档中心 | 3 |
-| 工单中心 | 3 |
+| 移动端 | 12 |
+| 控制台 | 8 |
+| 资源管理 | 5 |
+| 订单管理 | 5 |
+| 审批待办 | 5 |
+| 文档中心 | 4 |
+| 工单中心 | 4 |
 | 登录 | 2 |
+| 门户 | 2 |
 | 运维巡检 | 2 |
 | 控制台工作台 | 2 |
-| 门户 | 1 |
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **10** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **18** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -65,6 +65,14 @@
 | UI-LAYERED-M04-006 | 分层数据资源导入 | M04-06 数据安全分类与安全分级为空校验拦截 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04RequiredAndEnumValidation::test_m04_06_security_classification_required` |  |
 | UI-LAYERED-M04-007 | 分层数据资源导入 | M04-07 是否本系统产生的数据为空放行校验 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04PassAndOptionalValidation::test_m04_07_source_system_flag_empty_passes` |  |
 | UI-LAYERED-M04-008 | 分层数据资源导入 | M04-08 编码/长度/外键关联/来源系统等非必填放行 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04PassAndOptionalValidation::test_m04_08_optional_fields_pass` |  |
+| UI-PROD-SUPP-CONSOLE-001 | 控制台 | 生产控制台补充深层只读探活候选 | `tests/console/test_console_p0_readonly_supp.py::TestConsoleP0ReadonlySupp` | 候选补充探活，不进入生产默认 smoke；入口未暴露按 skip，入口存在但页面/弹窗异常按失败处理。 |
+| UI-PROD-SUPP-ORDER-001 | 订单管理 | 生产订单链路补充只读探活候选 | `tests/console/test_order_subscription_chain_supp.py::TestOrderSubscriptionChainSupp` | 覆盖订单状态 Tab、搜索重置、订单详情审批节点渲染；仅显式执行，稳定后再评估是否晋级 smoke。 |
+| UI-PROD-SUPP-RESOURCE-001 | 资源管理 | 生产资源管理补充只读探活候选 | `tests/console/test_resource_baseline_supp.py::TestResourceBaselineSupp` | 覆盖高级检索、分页健康和全局动作按钮可见性；只验证展示和查询，不点击新增、保存、删除等动作。 |
+| UI-PROD-SUPP-APPROVAL-001 | 审批待办 | 生产审批链路补充只读探活候选 | `tests/console/test_approval_todo_chain_supp.py::TestApprovalTodoChainSupp` | 覆盖已办列表和审批历史/流程图只读查看；不点击同意、驳回、提交等流转动作。 |
+| UI-PROD-SUPP-TICKET-001 | 工单中心 | 生产工单链路补充只读探活候选 | `tests/console/test_ticket_basic_chain_supp.py::TestTicketBasicChainSupp` | 仅允许点击工单历史、操作日志、流转日志等只读入口；转派、回复、挂起等流程动作不纳入 readonly。 |
+| UI-PROD-SUPP-DOCCENTER-001 | 文档中心 | 生产文档中心补充只读探活候选 | `tests/doccenter/test_doc_center_supp.py::TestDocCenterSupp` | 覆盖文档中心搜索和详情渲染；断言失败不再吞掉，入口未暴露按 skip 处理。 |
+| UI-PROD-SUPP-MOBILE-001 | 移动端 | 生产移动端补充只读探活候选 | `tests/mobile/test_mobile_baseline_supp.py::TestMobileBaselineSupp` | 移动端金刚区穿透只允许点击服务、消息、公告、帮助、文档、知识、工作台等只读白名单入口。 |
+| UI-PROD-SUPP-PORTAL-001 | 门户 | 生产门户补充只读探活候选 | `tests/portal/test_portal_p0_readonly_supp.py::TestPortalP0ReadonlySupp` | 覆盖门户链接、用户浮层、未授权拦截和图片渲染；候选阶段不进入生产默认 smoke。 |
 
 ## 4. 复用与维护约定
 

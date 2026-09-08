@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from typing import Optional
 
-from playwright.sync_api import Page
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from config.settings import settings
 from core.base_page import BasePage
 from core.logger import get_logger
+from core.navigation_helpers import EntryNotExposed
 
 logger = get_logger("ticket_center_page")
 
@@ -115,4 +116,75 @@ class TicketCenterPage(BasePage):
             submit_btn.click()
             self.nav.wait_ready()
             logger.info(f"[提交工单处理] 说明: {remark}")
+        return self
+
+    def verify_ticket_type_dropdown(self) -> "TicketCenterPage":
+        """M4-SUPP-001: 验证工单分类字典 (Taxonomy) 下拉框健康度。"""
+        type_dropdown = self.elements.find_candidates(
+            [
+                ("placeholder", "工单类型"),
+                ("placeholder", "请选择类型"),
+                ("placeholder", "请选择分类"),
+                ("text", "工单类型"),
+            ],
+            description="工单类型下拉框",
+            timeout=2000
+        )
+        
+        if not type_dropdown:
+            raise EntryNotExposed("工单列表未暴露工单类型下拉框")
+            
+        type_dropdown.click()
+        self.page.wait_for_timeout(500)
+        
+        try:
+            # 等待下拉列表容器渲染，任意一条选项出现即可证明字典接口未挂
+            option = self.page.locator(".ant-select-item, .el-select-dropdown__item").first
+            option.wait_for(state="visible", timeout=3000)
+            logger.info("[断言] 工单分类字典接口可用，下拉项已渲染")
+            
+            # 收起下拉框（点别的地方）
+            self.page.locator("body").click(position={"x": 0, "y": 0})
+        except PlaywrightTimeoutError:
+            raise AssertionError("点击工单类型下拉框后未能刷出字典选项") from None
+            
+        return self
+
+    def verify_ticket_modal_backdrop_clear(self) -> "TicketCenterPage":
+        """M4-SUPP-002: 前端弹窗遮罩层清除测试 (幽灵遮罩防御)。"""
+        # 找一个肯定会有弹窗的操作，且必须是纯只读向的按钮（严禁点击任何可能产生脏数据或状态流转的动作）
+        action_btn = self.elements.find_candidates(
+            [
+                ("text", "工单历史"),
+                ("text", "操作日志"),
+                ("text", "查看详情"),
+                ("text", "流转日志"),
+            ],
+            description="只读弹窗触发按钮",
+            timeout=3000
+        )
+        
+        if not action_btn:
+            raise EntryNotExposed("工单详情未暴露只读历史类弹窗入口")
+            
+        action_btn.click()
+        self.page.wait_for_timeout(1000)
+        
+        try:
+            modal = self.page.locator(".ant-modal, .el-dialog, .el-drawer").first
+            modal.wait_for(state="visible", timeout=4000)
+            logger.info("[交互] 弹窗加载成功")
+            
+            # 找到取消或关闭按钮
+            cancel_btn = modal.locator("button:has-text('取消'), .ant-modal-close, .el-dialog__headerbtn, .el-drawer__close-btn").first
+            cancel_btn.click()
+            self.page.wait_for_timeout(1000)
+            
+            # 核心断言：遮罩层必须被移除，页面可点击
+            modal.wait_for(state="hidden", timeout=3000)
+            logger.info("[断言] 弹窗和遮罩层被成功清理，不存在 UI 残留")
+            
+        except PlaywrightTimeoutError:
+            raise AssertionError("工单历史弹窗未能正常弹起，或关闭后未能正常隐藏") from None
+            
         return self
