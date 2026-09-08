@@ -16,7 +16,12 @@
    - **Pre-commit guard（提交前必做）**: 运行 `git -C "$PROJECT_DIR" diff --cached --name-only`，**断言所有暂存路径均以 `cscec-ui-autotest/` 开头**。若有任何路径逸出本工程子树，立即中止提交并告警，不得继续。
    - **Stage only monitored paths（绝不使用 `.` 或 `-A`）**: `git -C "$PROJECT_DIR" add pages tests core config test_assets docs tools utils AGENTS.md README.md .gitignore requirements.txt run_tests.py pytest.ini`。
    - **Commit**: Format Conventional Commits (e.g. `feat`, `fix`, `refactor`) — `git -C "$PROJECT_DIR" commit -m "<type>: <summary>"`。
-   - **Push**: `git -C "$PROJECT_DIR" push github master`。
-   - 在任何 cwd 下执行上述命令，都不会触及 `D:/Automation` 下的无关项目。
+   - **Push**: 先 `git -C "$PROJECT_DIR" push github master`。
+   - **Dual-remote sync（GitHub + 公司内网差异化同步）**: 重要变更推送 GitHub 后，运行 `powershell -ExecutionPolicy Bypass -File tools/sync_project_remotes.ps1`。该脚本会：
+     - 推送 GitHub `master`，保留 `.github/`。
+     - 通过 `git subtree split --prefix=cscec-ui-autotest` 生成只包含本工程的镜像分支。
+     - 为公司内网仓库生成 `cscec-ui-autotest-devops` 镜像，删除 `.github/`，并拦截 `.agents/`、`.workbuddy/`、`.claude/`、`.playwright-cli/`、`auth_states/`、`logs/`、`reports/`、`screenshots/`、`.env`、`.idea/`、`.venv/`、`.pytest_cache/`、`scratch*` 等本地文件。
+     - 推送公司内网仓库 `https://devops.cscec.com/osc/irp/irp-ui-autotest.git master`。
+   - 在任何 cwd 下执行上述命令，都不会触及 `D:/Automation` 下的无关项目；公司内网仓库也不会包含父目录 `D:/Automation` 内容。
 4. **Safety Protection**: 以下路径已被 `.gitignore` 覆盖，禁止提交：`.env`、`auth_states/`（含 `auth_states/*.json`）、`logs/`、`screenshots/`、`reports/`。提交前护栏（第 3 步）是第二道防线：即便 `.gitignore` 遗漏，暂存路径检查也会拦截越界文件。
 5. **Status Doc Refresh**: After any change to the monitored dirs, run `python tools/generate_progress_doc.py` to regenerate `docs/PROJECT_STATUS.md` from the asset registry + dry-run (replaces manual maintenance to prevent drift).
