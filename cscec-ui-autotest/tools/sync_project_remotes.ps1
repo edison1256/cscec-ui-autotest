@@ -66,12 +66,12 @@ if (-not $SkipDevops) {
         Invoke-Git -C $repoRoot worktree remove --force $mirrorDir
     }
 
-    if (Test-GitBranch -RepoRoot $repoRoot -BranchName $SubtreeBranch) {
+    if ((Test-GitBranch -RepoRoot $repoRoot -BranchName $SubtreeBranch)) {
         Invoke-Git -C $repoRoot branch -D $SubtreeBranch
     }
     Invoke-Git -C $repoRoot subtree split --prefix=$ProjectPrefix -b $SubtreeBranch
 
-    if (Test-GitBranch -RepoRoot $repoRoot -BranchName $DevopsBranch) {
+    if ((Test-GitBranch -RepoRoot $repoRoot -BranchName $DevopsBranch)) {
         Invoke-Git -C $repoRoot branch -D $DevopsBranch
     }
     Invoke-Git -C $repoRoot branch $DevopsBranch $SubtreeBranch
