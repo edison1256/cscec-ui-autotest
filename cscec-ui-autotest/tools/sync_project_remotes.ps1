@@ -60,10 +60,10 @@ if (-not $SkipDevops) {
         Invoke-Git -C $repoRoot worktree remove --force $mirrorDir
     }
 
-    Invoke-Git -C $repoRoot update-ref -d "refs/heads/$SubtreeBranch"
+    & git -C $repoRoot branch -D $SubtreeBranch 2>$null
     Invoke-Git -C $repoRoot subtree split --prefix=$ProjectPrefix -b $SubtreeBranch
 
-    Invoke-Git -C $repoRoot update-ref -d "refs/heads/$DevopsBranch"
+    & git -C $repoRoot branch -D $DevopsBranch 2>$null
     Invoke-Git -C $repoRoot branch $DevopsBranch $SubtreeBranch
     Invoke-Git -C $repoRoot worktree add $mirrorDir $DevopsBranch
 
