@@ -16,6 +16,12 @@ auth_state.json
 auth_states/
 auth_states/*.json
 .playwright/
+.playwright-cli/
+playwright-report/
+test-results/
+*.trace.zip
+*.webm
+*.har
 
 # 测试产物
 screenshots/
@@ -24,6 +30,18 @@ reports/
 allure-results/
 allure-report/
 debug/
+
+# 本地 Agent / 工具状态
+.claude/
+.workbuddy/
+.agents/
+
+# 临时探查脚本与草稿
+scratch*.py
+*_explore.py
+tmp*.py
+*.tmp
+*.bak
 
 # IDE
 .idea/
