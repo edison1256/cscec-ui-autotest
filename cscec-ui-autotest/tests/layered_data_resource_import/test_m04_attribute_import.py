@@ -205,7 +205,7 @@ class TestM04ImportResultAndAttributes:
     def test_m04_09_attribute_import_and_search(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M04-09: 导入完成后进入数据项属性列表，按字段英文名检索核验新增数据项可查询。
 
-        注：目标实体使用已知存在的 ``shujuzichanceSHI``，字段英文名唯一，避免污染库中既有数据。
+        注：目标实体使用已知存在的 ``test0813table1``，字段英文名唯一，避免污染库中既有数据。
         属性列表逐字段（类型/安全分级等）的精确展示核验依赖真实属性页定位，标记为后续补齐项。
         """
         run_id = import_run_id("m04_attr")

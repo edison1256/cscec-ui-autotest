@@ -1,5 +1,4 @@
-"""
-文档中心页面
+"""文档中心页面
 
 文档中心是中建云门户下的子模块，通过独立 URL 直接访问。
 提供文档中心相关的操作封装。
@@ -7,9 +6,7 @@
 
 from urllib.parse import urlparse
 
-from urllib.parse import urlparse
-
-from playwright.sync_api import Page
+from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
 
 from core.base_page import BasePage
 from core.logger import get_logger
@@ -33,6 +30,9 @@ class DocCenterPage(BasePage):
     def open(self) -> "DocCenterPage":
         """打开文档中心"""
         self.nav.goto_url(settings.DOC_CENTER_URL)
+        if not self._is_doc_center_ready() and settings.DOC_CENTER_FALLBACK_URL:
+            logger.info("[导航] 文档中心主域名未就绪，切换备用域名")
+            self.nav.goto_url(settings.DOC_CENTER_FALLBACK_URL)
         logger.info("[导航] → 文档中心")
         return self
 
@@ -108,8 +108,9 @@ class DocCenterPage(BasePage):
     def should_be_on_doc_center(self) -> "DocCenterPage":
         """断言在文档中心页面"""
         current_url = self.page.url.lower()
-        expected_host = urlparse(settings.DOC_CENTER_URL).netloc.lower()
-        assert expected_host in current_url and any(
+        expected_hosts = _doc_center_hosts()
+        current_host = urlparse(current_url).netloc.lower()
+        assert current_host in expected_hosts and any(
             kw in current_url for kw in ["workbench", "doc", "document", "knowledge"]
         ), \
             f"期望在文档中心页面，当前 URL: {self.page.url}"
@@ -129,3 +130,34 @@ class DocCenterPage(BasePage):
         self.assertions.text_visible("我的文档")
         logger.info("[断言] 当前在我的文档页")
         return self
+
+    def _is_doc_center_ready(self) -> bool:
+        current_url = self.page.url.lower()
+        if _is_login_like_url(current_url):
+            return False
+        current_host = urlparse(current_url).netloc.lower()
+        if current_host not in _doc_center_hosts():
+            return False
+        if not any(kw in current_url for kw in ["workbench", "doc", "document", "knowledge"]):
+            return False
+        try:
+            self.assertions.any_text_visible(["文档中心", "工作台", "我的文档"], timeout=3000)
+            return True
+        except (AssertionError, PlaywrightTimeoutError):
+            return False
+
+
+def _doc_center_hosts() -> set[str]:
+    hosts = {urlparse(settings.DOC_CENTER_URL).netloc.lower()}
+    if settings.DOC_CENTER_FALLBACK_URL:
+        hosts.add(urlparse(settings.DOC_CENTER_FALLBACK_URL).netloc.lower())
+    return hosts
+
+
+def _is_login_like_url(url: str) -> bool:
+    parsed = urlparse(url)
+    return (
+        ("iam" in parsed.netloc and "cas" in parsed.path)
+        or "passport" in parsed.netloc
+        or "/login" in parsed.path
+    )

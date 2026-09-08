@@ -161,6 +161,30 @@ UI 自动化资产可以来自以下来源：
 
 PROD 下如果显式指定写入类 marker/path，可以执行，但资产登记中必须保留 `prod_default: false`。生产默认集合不能因为单条用例重要就绕过只读原则。
 
+### 10.1 生产执行分层管理
+
+生产环境的 UI 资产按“是否改变业务状态”分层管理，避免只读走查、可增删改、破坏性动作混跑。
+
+| 类别 | 典型动作 | 资产标记 / 约束 | 默认执行方式 |
+| --- | --- | --- | --- |
+| 只读走查 | 页面打开、菜单展开、详情查看、搜索填充清空、路由跳转、hover 展示 | `readonly` + `smoke`；`prod_default=true`；`prod_explicit=true` | 进入 `python run_tests.py --env prod` 默认集合 |
+| 可增删改 | 新增、编辑、上传、导入、保存、提交、确认、启停用前置动作 | `write`；`prod_default=false`；`prod_explicit=true` | 仅显式执行，必须限定路径/用例组和数据边界 |
+| 破坏性动作 | 删除、撤回、作废、不可逆审批、真实清理 | `destructive`；`prod_default=false`；`prod_explicit=true` | 仅少量受控资产，执行前需再次确认回滚/清理方案 |
+
+管理要求：
+
+- 只读走查只覆盖“打开即验证”的路径，不进入提交、保存、删除确认、真正导入等动作。
+- 写入类用例允许在 UAT/PRE/PROD 显式执行，但生产默认集合必须排除。
+- 数据重复校验类用例保持必要重复，不做唯一化；只有“写入型种子 / 落库准备”场景才生成运行时唯一后缀。
+- 生产写入类资产必须在 `notes` 或 `evidence` 中写清：目标域/租户、数据范围、是否可重复执行、是否需要清理。
+- 破坏性用例如需进入生产，必须单独评审，不和普通写入用例混跑。
+
+推荐执行口径：
+
+- `python run_tests.py --env prod`：只跑 `smoke and readonly`
+- `python run_tests.py --env prod -m write`：仅显式写入类
+- `python run_tests.py --env prod -m destructive`：仅受控破坏类，默认不建议批量执行
+
 ## 11. Marker 规则
 
 基础 marker：

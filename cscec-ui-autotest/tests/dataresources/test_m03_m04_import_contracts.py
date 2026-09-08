@@ -32,12 +32,12 @@ from tests.dataresources.import_workbooks import (
 IMPORT_CONTRACTS = [
     pytest.param(
         "M03",
-        ["一级应用域", "表英文名"],
+        ["一级应用域名称", "表英文名称"],
         id="m03",
     ),
     pytest.param(
         "M04",
-        ["一级应用域", "表英文名", "字段英文名"],
+        ["一级应用域名称", "表英文名", "字段英文名"],
         id="m04",
     ),
 ]

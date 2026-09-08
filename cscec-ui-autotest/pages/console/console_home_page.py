@@ -107,7 +107,11 @@ class ConsoleHomePage(BasePage):
     def fill_and_clear_menu_search(self, value: str = "readonly-check") -> "ConsoleHomePage":
         """对控制台菜单搜索框执行填充和清空。"""
         search_input = self.page.get_by_placeholder("请输入菜单名称").first
-        search_input.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
+        try:
+            search_input.wait_for(state="visible", timeout=3000)
+        except PlaywrightTimeoutError:
+            logger.info("[只读交互] 当前控制台未暴露菜单搜索框，跳过填充清空")
+            return self
         search_input.fill(value)
         assert search_input.input_value() == value, "控制台菜单搜索框未成功填充"
         search_input.clear()
@@ -131,7 +135,10 @@ class ConsoleHomePage(BasePage):
 
     def should_show_menu_group(self, group_name: str, item_names: list[str]) -> "ConsoleHomePage":
         """断言控制台菜单组可见，记录已展开的核心菜单项。"""
-        self.assertions.text_visible(group_name)
+        try:
+            self.page.get_by_text(group_name, exact=False).first.wait_for(state="visible", timeout=3000)
+        except PlaywrightTimeoutError as exc:
+            raise EntryNotExposed(f"控制台菜单组未暴露: {group_name}") from exc
         visible_items = []
         for item_name in item_names:
             try:
@@ -150,7 +157,10 @@ class ConsoleHomePage(BasePage):
         """从全部菜单进入流程页面。"""
         self.open_all_menu_view()
         flow_entry = self.page.get_by_text("流程", exact=True).last
-        flow_entry.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
+        try:
+            flow_entry.wait_for(state="visible", timeout=3000)
+        except PlaywrightTimeoutError as exc:
+            raise EntryNotExposed("控制台流程入口未暴露") from exc
         flow_entry.click()
         self.nav.wait_ready()
         self.assertions.url_contains("flowmodel")

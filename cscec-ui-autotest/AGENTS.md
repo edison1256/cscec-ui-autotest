@@ -1,8 +1,8 @@
 # AGENTS.md — CSCEC UI Automation Project Instructions
 
 ## Mandatory Production Release Walkthrough Suite
-- **Mandatory Suite**: All 49 PC + Mobile read-only smoke cases defined in `docs/prod-release-mandatory-walkthrough-suite.md` are mandatory on every release.
-- **Production Execution**: `python run_tests.py --env prod` automatically executes the full 49-case mandatory suite with 0 write risk.
+- **Mandatory Suite**: All 68 PC + Mobile read-only smoke cases defined in `docs/prod-release-mandatory-walkthrough-suite.md` are mandatory on every release.
+- **Production Execution**: `python run_tests.py --env prod` automatically executes the full 68-case mandatory suite with 0 write risk.
 
 ## Automatic Git & DevOps Maintenance
 

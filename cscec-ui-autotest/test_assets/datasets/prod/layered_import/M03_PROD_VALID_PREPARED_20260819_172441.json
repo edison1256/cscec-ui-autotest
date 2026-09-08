@@ -1,0 +1,45 @@
+{
+  "file": "test_assets\\datasets\\prod\\layered_import\\M03_PROD_VALID_PREPARED_20260819_172441.xlsx",
+  "table_english_name": "auto_prod_m03_20260819_172441",
+  "headers": [
+    "一级应用域编号",
+    "一级应用域名称",
+    "应用系统编码",
+    "应用系统名称",
+    "L1",
+    "L2",
+    "L3",
+    "表中文名称",
+    "表英文名称",
+    "表描述",
+    "存储周期",
+    "数据责任部门",
+    "系统项目组"
+  ],
+  "row": {
+    "一级应用域编号": "",
+    "一级应用域名称": "司库一体化",
+    "应用系统编码": "02",
+    "应用系统名称": "税务系统",
+    "L1": "税务业务",
+    "L2": "发票管理/进项发票管理",
+    "L3": "发票池管理",
+    "表中文名称": "自动化生产M03导入前校验172441",
+    "表英文名称": "auto_prod_m03_20260819_172441",
+    "表描述": "生产环境M03导入前校验文件，仅准备Excel，不执行导入",
+    "存储周期": "永久",
+    "数据责任部门": "财务部",
+    "系统项目组": "财务一体化项目组"
+  },
+  "source_prod_entity": {
+    "app_domain": "司库一体化",
+    "app_domain_code": "AD08",
+    "app_system": "税务系统",
+    "app_system_code": "02",
+    "l1": "税务业务",
+    "l2": "发票管理/进项发票管理",
+    "l3": "发票池管理",
+    "sample_table_english_name": "CWBASE1_9999.SW_STO_JXFPFL"
+  },
+  "note": "Prepared only. Not uploaded, not validated in PROD UI, not imported."
+}

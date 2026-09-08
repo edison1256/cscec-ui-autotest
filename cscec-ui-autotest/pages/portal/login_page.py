@@ -65,11 +65,18 @@ class LoginPage(BasePage):
     def open(self) -> "LoginPage":
         """打开门户首页"""
         self.nav.goto_url(settings.BASE_URL)
-        self.assertions.any_text_visible(["登录", "中国建筑"])
+        if self._login_frame_visible(timeout=5000):
+            return self
+        try:
+            self.assertions.any_text_visible(["登录", "中国建筑", "中建云"])
+        except AssertionError:
+            self.page.locator("body").wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
         return self
 
     def click_login_entry(self) -> "LoginPage":
         """点击右上角登录入口"""
+        if self._login_frame_visible(timeout=2000):
+            return self
         # 点击登录链接后页面会跳转到 CAS 认证页
         # 使用 expect_navigation 等待跳转完成
         try:
@@ -80,17 +87,42 @@ class LoginPage(BasePage):
                 )
         except Exception:
             # 某些情况下点击可能不触发导航（如弹窗模式），直接继续
-            self.elements.click_candidates(
-                self._login_entry_candidates,
-                description="登录入口",
-            )
-        # 等待登录表单 iframe 加载
-        self.page.wait_for_selector(self._login_frame, timeout=settings.ACTION_TIMEOUT)
+            try:
+                self.elements.click_candidates(
+                    self._login_entry_candidates,
+                    description="登录入口",
+                )
+            except AssertionError:
+                if not self._is_cas_login_url():
+                    return self
+                raise
+        # 等待登录表单 iframe 加载；已存在 IAM 会话时可能直接 SSO 回跳门户。
+        try:
+            self.page.wait_for_selector(self._login_frame, timeout=settings.ACTION_TIMEOUT)
+        except Exception:
+            if not self._is_cas_login_url():
+                return self
+            raise
         # 等待 iframe 内容加载完成
         frame = self._get_login_frame()
         if frame:
-            frame.wait_for_load_state("networkidle", timeout=settings.ACTION_TIMEOUT)
+            frame.locator(self._username_input).wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
         return self
+
+    def login_form_visible(self, timeout: int = 2000) -> bool:
+        """判断当前页面是否仍需要填写登录表单。"""
+        return self._login_frame_visible(timeout=timeout)
+
+    def _login_frame_visible(self, timeout: int) -> bool:
+        """登录 iframe 已可见时，说明当前已在 CAS 登录页。"""
+        try:
+            self.page.locator(self._login_frame).wait_for(state="visible", timeout=timeout)
+            frame = self._get_login_frame()
+            if frame:
+                frame.locator(self._username_input).wait_for(state="visible", timeout=timeout)
+            return True
+        except Exception:
+            return False
 
     def _get_login_frame(self):
         """获取登录 iframe 的 Frame 对象"""
@@ -151,14 +183,15 @@ class LoginPage(BasePage):
         self._fill_in_frame(self._password_input, pwd, "密码")
         return self
 
-    def click_login_button(self) -> "LoginPage":
+    def click_login_button(self, expected_host: Optional[str] = None) -> "LoginPage":
         """点击登录按钮"""
         self._click_in_frame(self._login_button, "登录按钮")
+        target_host = expected_host or self._portal_host
         # 等待 CAS 认证完成并跳转回当前环境的门户首页
         try:
             self.page.wait_for_function(
                 "host => window.location.host.toLowerCase() === host",
-                arg=self._portal_host,
+                arg=target_host,
                 timeout=settings.NAVIGATION_TIMEOUT,
             )
             self.page.wait_for_function(

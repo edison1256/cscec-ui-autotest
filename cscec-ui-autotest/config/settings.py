@@ -36,7 +36,14 @@ class Settings:
 
     ENV: str = "uat"
     BASE_URL: str = ""
+    CONSOLE_BASE_URL: str = ""
+    PORTAL_BASE_URL: str = ""
+    WORKBENCH_BASE_URL: str = ""
+    MOBILE_BASE_URL: str = ""
     DOC_CENTER_URL: str = ""
+    DOC_CENTER_FALLBACK_URL: str = ""
+    DATA_RESOURCE_ROUTE: str = ""
+    LAYER_SETTINGS_ROUTE: str = ""
     DEEP_LINKS: dict = field(default_factory=dict)
 
     USERNAME: str = ""
@@ -70,10 +77,50 @@ class Settings:
             raise ValueError(f"Invalid ENV '{env}', expected one of {list(ENVIRONMENTS.keys())}")
 
         env_urls = ENVIRONMENTS[env]
+        env_prefix = env.upper()
         return cls(
             ENV=env,
             BASE_URL=env_urls["BASE_URL"],
-            DOC_CENTER_URL=env_urls["DOC_CENTER_URL"],
+            CONSOLE_BASE_URL=_read_setting(
+                f"{env_prefix}_CONSOLE_BASE_URL",
+                _read_setting("CONSOLE_BASE_URL", env_urls.get("CONSOLE_BASE_URL", env_urls["BASE_URL"]), env_preferred=True),
+                env_preferred=True,
+            ),
+            PORTAL_BASE_URL=_read_setting(
+                f"{env_prefix}_PORTAL_BASE_URL",
+                _read_setting("PORTAL_BASE_URL", env_urls.get("PORTAL_BASE_URL", env_urls["BASE_URL"]), env_preferred=True),
+                env_preferred=True,
+            ),
+            WORKBENCH_BASE_URL=_read_setting(
+                f"{env_prefix}_WORKBENCH_BASE_URL",
+                _read_setting("WORKBENCH_BASE_URL", env_urls.get("WORKBENCH_BASE_URL", env_urls["BASE_URL"]), env_preferred=True),
+                env_preferred=True,
+            ),
+            MOBILE_BASE_URL=_read_setting(
+                f"{env_prefix}_MOBILE_BASE_URL",
+                _read_setting("MOBILE_BASE_URL", env_urls.get("MOBILE_BASE_URL", env_urls.get("WORKBENCH_BASE_URL", env_urls["BASE_URL"])), env_preferred=True),
+                env_preferred=True,
+            ),
+            DOC_CENTER_URL=_read_setting(
+                f"{env_prefix}_DOC_CENTER_URL",
+                _read_setting("DOC_CENTER_URL", env_urls["DOC_CENTER_URL"], env_preferred=True),
+                env_preferred=True,
+            ),
+            DOC_CENTER_FALLBACK_URL=_read_setting(
+                f"{env_prefix}_DOC_CENTER_FALLBACK_URL",
+                _read_setting("DOC_CENTER_FALLBACK_URL", env_urls.get("DOC_CENTER_FALLBACK_URL", ""), env_preferred=True),
+                env_preferred=True,
+            ),
+            DATA_RESOURCE_ROUTE=_read_setting(
+                f"{env_prefix}_DATA_RESOURCE_ROUTE",
+                _read_setting("DATA_RESOURCE_ROUTE", env_urls.get("DATA_RESOURCE_ROUTE", ""), env_preferred=True),
+                env_preferred=True,
+            ),
+            LAYER_SETTINGS_ROUTE=_read_setting(
+                f"{env_prefix}_LAYER_SETTINGS_ROUTE",
+                _read_setting("LAYER_SETTINGS_ROUTE", env_urls.get("LAYER_SETTINGS_ROUTE", ""), env_preferred=True),
+                env_preferred=True,
+            ),
             DEEP_LINKS=env_urls.get("DEEP_LINKS", {}),
             USERNAME=_read_setting("USERNAME", ""),
             PASSWORD=_read_setting("PASSWORD", ""),
@@ -115,6 +162,30 @@ class Settings:
     @property
     def auth_state_file(self) -> Path:
         return self.AUTH_STATES_DIR / f"{self.ENV}.json"
+
+    def url_for(self, base_url: str, path: str = "") -> str:
+        """Build an absolute URL from an environment-specific base URL."""
+        if path.startswith(("http://", "https://")):
+            return path
+        clean_base = base_url.rstrip("/")
+        clean_path = path.lstrip("/")
+        return f"{clean_base}/{clean_path}" if clean_path else clean_base
+
+    def console_url(self, path: str = "") -> str:
+        """Build a URL under the split console domain."""
+        return self.url_for(self.CONSOLE_BASE_URL, path)
+
+    def portal_url(self, path: str = "") -> str:
+        """Build a URL under the split portal domain."""
+        return self.url_for(self.PORTAL_BASE_URL, path)
+
+    def workbench_url(self, path: str = "") -> str:
+        """Build a URL under the split workbench domain."""
+        return self.url_for(self.WORKBENCH_BASE_URL, path)
+
+    def mobile_url(self, path: str = "") -> str:
+        """Build a URL under the split mobile workbench domain."""
+        return self.url_for(self.MOBILE_BASE_URL, path)
 
 
 settings = Settings.from_env()

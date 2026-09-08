@@ -25,6 +25,10 @@ def get_current_dataset_dir() -> Path:
         pre_dir = BASE_DATASET_DIR / "pre" / "layered_import"
         if pre_dir.exists():
             return pre_dir
+    if env == "prod":
+        prod_dir = BASE_DATASET_DIR / "prod" / "layered_import"
+        if prod_dir.exists():
+            return prod_dir
     return BASE_DATASET_DIR / "layered_import"
 
 

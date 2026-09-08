@@ -2,9 +2,9 @@
 多环境 URL 映射
 
 环境说明：
-- UAT（irp-uat.cscec.com）：测试环境，日常测试用
-- PRE（irp-pre.cscec.com）：预发环境，上线生产前验收测试用
-- PROD（irp.cscec.com）：生产环境
+- UAT（irp-uat.cscec.com / cloud-uat.cscec.com）：测试环境，日常测试用
+- PRE（irp-pre.cscec.com / cloud-pre.cscec.com）：预发环境，上线生产前验收测试用
+- PROD（irp.cscec.com / cloud.cscec.com）：生产环境
 """
 
 # 直链兜底路由：当菜单入口在某环境未暴露时，可在此填入真实 SPA 路由作为
@@ -16,41 +16,83 @@ DEEP_LINKS = {
     "uat": {},
 }
 
+DATA_RESOURCE_ROUTE = (
+    "/udpweb/portal/index.html?loginType=1&"
+    "#/sub/resource/resource/dataResources"
+    "?suitKey=1895404747812683790"
+    "&routeName=resource"
+    "&appTitle=%E6%95%B0%E6%8D%AE%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86"
+    "&mc=1895404747812683790"
+    "&mn=%E6%8E%A7%E5%88%B6%E5%8F%B0"
+    "&mt=module"
+    "&menuCode=1930918519330086914"
+)
+
+LAYER_SETTINGS_ROUTE_BY_ENV = {
+    "prod": (
+        "/udpweb/portal/index.html?#/sub/resource/systemManage/layerSet"
+        "?suitKey=1899427585366003724"
+        "&routeName=resource"
+        "&appTitle=%E6%95%B0%E6%8D%AE%E5%88%86%E5%B1%82%E8%AE%BE%E7%BD%AE"
+    ),
+    "pre": (
+        "/udpweb/portal/index.html?#/sub/resource/systemManage/layerSet"
+        "?suitKey=1899427585366003726"
+        "&routeName=resource"
+        "&appTitle=%E6%95%B0%E6%8D%AE%E5%88%86%E5%B1%82%E8%AE%BE%E7%BD%AE"
+    ),
+    "uat": (
+        "/udpweb/portal/index.html?#/sub/resource/systemManage/layerSet"
+        "?suitKey=1899427585366003724"
+        "&routeName=resource"
+        "&appTitle=%E6%95%B0%E6%8D%AE%E5%88%86%E5%B1%82%E8%AE%BE%E7%BD%AE"
+    ),
+}
+
+DOC_CENTER_WORKBENCH_ROUTE = (
+    "/udpweb/portal/index.html#/portal/home/workbench"
+    "?suitKey=1899427585366003724"
+    "&mc=1899427585366003724"
+    "&mn=%E6%96%87%E6%A1%A3%E4%B8%AD%E5%BF%83"
+    "&mt=module"
+    "&appTitle=%E5%B7%A5%E4%BD%9C%E5%8F%B0"
+)
+
 ENVIRONMENTS = {
     "prod": {
         "BASE_URL": "https://irp.cscec.com/",
-        "DOC_CENTER_URL": (
-            "https://irp.cscec.com/udpweb/portal/index.html#/portal/home/workbench"
-            "?suitKey=1899427585366003724"
-            "&mc=1899427585366003724"
-            "&mn=%E6%96%87%E6%A1%A3%E4%B8%AD%E5%BF%83"
-            "&mt=module"
-            "&appTitle=%E5%B7%A5%E4%BD%9C%E5%8F%B0"
-        ),
+        "CONSOLE_BASE_URL": "https://irp.cscec.com/",
+        "PORTAL_BASE_URL": "https://cloud.cscec.com/",
+        "WORKBENCH_BASE_URL": "https://cloud.cscec.com/",
+        "MOBILE_BASE_URL": "https://cloud.cscec.com/",
+        "DOC_CENTER_URL": "https://cloud.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
+        "DOC_CENTER_FALLBACK_URL": "https://irp.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
+        "DATA_RESOURCE_ROUTE": DATA_RESOURCE_ROUTE,
+        "LAYER_SETTINGS_ROUTE": LAYER_SETTINGS_ROUTE_BY_ENV["prod"],
         "DEEP_LINKS": DEEP_LINKS["prod"],
     },
     "pre": {
         "BASE_URL": "https://irp-pre.cscec.com/",
-        "DOC_CENTER_URL": (
-            "https://irp-pre.cscec.com/udpweb/portal/index.html#/portal/home/workbench"
-            "?suitKey=1899427585366003724"
-            "&mc=1899427585366003724"
-            "&mn=%E6%96%87%E6%A1%A3%E4%B8%AD%E5%BF%83"
-            "&mt=module"
-            "&appTitle=%E5%B7%A5%E4%BD%9C%E5%8F%B0"
-        ),
+        "CONSOLE_BASE_URL": "https://irp-pre.cscec.com/",
+        "PORTAL_BASE_URL": "https://cloud-pre.cscec.com/",
+        "WORKBENCH_BASE_URL": "https://cloud-pre.cscec.com/",
+        "MOBILE_BASE_URL": "https://cloud-pre.cscec.com/",
+        "DOC_CENTER_URL": "https://irp-pre.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
+        "DOC_CENTER_FALLBACK_URL": "https://cloud-pre.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
+        "DATA_RESOURCE_ROUTE": DATA_RESOURCE_ROUTE,
+        "LAYER_SETTINGS_ROUTE": LAYER_SETTINGS_ROUTE_BY_ENV["pre"],
         "DEEP_LINKS": DEEP_LINKS["pre"],
     },
     "uat": {
         "BASE_URL": "https://irp-uat.cscec.com/",
-        "DOC_CENTER_URL": (
-            "https://irp-uat.cscec.com/udpweb/portal/index.html#/portal/home/workbench"
-            "?suitKey=1899427585366003724"
-            "&mc=1899427585366003724"
-            "&mn=%E6%96%87%E6%A1%A3%E4%B8%AD%E5%BF%83"
-            "&mt=module"
-            "&appTitle=%E5%B7%A5%E4%BD%9C%E5%8F%B0"
-        ),
+        "CONSOLE_BASE_URL": "https://irp-uat.cscec.com/",
+        "PORTAL_BASE_URL": "https://cloud-uat.cscec.com/",
+        "WORKBENCH_BASE_URL": "https://cloud-uat.cscec.com/",
+        "MOBILE_BASE_URL": "https://cloud-uat.cscec.com/",
+        "DOC_CENTER_URL": "https://irp-uat.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
+        "DOC_CENTER_FALLBACK_URL": "https://cloud-uat.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
+        "DATA_RESOURCE_ROUTE": DATA_RESOURCE_ROUTE,
+        "LAYER_SETTINGS_ROUTE": LAYER_SETTINGS_ROUTE_BY_ENV["uat"],
         "DEEP_LINKS": DEEP_LINKS["uat"],
     },
 }

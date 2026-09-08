@@ -22,7 +22,7 @@ class MobileHomePage(BasePage):
 
     def open_home(self) -> "MobileHomePage":
         """打开移动端定制首页。"""
-        full_url = f"{settings.BASE_URL.rstrip('/')}{self.MOBILE_HOME_PATH}"
+        full_url = settings.mobile_url(self.MOBILE_HOME_PATH)
         logger.info(f"[移动端导航] {full_url}")
         self.nav.goto_url(full_url)
         self.nav.wait_ready()

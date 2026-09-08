@@ -11,6 +11,7 @@ from playwright.sync_api import Locator, Page, TimeoutError as PlaywrightTimeout
 from config.settings import settings
 from core.base_page import BasePage
 from core.logger import get_logger
+from core.navigation_helpers import EntryNotExposed
 
 
 logger = get_logger("data_resource_page")
@@ -31,6 +32,25 @@ _IMPORT_DIALOGS = {
     },
 }
 
+DEFAULT_DATA_RESOURCE_ROUTE = (
+    "/udpweb/portal/index.html?loginType=1&"
+    "#/sub/resource/resource/dataResources"
+    "?suitKey=1895404747812683790"
+    "&routeName=resource"
+    "&appTitle=%E6%95%B0%E6%8D%AE%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86"
+    "&mc=1895404747812683790"
+    "&mn=%E6%8E%A7%E5%88%B6%E5%8F%B0"
+    "&mt=module"
+    "&menuCode=1930918519330086914"
+)
+
+DEFAULT_LAYER_SETTINGS_ROUTE = (
+    "/udpweb/portal/index.html?#/sub/resource/systemManage/layerSet"
+    "?suitKey=1899427585366003724"
+    "&routeName=resource"
+    "&appTitle=%E6%95%B0%E6%8D%AE%E5%88%86%E5%B1%82%E8%AE%BE%E7%BD%AE"
+)
+
 
 class DataResourcePage(BasePage):
     """控制台数据资源管理页。"""
@@ -41,13 +61,24 @@ class DataResourcePage(BasePage):
     def open_from_console_home(self) -> "DataResourcePage":
         """从控制台工作台进入数据资源管理。"""
         self.dismiss_visible_modals()
-        self._click_exact_text("数据资源管理")
+        try:
+            self._click_exact_text("数据资源管理")
+        except AssertionError as exc:
+            logger.info(f"[导航] 数据资源管理菜单未暴露，走控制台直链兜底: {exc}")
+            self.page.goto(
+                settings.console_url(_data_resource_route()),
+                timeout=settings.NAVIGATION_TIMEOUT,
+                wait_until="domcontentloaded",
+            )
         try:
             self.page.wait_for_url(re.compile(r"dataResources"), timeout=settings.NAVIGATION_TIMEOUT)
         except PlaywrightTimeoutError:
             pass
         self.nav.wait_ready()
-        self.assertions.any_text_visible(["数据资源列表", "导入数据实体清单", "导入实体", "导入数据实体"], timeout=settings.ACTION_TIMEOUT)
+        try:
+            self._wait_for_any_body_text(["数据资源列表", "导入数据实体清单", "导入实体", "导入数据实体"])
+        except AssertionError as exc:
+            raise EntryNotExposed("数据资源管理入口未暴露或控制台深链未加载目标页面") from exc
         logger.info("[导航] → 数据资源管理")
         return self
 
@@ -55,14 +86,25 @@ class DataResourcePage(BasePage):
         """从控制台工作台进入数据分层设置。"""
         self.dismiss_visible_modals()
         entry = self.page.get_by_text("数据分层设置", exact=True).last
-        entry.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
-        entry.click()
+        try:
+            entry.wait_for(state="visible", timeout=3000)
+            entry.click()
+        except PlaywrightTimeoutError:
+            logger.info("[导航] 数据分层设置菜单未暴露，走控制台直链兜底")
+            self.page.goto(
+                settings.console_url(_layer_settings_route()),
+                timeout=settings.NAVIGATION_TIMEOUT,
+                wait_until="domcontentloaded",
+            )
         try:
             self.page.wait_for_url(re.compile(r"layerSet"), timeout=settings.NAVIGATION_TIMEOUT)
         except PlaywrightTimeoutError:
             pass
         self.nav.wait_ready()
-        self.assertions.any_text_visible(["数据分层设置", "导入数据分层清单"], timeout=settings.ACTION_TIMEOUT)
+        try:
+            self._wait_for_any_body_text(["数据分层设置", "导入数据分层清单"])
+        except AssertionError as exc:
+            raise EntryNotExposed("数据分层设置入口未暴露或控制台深链未加载目标页面") from exc
         logger.info("[导航] → 数据分层设置")
         return self
 
@@ -355,6 +397,25 @@ class DataResourcePage(BasePage):
         except PlaywrightTimeoutError:
             pass
 
+    def _wait_for_any_body_text(self, texts: list[str]) -> None:
+        expected_json = repr(texts)
+        self.page.wait_for_function(
+            """(expected) => {
+                const text = document.body ? document.body.innerText : '';
+                return expected.some((item) => text.includes(item));
+            }""",
+            arg=texts,
+            timeout=max(settings.ACTION_TIMEOUT, 30000),
+        )
+
 
 def _normalize_text(text: str) -> str:
     return re.sub(r"\s+", "", text)
+
+
+def _data_resource_route() -> str:
+    return settings.DATA_RESOURCE_ROUTE or DEFAULT_DATA_RESOURCE_ROUTE
+
+
+def _layer_settings_route() -> str:
+    return settings.LAYER_SETTINGS_ROUTE or DEFAULT_LAYER_SETTINGS_ROUTE

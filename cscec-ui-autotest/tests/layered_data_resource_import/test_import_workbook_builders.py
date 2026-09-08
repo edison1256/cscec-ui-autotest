@@ -58,7 +58,7 @@ def test_m04_missing_security_classification_row_keeps_locator_valid():
 
     row = m04_missing_security_classification_row(headers, "field_uat_sec")
 
-    assert row["表英文名"] == "shujuzichanceSHI"
+    assert row["表英文名"] == "test0813table1"
     assert row["字段英文名"] == "field_uat_sec"
     assert row["数据安全分类"] == ""
     assert row["数据安全分级"] == ""

@@ -19,7 +19,7 @@ class MessageCenterPage(BasePage):
     def open_message_bell(self) -> "MessageCenterPage":
         """点击顶部消息小铃铛入口。"""
         if self.page.url == "about:blank" or not self.page.url.startswith("http"):
-            self.nav.goto_url(settings.BASE_URL)
+            self.nav.goto_url(settings.WORKBENCH_BASE_URL)
             self.nav.wait_ready()
 
         bell_icon = self.elements.find_candidates(

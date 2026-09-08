@@ -22,7 +22,7 @@ class ApprovalCenterPage(BasePage):
     def open_todo_list(self) -> "ApprovalCenterPage":
         """进入我的待办列表（M3-01）。"""
         try:
-            self.nav.goto_path("/udpweb/portal/index.html#/portal/approval/todo")
+            self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/approval/todo"))
             self.nav.wait_ready()
             self.assertions.page_not_blank_or_error()
         except Exception:

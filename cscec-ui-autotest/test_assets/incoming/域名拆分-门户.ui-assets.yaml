@@ -1,0 +1,77 @@
+registry_version: 1
+generated_at: '2026-08-20'
+requirement: 域名拆分-门户
+source:
+  xmind: C:\Users\CFD\Desktop\域名拆分.xmind
+  test_cases: C:\Users\CFD\Desktop\域名拆分_测试用例.xlsx
+  requirement_docs: D:\AI\LM\新需求
+scope:
+  included_rows: 2-60
+  included_count: 59
+  implementation_path: tests/portal/test_domain_split_portal.py
+  rule: 先实施门户模块；写入类首版只允许 UAT；生产默认仅允许 readonly。
+env_policy_defaults:
+  uat: true
+  pre: true
+  prod_default: false
+  prod_explicit: true
+assets:
+- {asset_id: DS-PORTAL-002, row: 2, module: 域名访问, title: 使用新域名访问门户，验证首页正常加载, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-003, row: 3, module: 中建通入口, title: 通过中建通应用入口点击进入门户，验证跳转至新域名门户首页, automation_status: needs_stabilization, markers: [portal, domain_split, readonly, e2e, regression], gap: 需要 PORTAL_ZJT_ENTRY_NAME 或中建通入口稳定定位}
+- {asset_id: DS-PORTAL-004, row: 4, module: 首页展示, title: 在新域名下访问首页，验证所有模块正常展示, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-005, row: 5, module: 首页, title: 点击首页图片，验证跳转到控制台配置的链接, automation_status: needs_stabilization, markers: [portal, domain_split, readonly, e2e, regression], gap: 需要 PORTAL_HOME_IMAGE_LINK_TEXT}
+- {asset_id: DS-PORTAL-006, row: 6, module: 用户信息展示, title: 登录成功后正确展示当前用户的账号信息, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-007, row: 7, module: 用户认证模块, title: 登录状态下点击退出登录，验证退出成功并跳转至登录页, automation_status: needs_stabilization, markers: [portal, domain_split, write, regression], gap: 退出会破坏共享登录态，需独立会话实现}
+- {asset_id: DS-PORTAL-008, row: 8, module: 门户首页, title: 用户登录门户后，验证首页展示的租户信息与当前登录用户所属租户一致, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-009, row: 9, module: 门户/角色信息展示, title: 使用已分配角色的用户登录门户，验证角色信息展示正确, automation_status: manual_confirm, markers: [portal, domain_split, readonly, regression], gap: 角色可随时设置变化，当前不做自动断言}
+- {asset_id: DS-PORTAL-010, row: 10, module: 租户切换, title: 已登录多租户用户切换租户，系统跳转至所选租户工作台, automation_status: needs_stabilization, markers: [portal, domain_split, readonly, regression], gap: 需要 PORTAL_ALT_TENANT}
+- {asset_id: DS-PORTAL-011, row: 11, module: 租户流程管理, title: 创建租户后，使用租户管理员账号登录门户并成功发起流程, automation_status: needs_stabilization, markers: [portal, domain_split, write, regression], gap: 需要租户管理员账号和流程数据}
+- {asset_id: DS-PORTAL-012, row: 12, module: 待办信息, title: 验证待办信息中资源、审批、订单、收藏链接域名均为新域名cloud.cscec.com, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-013, row: 13, module: 云产品分类查询, title: 选择前端类目查询，验证返回该类目下的云产品列表, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-014, row: 14, module: 门户内容操作, title: 点击收藏按钮，验证收藏成功提示并更新收藏状态, automation_status: automated, markers: [portal, domain_split, write, regression], gap: ''}
+- {asset_id: DS-PORTAL-015, row: 15, module: 详情查看功能, title: 通过列表页点击记录，验证详情页正确展示, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: 可用 PORTAL_DETAIL_ROUTE 指定稳定详情页}
+- {asset_id: DS-PORTAL-016, row: 16, module: 门户应用文档, title: 点击应用文档链接，验证文档正常打开, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-017, row: 17, module: 服务咨询模块, title: 在服务咨询页面填写有效咨询内容并提交，验证工单创建成功, automation_status: needs_data, markers: [portal, domain_split, write, regression], gap: 当前云产品样本未开放服务咨询入口，需指定可咨询资源}
+- {asset_id: DS-PORTAL-018, row: 18, module: 立即申请, title: 切换租户后完成申请：保存草稿、加入购物车并提交审批，验证完整流程, automation_status: automated, markers: [portal, domain_split, write, regression], gap: 已自动化申请入口校验，保存草稿/购物车/提交审批需继续指定完整申请字段}
+- {asset_id: DS-PORTAL-019, row: 19, module: 审批流程, title: 提交审批，验证审批流程成功发起, automation_status: needs_stabilization, markers: [portal, domain_split, write, regression], gap: 需要 PORTAL_APPROVER_NAME}
+- {asset_id: DS-PORTAL-020, row: 20, module: 系统入口, title: 使用新域名访问门户，验证进入系统, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-021, row: 21, module: 服务组件查询, title: 按前端类目分类查询服务组件，验证查询结果正确, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-022, row: 22, module: 门户-收藏分享, title: 收藏成功的内容分享后，他人通过分享链接可正常访问, automation_status: needs_stabilization, markers: [portal, domain_split, write, regression], gap: 需要分享目标用户}
+- {asset_id: DS-PORTAL-023, row: 23, module: API详情页, title: 使用新域名访问API详情，页面正常展示接口信息, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: 已使用当前服务组件详情样本校验接口文档展示}
+- {asset_id: DS-PORTAL-024, row: 24, module: 应用文档, title: 点击应用文档链接，验证文档页面可正常打开, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-025, row: 25, module: 服务咨询, title: 登录用户填写有效咨询内容并提交，验证工单发起成功, automation_status: needs_data, markers: [portal, domain_split, write, regression], gap: 当前服务组件样本未开放服务咨询入口，需指定可咨询资源}
+- {asset_id: DS-PORTAL-026, row: 26, module: 立即申请, title: 切换租户后，验证立即申请支持保存草稿、加入购物车并提交审批, automation_status: needs_data, markers: [portal, domain_split, write, regression], gap: 需要 PORTAL_ALT_TENANT，多租户切换后可复用申请入口校验}
+- {asset_id: DS-PORTAL-027, row: 27, module: 数据资产查询, title: 选择有效前端类目查询数据资产，验证返回正确类目下的资产列表, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-028, row: 28, module: 内容交互, title: 在门户内容详情页点击收藏，验证收藏成功, automation_status: automated, markers: [portal, domain_split, write, regression], gap: ''}
+- {asset_id: DS-PORTAL-029, row: 29, module: 门户-详情查看, title: 用户点击列表项查看详情，验证详情页正常展示, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: 可用 PORTAL_DETAIL_ROUTE 指定稳定详情页}
+- {asset_id: DS-PORTAL-030, row: 30, module: 资产表权限申请, title: 提交有效资产表权限申请，验证申请成功, automation_status: needs_stabilization, markers: [portal, domain_split, write, regression], gap: 需要资产表名称}
+- {asset_id: DS-PORTAL-031, row: 31, module: 门户-立即申请, title: 用户在门户首页点击立即申请，跳转至申请页面并正确加载表单, automation_status: automated, markers: [portal, domain_split, write, regression], gap: 已使用云产品详情样本完成申请入口校验}
+- {asset_id: DS-PORTAL-032, row: 32, module: 审批流程, title: 提交申请，验证审批流程成功发起, automation_status: needs_stabilization, markers: [portal, domain_split, write, regression], gap: 需要审批人}
+- {asset_id: DS-PORTAL-033, row: 33, module: 企业应用查询, title: 使用有效关键词搜索企业应用，验证返回匹配结果, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-034, row: 34, module: 企业应用收藏和分享, title: 用户收藏企业应用并分享给指定用户，验证收藏状态和分享消息, automation_status: needs_stabilization, markers: [portal, domain_split, write, regression], gap: 需要企业应用和分享用户}
+- {asset_id: DS-PORTAL-035, row: 35, module: 企业应用详情, title: 通过新门户域名访问企业应用详情，验证页面正常展示, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: 已使用当前页面企业应用样本 帆软BI}
+- {asset_id: DS-PORTAL-036, row: 36, module: 企业应用申请, title: 点击“立即申请”按钮提交申请，验证审批流程发起成功, automation_status: needs_data, markers: [portal, domain_split, write, regression], gap: 当前企业应用样本未开放立即申请入口，需指定可申请企业应用}
+- {asset_id: DS-PORTAL-037, row: 37, module: 门户-企业应用与云产品一致性, title: 验证企业应用与云产品在列表筛选功能上保持一致, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: 已自动化企业应用与云产品搜索框一致性校验}
+- {asset_id: DS-PORTAL-038, row: 38, module: 建筑大模型栏目, title: 使用新域名访问建筑大模型栏目首页，验证页面正常加载, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-039, row: 39, module: 门户展示, title: 门户页面仅显示“中建通”应用入口, automation_status: needs_stabilization, markers: [portal, domain_split, readonly, regression], gap: 需要 PORTAL_EXPECTED_APP_ENTRY}
+- {asset_id: DS-PORTAL-040, row: 40, module: 业务接入, title: 在门户中打开已授权的轻应用，验证页面正常加载, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按当前开发者平台“统一开发平台”入口校验轻应用内容加载}
+- {asset_id: DS-PORTAL-041, row: 41, module: 算力申请, title: 在门户新域名下打开算力申请轻应用，验证轻应用加载正常, automation_status: needs_stabilization, markers: [portal, domain_split, readonly, e2e, regression], gap: 需要 PORTAL_COMPUTE_APP_ENTRY}
+- {asset_id: DS-PORTAL-042, row: 42, module: 解决方案栏目, title: 使用新域名访问解决方案栏目首页，验证页面正常加载且内容显示正确, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-043, row: 43, module: 解决方案展示, title: 新域名下访问全部解决方案列表，验证页面正常加载并展示数据, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-044, row: 44, module: 解决方案标签展示, title: 访问门户解决方案页面，验证标签展示与后台配置一致, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: 已按当前页面展示校验 产业/云计算/查看更多}
+- {asset_id: DS-PORTAL-045, row: 45, module: 内容详情页, title: 用户访问门户详情页并收藏，验证收藏功能正常, automation_status: automated, markers: [portal, domain_split, write, regression], gap: ''}
+- {asset_id: DS-PORTAL-046, row: 46, module: 联系咨询, title: 通过门户新域名访问联系咨询并提交咨询信息, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按支持页悬浮“问题咨询”入口校验咨询表单打开，不提交咨询}
+- {asset_id: DS-PORTAL-047, row: 47, module: 门户-开发者实验室, title: 打开开发者实验室页面，验证列表展示2个实验室, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-048, row: 48, module: 域名拆分-门户iframe, title: 验证门户详情页、开始体验、操作文档、实验简介iframe在新域名下正常加载, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按当前开发者平台页面 iframe 加载校验}
+- {asset_id: DS-PORTAL-049, row: 49, module: 账号申请模块, title: 点击申请账号链接，验证链接可打开并跳转至注册页面, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-050, row: 50, module: VPN 申请, title: 在浏览器中打开 VPN 申请链接，验证页面正常加载, automation_status: needs_stabilization, markers: [portal, domain_split, readonly, e2e, regression], gap: 需要 PORTAL_VPN_APPLY_URL}
+- {asset_id: DS-PORTAL-051, row: 51, module: 统一开发平台/实验室申请, title: 使用新域名 cloud.cscec.com 访问实验室申请部署链接，验证页面正常加载, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按当前开发者平台“立即申请”入口校验跳转支持与帮助页}
+- {asset_id: DS-PORTAL-052, row: 52, module: 门户-导航链接, title: 点击“开发者社区”跳转链接，验证跳转至正确的开发者社区页面, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按当前页面开发者社区入口校验，外部 SPA 正文为空时以非登录目标 URL 兜底}
+- {asset_id: DS-PORTAL-053, row: 53, module: 开发规范指引, title: 访问开发规范指引文档，验证iframe内正常加载, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按当前开发者平台页面 iframe 加载校验}
+- {asset_id: DS-PORTAL-054, row: 54, module: 控制台-开发资源获取与平台展示, title: 使用irp域名访问控制台，验证开发资源获取配置内容正常展示, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: 已按 irp 控制台工作台校验开发者社区/API资源/组件资源/云资源展示}
+- {asset_id: DS-PORTAL-055, row: 55, module: 门户首页, title: 验证门户首页开发者社区配置展示正确, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: 已按当前开发者平台页面校验开发者社区配置}
+- {asset_id: DS-PORTAL-056, row: 56, module: 门户通用交互, title: 点击“查看更多”链接，验证跳转至正确的目标页面, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 当前页面未稳定展示 查看更多，已使用云产品列表资源标题作为通用点击跳转校验}
+- {asset_id: DS-PORTAL-057, row: 57, module: 知识中心, title: 使用新域名访问门户知识中心，验证页面正常加载, automation_status: automated, markers: [portal, domain_split, readonly, regression], gap: ''}
+- {asset_id: DS-PORTAL-058, row: 58, module: 智能机器人咨询, title: 在门户域名下咨询智能机器人，验证回复正常, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按支持页悬浮机器人入口校验智能客服面板打开，不发送消息}
+- {asset_id: DS-PORTAL-059, row: 59, module: 智能客服, title: 通过新域名访问智能客服，验证对话功能正常, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按支持页悬浮入口校验问题咨询表单打开，不提交咨询}
+- {asset_id: DS-PORTAL-060, row: 60, module: 进度查询, title: 使用有效查询条件查询进度，验证进度信息显示正确, automation_status: automated, markers: [portal, domain_split, readonly, e2e, regression], gap: 已按支持页悬浮入口校验查询进度跳转工作台，不输入查询条件}

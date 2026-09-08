@@ -65,3 +65,49 @@ m03_datasets:
     expected_status: "error"
     expected_error_snippets: ["不存在", "不匹配", "不能为空", "错误", "校验失败"]
     block_import: true
+
+m04_datasets:
+  standard_valid:
+    filename: "m04_standard_valid.xlsx"
+    description: "PRE 标准有效数据属性清单（实体: test0001，字段: pre_m04_attr_valid_001）"
+    expected_status: "valid"
+    expected_headers:
+      [
+        "一级应用域编号",
+        "一级应用域名称",
+        "应用系统编码",
+        "应用系统名称",
+        "L1",
+        "L2",
+        "L3",
+        "表中文名",
+        "表英文名",
+        "字段中文名",
+        "字段英文名",
+        "字段业务规则和含义",
+        "缺省值",
+        "字段类型",
+        "取值范围",
+        "数据长度",
+        "是否主键",
+        "是否可空",
+        "是否外键",
+        "外键关联信息",
+        "是否本系统产生的数据",
+        "数据来源系统",
+        "数据来源本系统模块",
+        "数据安全分类",
+        "数据安全分级",
+        "是否国资监管",
+        "监管指标项编号",
+        "监管指标项名称",
+      ]
+    table_english_name: "test0001"
+    field_english_name: "pre_m04_attr_valid_001"
+
+  reference_and_required_errors:
+    filename: "m04_reference_and_required_errors.xlsx"
+    description: "PRE 引用错误与必填缺失混合样例（用于校验错误行提示）"
+    expected_status: "error"
+    expected_error_snippets: ["不存在", "不能为空", "错误", "校验失败"]
+    block_import: true

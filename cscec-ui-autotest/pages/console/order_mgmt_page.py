@@ -23,7 +23,7 @@ class OrderMgmtPage(BasePage):
     def open_apply_form(self) -> "OrderMgmtPage":
         """进入资源申请/订阅表单页（M2-01）。"""
         try:
-            self.nav.goto_path("/udpweb/portal/index.html#/portal/order/apply")
+            self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/order/apply"))
             self.nav.wait_ready()
             self.assertions.page_not_blank_or_error()
         except Exception:
@@ -81,7 +81,7 @@ class OrderMgmtPage(BasePage):
     def open_order_list(self) -> "OrderMgmtPage":
         """进入订单列表（M2-03）。"""
         try:
-            self.nav.goto_path("/udpweb/portal/index.html#/portal/order/list")
+            self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/order/list"))
             self.nav.wait_ready()
             self.assertions.page_not_blank_or_error()
         except Exception:

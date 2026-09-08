@@ -22,7 +22,7 @@ class TicketCenterPage(BasePage):
     def open_ticket_list(self) -> "TicketCenterPage":
         """进入工单列表（M4-01）。"""
         try:
-            self.nav.goto_path("/udpweb/portal/index.html#/portal/ticket/list")
+            self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/ticket/list"))
             self.nav.wait_ready()
             self.assertions.page_not_blank_or_error()
         except Exception:

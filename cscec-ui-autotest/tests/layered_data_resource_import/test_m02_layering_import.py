@@ -13,10 +13,13 @@ from pathlib import Path
 import pytest
 
 from pages.dataresources.layered_import_page import LayeredImportPage
+from config.settings import settings
 from tests.dataresources.import_workbooks import (
     m02_diff_l1_same_l2_pass_rows,
     m02_duplicate_layer_rows,
+    m02_layer_rows_for_domain,
     m02_unique_layer_row,
+    prod_business_layer_paths,
     read_first_sheet_headers,
 )
 from tests.layered_data_resource_import.data_provider import get_m02_dataset, import_run_id
@@ -221,3 +224,36 @@ class TestM02ImportResultAndTree:
         layered_import_page.should_show_import_finished()
         layered_import_page.close_import_dialog()
         layered_import_page.verify_layer_tree_nodes(l1=row["L1"], l2=row["L2"], l3=row["L3"])
+
+
+@pytest.mark.dataresources
+@pytest.mark.layered_import
+@pytest.mark.regression
+@pytest.mark.write
+class TestM02ProdExplicitBusinessPaths:
+    """PROD 专用运行时唯一层级路径构造测试。"""
+
+    def test_m02_prod_explicit_business_paths_seed(self, layered_import_page: LayeredImportPage, tmp_path: Path):
+        """在 PROD 专用域下构造运行时唯一层级路径，供后续 M03/M04 同表不同层级专项复用。"""
+        if settings.ENV != "prod":
+            pytest.skip("仅在 PROD 运行运行时唯一层级路径构造")
+
+        run_id = import_run_id("m02_prod_seed")
+        paths = prod_business_layer_paths(run_id)
+        layered_import_page.open_m02_layer_import_dialog()
+        _, rows = build_upload_validate(
+            layered_import_page,
+            tmp_path=tmp_path,
+            run_id=run_id,
+            row_builder=lambda headers: m02_layer_rows_for_domain(headers, "中建云测试专用", paths),
+        )
+        layered_import_page.should_allow_import_after_validation()
+        layered_import_page.click_confirm_import()
+        layered_import_page.page.wait_for_timeout(1500)
+        layered_import_page.close_import_dialog()
+        layered_import_page.open_layer_settings()
+        layered_import_page.verify_layer_tree_nodes(
+            l1=rows[0]["L1"],
+            l2=rows[0]["L2"],
+            l3=rows[0]["L3"],
+        )

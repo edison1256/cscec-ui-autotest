@@ -33,7 +33,7 @@ _UAT_REFS = {
     "l2": "测试",
     "l3": "主线程1",
     "mismatch_domain": "测试2",
-    "existing_table_en": "shujuzichanceSHI",
+    "existing_table_en": "test0813table1",
 }
 _PRE_REFS = {
     "layer_app_domain": "测试test",        # PRE 无「测试test260812」，M02 分层域用「测试test」
@@ -45,7 +45,58 @@ _PRE_REFS = {
     "mismatch_domain": "建造一体化",       # PRE 真实域，测试test123 不属其
     "existing_table_en": "test0001",       # 实测存在（测试test/测试test123 下）
 }
-_REFS = _PRE_REFS if _current_env() == "pre" else _UAT_REFS
+_PROD_REFS = {
+    # 生产环境已确认可用的专用链路与现有表：
+    # 一级应用域 / 应用系统 = 中建云测试专用
+    # L1 / L2 / L3 = 中建云测试专用L1 / 中建云测试专用L2 / 中建云测试专用L3
+    # 表英文名 = cloudtest
+    "layer_app_domain": os.getenv("PROD_M02_LAYER_APP_DOMAIN", "中建云测试专用"),
+    "app_domain": os.getenv("PROD_M03_APP_DOMAIN", "中建云测试专用"),
+    "app_system": os.getenv("PROD_M03_APP_SYSTEM", "中建云测试专用"),
+    "l1": os.getenv("PROD_M03_L1", "中建云测试专用L1"),
+    "l2": os.getenv("PROD_M03_L2", "中建云测试专用L2"),
+    "l3": os.getenv("PROD_M03_L3", "中建云测试专用L3"),
+    "mismatch_domain": os.getenv("PROD_M03_MISMATCH_DOMAIN", "企业管理协同"),
+    "existing_table_en": os.getenv("PROD_M03_EXISTING_TABLE_EN", "cloudtest"),
+}
+
+_PROD_BUSINESS_LAYER_PATHS = [
+    {"l1": "中建云测试专用L1_01", "l2": "中建云测试专用L2_01", "l3": "中建云测试专用L3_01"},
+    {"l1": "中建云测试专用L1_02", "l2": "中建云测试专用L2_01", "l3": "中建云测试专用L3_01"},
+    {"l1": "中建云测试专用L1_01", "l2": "中建云测试专用L2_02", "l3": "中建云测试专用L3_01"},
+    {"l1": "中建云测试专用L1_01", "l2": "中建云测试专用L2_01", "l3": "中建云测试专用L3_02"},
+]
+
+
+def _refs_for_env() -> dict[str, str]:
+    env = _current_env()
+    if env == "pre":
+        return _PRE_REFS
+    if env == "prod":
+        return _PROD_REFS
+    return _UAT_REFS
+
+
+def prod_business_layer_paths(run_id: str | None = None) -> list[dict[str, str]]:
+    """Return production layer tuples for the dedicated test domain.
+
+    When ``run_id`` is provided, the returned paths get a stable unique suffix so
+    repeated write runs do not collide with earlier inserts. Callers that need the
+    original fixed baseline can omit ``run_id``.
+    """
+    if not run_id:
+        return [dict(path) for path in _PROD_BUSINESS_LAYER_PATHS]
+
+    token = _safe_token(run_id)
+    return [
+        {"l1": f"中建云测试专用L1_01_{token}", "l2": f"中建云测试专用L2_01_{token}", "l3": f"中建云测试专用L3_01_{token}"},
+        {"l1": f"中建云测试专用L1_02_{token}", "l2": f"中建云测试专用L2_01_{token}", "l3": f"中建云测试专用L3_01_{token}"},
+        {"l1": f"中建云测试专用L1_01_{token}", "l2": f"中建云测试专用L2_02_{token}", "l3": f"中建云测试专用L3_01_{token}"},
+        {"l1": f"中建云测试专用L1_01_{token}", "l2": f"中建云测试专用L2_01_{token}", "l3": f"中建云测试专用L3_02_{token}"},
+    ]
+
+
+_REFS = _refs_for_env()
 
 _VALID_APP_DOMAIN = _REFS["app_domain"]
 _VALID_LAYER_APP_DOMAIN = _REFS["layer_app_domain"]
@@ -55,6 +106,37 @@ _VALID_EXISTING_TABLE_ENGLISH_NAME = _REFS["existing_table_en"]
 _VALID_L1 = _REFS["l1"]
 _VALID_L2 = _REFS["l2"]
 _VALID_L3 = _REFS["l3"]
+
+M04_TEMPLATE_HEADERS = [
+    "一级应用域编号",
+    "一级应用域名称",
+    "应用系统编码",
+    "应用系统名称",
+    "L1",
+    "L2",
+    "L3",
+    "表中文名",
+    "表英文名",
+    "字段中文名",
+    "字段英文名",
+    "字段业务规则和含义",
+    "缺省值",
+    "字段类型",
+    "取值范围",
+    "数据长度",
+    "是否主键",
+    "是否可空",
+    "是否外键",
+    "外键关联信息",
+    "是否本系统产生的数据",
+    "数据来源系统",
+    "数据来源本系统模块",
+    "数据安全分类",
+    "数据安全分级",
+    "是否国资监管",
+    "监管指标项编号",
+    "监管指标项名称",
+]
 
 
 def read_first_sheet_headers(workbook_path: Path) -> list[str]:
@@ -210,6 +292,29 @@ def m02_diff_l1_same_l2_pass_rows(headers: list[str], run_id: str) -> list[dict[
     return [_row(f"auto_l1_a_{token}"), _row(f"auto_l1_b_{token}")]
 
 
+def m02_layer_rows_for_domain(headers: list[str], app_domain: str, layer_paths: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Build M02 rows for preparing unique L1/L2/L3 paths under a known app domain."""
+    rows: list[dict[str, str]] = []
+    for index, path in enumerate(layer_paths, 1):
+        row = _default_row(headers)
+        l1 = path["l1"]
+        l2 = path["l2"]
+        l3 = path["l3"]
+        row.update(
+            {
+                "一级应用域名称": app_domain,
+                "L1": l1,
+                "L1定义": path.get("l1_def", f"{l1}_def_{index}"),
+                "L2": l2,
+                "L2定义": path.get("l2_def", f"{l2}_def_{index}"),
+                "L3": l3,
+                "L3定义": path.get("l3_def", f"{l3}_def_{index}"),
+            }
+        )
+        rows.append(row)
+    return rows
+
+
 def m03_missing_app_domain_row(headers: list[str], table_english_name: str) -> dict[str, str]:
     """Build one M03 row that should fail business validation in the UI."""
     base = m03_valid_like_row(headers, table_english_name)
@@ -319,6 +424,30 @@ def m03_valid_like_row(headers: list[str], table_english_name: str) -> dict[str,
         }
     )
     return base
+
+
+def m03_same_system_table_rows(headers: list[str], table_english_name: str, layer_paths: list[dict[str, str]]) -> list[dict[str, str]]:
+    """Build M03 rows with the same app system and table English name across different business layers."""
+    rows: list[dict[str, str]] = []
+    for index, path in enumerate(layer_paths, 1):
+        row = m03_valid_like_row(headers, table_english_name)
+        row.update(
+            {
+                "一级应用域名称": path.get("app_domain", _VALID_APP_DOMAIN),
+                "一级应用域": path.get("app_domain", _VALID_APP_DOMAIN),
+                "应用系统名称": path.get("app_system", _VALID_APP_SYSTEM),
+                "应用系统": path.get("app_system", _VALID_APP_SYSTEM),
+                "L1": path["l1"],
+                "L2": path["l2"],
+                "L3": path["l3"],
+                "表中文名称": path.get("table_chinese_name", f"同名表新规则{index}"),
+                "表中文名": path.get("table_chinese_name", f"同名表新规则{index}"),
+                "表描述": path.get("table_desc", f"同应用系统同表英文名不同层级放行{index}"),
+                "系统项目组": path.get("project_group", "自动化测试组"),
+            }
+        )
+        rows.append(row)
+    return rows
 
 
 def m04_invalid_attribute_row(headers: list[str], table_english_name: str, field_english_name: str) -> dict[str, str]:
@@ -542,6 +671,46 @@ def m04_valid_like_row(headers: list[str], table_english_name: str, field_englis
         elif header == "数据安全分级":
             row[header] = "1"
     return row
+
+
+def m04_same_system_table_attribute_row(
+    headers: list[str],
+    table_english_name: str,
+    field_english_name: str,
+    layer_path: dict[str, str],
+) -> dict[str, str]:
+    """Build one M04 row that targets a same-system/same-table entity by full business layer tuple."""
+    row = m04_valid_like_row(headers, table_english_name, field_english_name)
+    row.update(
+        {
+            "一级应用域名称": layer_path.get("app_domain", _VALID_APP_DOMAIN),
+            "一级应用域": layer_path.get("app_domain", _VALID_APP_DOMAIN),
+            "应用系统名称": layer_path.get("app_system", _VALID_APP_SYSTEM),
+            "应用系统": layer_path.get("app_system", _VALID_APP_SYSTEM),
+            "L1": layer_path["l1"],
+            "L2": layer_path["l2"],
+            "L3": layer_path["l3"],
+            "字段中文名称": layer_path.get("field_chinese_name", "同名表定位字段"),
+            "字段中文名": layer_path.get("field_chinese_name", "同名表定位字段"),
+            "字段业务规则和含义": "同名表不同层级下按完整定位元组写入",
+        }
+    )
+    return row
+
+
+def valid_m03_app_domain() -> str:
+    """Return the current environment's known-valid M03 app domain."""
+    return _VALID_APP_DOMAIN
+
+
+def valid_m03_app_system() -> str:
+    """Return the current environment's known-valid M03 app system."""
+    return _VALID_APP_SYSTEM
+
+
+def m04_attribute_template_headers() -> list[str]:
+    """Return the canonical M04 attribute template headers."""
+    return list(M04_TEMPLATE_HEADERS)
 
 
 def _read_shared_strings(archive: zipfile.ZipFile) -> list[str]:

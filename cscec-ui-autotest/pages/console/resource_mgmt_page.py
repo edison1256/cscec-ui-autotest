@@ -22,7 +22,7 @@ class ResourceMgmtPage(BasePage):
 
     def open_resource_list(self) -> "ResourceMgmtPage":
         """导航到控制台资源列表。"""
-        self.nav.goto_path("/udpweb/portal/index.html#/portal/resource/list")
+        self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/resource/list"))
         self.nav.wait_ready()
         self.assertions.any_text_visible(["资源列表", "云产品", "数据资产", "应用服务", "资源类型"], timeout=settings.ACTION_TIMEOUT)
         logger.info("[导航] → 控制台资源列表")
@@ -99,7 +99,7 @@ class ResourceMgmtPage(BasePage):
 
     def search_and_open_portal_service_center(self, resource_name: str) -> "ResourceMgmtPage":
         """门户/服务中心搜索并打开代表资源（M1-04）。"""
-        self.nav.goto_url(f"{settings.BASE_URL.rstrip('/')}/#/service-center/2")
+        self.nav.goto_url(settings.portal_url("/#/service-center/2"))
         self.nav.wait_ready()
         search_input = self.page.get_by_placeholder("请输入搜索内容").first
         if search_input.is_visible():

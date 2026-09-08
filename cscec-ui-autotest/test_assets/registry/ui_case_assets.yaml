@@ -2749,5 +2749,291 @@ assets:
       prod_default: false
       prod_explicit: false
 
+  - asset_id: UI-LAYERED-M02-PROD-SEED-001
+    module: 分层数据资源导入
+    title: 生产专用域下运行时唯一层级路径种子构造与可见性验证
+    lifecycle: candidate
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 域名拆分生产专用层级路径构造
+      manual_case_id: M02-PROD-SEED-001
+    test_path: tests/layered_data_resource_import/test_m02_layering_import.py::TestM02ProdExplicitBusinessPaths::test_m02_prod_explicit_business_paths_seed
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    evidence:
+      prod_probe: "2026-09-08 manual browser verification: 中建云测试专用 域下可见 L1_01/L1_02、L2_01/L2_02、L3_01/L3_02"
+    notes: "写入型种子按运行 token 生成唯一后缀，避免重复插入；重复校验类用例仍保留重复数据不改造。"
 
+  - asset_id: UI-LAYERED-M03-20260907-001
+    module: 分层数据资源导入
+    title: M03 同应用系统同表英文名但不同业务层级校验通过
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 20260907数据资源导入逻辑优化需求
+      source_file: D:\AI\LM\已上线需求\20260907数据资源导入逻辑优化需求.docx
+      manual_case_id: M03-01/M03-02/M03-03
+    test_path: tests/layered_data_resource_import/test_20260907_m03_same_system_table_logic.py::TestM03SameSystemTableLogic20260907::test_m03_same_system_same_table_different_business_layer_passes_validation
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    notes: "覆盖同应用系统名称、同表英文名称，在 L1/L2/L3 任一层级不同的业务定位下不再触发旧重复拦截。"
 
+  - asset_id: UI-LAYERED-M03-20260907-002
+    module: 分层数据资源导入
+    title: M03 新规则数据确认导入后可在数据资源列表检索
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 20260907数据资源导入逻辑优化需求
+      source_file: D:\AI\LM\已上线需求\20260907数据资源导入逻辑优化需求.docx
+      manual_case_id: M03-04/M03-08
+    test_path: tests/layered_data_resource_import/test_20260907_m03_same_system_table_logic.py::TestM03SameSystemTableLogic20260907::test_m03_same_system_same_table_different_l3_imports_and_is_searchable
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    notes: "覆盖前后端一致性：校验通过后点击导入，新增同表英文名实体可在列表按表英文名查到。"
+
+  - asset_id: UI-LAYERED-M03-20260907-003
+    module: 分层数据资源导入
+    title: M03 仅校验通过但未点击导入前不提前落库
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 20260907数据资源导入逻辑优化需求
+      source_file: D:\AI\LM\已上线需求\20260907数据资源导入逻辑优化需求.docx
+      manual_case_id: M03-07
+    test_path: tests/layered_data_resource_import/test_20260907_m03_same_system_table_logic.py::TestM03SameSystemTableLogic20260907::test_m03_same_system_same_table_validation_does_not_write_before_import
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    notes: "覆盖点击校验与点击导入的写入边界，避免校验阶段提前写入正式数据资源。"
+
+  - asset_id: UI-LAYERED-M03-20260907-004
+    module: 分层数据资源导入
+    title: M03 完整业务定位元组重复仍展示重复处理
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 20260907数据资源导入逻辑优化需求
+      source_file: D:\AI\LM\已上线需求\20260907数据资源导入逻辑优化需求.docx
+      manual_case_id: M03-05/M03-09
+    test_path: tests/layered_data_resource_import/test_20260907_m03_same_system_table_logic.py::TestM03SameSystemTableLogic20260907::test_m03_full_business_tuple_duplicate_still_requires_duplicate_handling
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    notes: "防止本次放开范围过宽：应用域、应用系统、L1、L2、L3、表英文名完整一致时仍应进入重复处理。"
+
+  - asset_id: UI-LAYERED-M04-20260907-001
+    module: 分层数据资源导入
+    title: M04 同应用系统同表英文名场景按完整业务层级定位目标实体
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 20260907数据资源导入逻辑优化需求
+      source_file: D:\AI\LM\已上线需求\20260907数据资源导入逻辑优化需求.docx
+      manual_case_id: M04-01/M04-02/M04-03/M04-07
+    test_path: tests/layered_data_resource_import/test_20260907_m03_same_system_table_logic.py::TestM04SameSystemTableLocator20260907::test_m04_same_system_same_table_uses_full_business_tuple_for_locator
+    page_objects:
+      - pages/dataresources/layered_import_page.py
+    markers:
+      - dataresources
+      - layered_import
+      - regression
+      - write
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: false
+    notes: "先导入同应用系统同表英文名但不同 L3 的实体，再验证 M04 属性导入必须按完整业务层级命中实体，错误层级应校验失败。"
+
+  - asset_id: UI-PROD-DOMAIN-CONSOLE-WB-001
+    module: 控制台工作台
+    title: 生产双域名下控制台工作台常用模块入口打开后无 404/500
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 域名拆分生产扩展探查
+      manual_case_id: C-P0-CONSOLE-WB-001~009
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - console
+      - domain_split
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod_probe: "2026-09-04 reports/prod-range-probe-20260904-141751.md: 被订阅的订单触发 /irp-api/irp-portal-console/order/applyPage 404"
+    notes: "从生产控制台工作台可见常用模块入口沉淀；只点击入口导航，不提交、保存或修改业务数据。"
+
+  - asset_id: UI-PROD-DOMAIN-CONSOLE-WB-DEEP-001
+    module: 控制台工作台
+    title: 生产双域名下控制台工作台订阅/订单详情首层业务流无 404/500
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 域名拆分生产扩展深层探查
+      manual_case_id: C-P0-CONSOLE-WB-DEEP-001~005
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - console
+      - domain_split
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod_probe: "2026-09-04 reports/prod-range-probe-20260904-154025.md: 订单/应用订阅/数据资产订阅/组件订阅/云产品订阅详情首层动作 guarded_ok"
+      prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k first_detail -v --no-html: 5 passed"
+    notes: "深入一层点击生产列表首条“详情”，只验证详情抽屉或流程详情页打开，不点击提交、保存、审批、删除确认等最终动作。"
+
+  - asset_id: UI-PROD-DOMAIN-CONSOLE-PROFILE-001
+    module: 控制台
+    title: 生产双域名下控制台右上角个人信息编辑入口无 404/500
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 域名拆分生产扩展深层探查
+      manual_case_id: C-P0-CONSOLE-PROFILE-001
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_profile_edit_opens_without_error
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - console
+      - domain_split
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k profile_edit -v --no-html: failed, 404 https://irp.cscec.com/irp-api/irp-portal-console/personInfo/personInfo"
+    notes: "覆盖控制台全局头部账号悬浮层；只打开编辑入口并校验页面/接口，不保存个人信息。"
+
+  - asset_id: UI-PROD-DOMAIN-CONSOLE-PROFILE-002
+    module: 控制台
+    title: 生产双域名下控制台右上角账号浮层常用工具入口无 404/500
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 域名拆分生产扩展深层探查补盲
+      manual_case_id: C-P0-CONSOLE-PROFILE-002~004
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_profile_common_tool_opens_without_error
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - console
+      - domain_split
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod_probe: "2026-09-04 reports/prod-hidden-surface-probe-20260904-profile-topbar.json: 资源/审批/订单账号浮层入口均进入 irp 控制台页面且无 404/500"
+      prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k profile_common_tool -v --no-html: 3 passed"
+    notes: "覆盖 hover 后才出现的账号浮层常用工具入口；只验证导航打开，不进入提交、保存、删除确认等写入动作。"
+
+  - asset_id: UI-PROD-DOMAIN-CONSOLE-TOPBAR-001
+    module: 控制台
+    title: 生产双域名下控制台顶部返回门户入口无 404/500
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 域名拆分生产扩展深层探查补盲
+      manual_case_id: C-P0-CONSOLE-TOPBAR-001
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_topbar_return_to_portal_opens_without_error
+    page_objects:
+      - pages/portal/portal_home_page.py
+    markers:
+      - console
+      - domain_split
+      - smoke
+      - readonly
+      - regression
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod_probe: "2026-09-04 reports/prod-hidden-surface-probe-20260904-profile-topbar.json: 顶部返回图标进入 https://cloud.cscec.com/ 且无 404/500"
+      prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k topbar_return_to_portal -v --no-html: passed"
+    notes: "覆盖图标型全局头部入口；只校验控制台到 cloud 门户的导航和错误响应。"
