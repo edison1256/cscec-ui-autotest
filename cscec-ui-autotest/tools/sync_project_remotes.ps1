@@ -83,7 +83,7 @@ if (-not $SkipDevops) {
     }
 
     Write-Host "Pushing DevOps mirror to $DevopsRemote $TargetBranch..."
-    Invoke-Git -C $mirrorDir push $DevopsRemote HEAD:$TargetBranch
+    Invoke-Git -C $mirrorDir push "--force-with-lease" $DevopsRemote HEAD:$TargetBranch
 }
 
 Write-Host "Remote sync completed."
