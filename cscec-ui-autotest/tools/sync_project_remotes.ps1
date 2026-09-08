@@ -83,7 +83,18 @@ if (-not $SkipDevops) {
     }
 
     Write-Host "Pushing DevOps mirror to $DevopsRemote $TargetBranch..."
-    Invoke-Git -C $mirrorDir push "--force-with-lease" $DevopsRemote HEAD:$TargetBranch
+    $remoteRef = "refs/heads/$TargetBranch"
+    $remoteLine = & git -C $mirrorDir ls-remote $DevopsRemote $remoteRef
+    if ($LASTEXITCODE -ne 0) {
+        throw "Unable to read DevOps remote branch $remoteRef"
+    }
+    if ($remoteLine) {
+        $remoteOid = ($remoteLine -split "\s+")[0]
+        Invoke-Git -C $mirrorDir push "--force-with-lease=$remoteRef`:$remoteOid" $DevopsRemote HEAD:$TargetBranch
+    }
+    else {
+        Invoke-Git -C $mirrorDir push $DevopsRemote HEAD:$TargetBranch
+    }
 }
 
 Write-Host "Remote sync completed."
