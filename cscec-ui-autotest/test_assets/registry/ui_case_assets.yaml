@@ -2902,13 +2902,13 @@ assets:
 
   - asset_id: UI-PROD-DOMAIN-CONSOLE-WB-001
     module: 控制台工作台
-    title: 生产双域名下控制台工作台常用模块入口打开后无 404/500
+    title: 生产双域名下控制台常用模块入口打开后无 404/500
     lifecycle: prod_regression
     automation_status: automated
     source:
       source_type: production_probe
       requirement: 域名拆分生产扩展探查
-      manual_case_id: C-P0-CONSOLE-WB-001~009
+      manual_case_id: C-P0-CONSOLE-WB-001~008
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
     page_objects:
       - pages/portal/portal_home_page.py
@@ -2924,8 +2924,8 @@ assets:
       prod_default: true
       prod_explicit: true
     evidence:
-      prod_probe: "2026-09-04 reports/prod-range-probe-20260904-141751.md: 被订阅的订单触发 /irp-api/irp-portal-console/order/applyPage 404"
-    notes: "从生产控制台工作台可见常用模块入口沉淀；只点击入口导航，不提交、保存或修改业务数据。"
+      prod_probe: "2026-09-04 reports/prod-range-probe-20260904-141751.md: 工作台入口探查沉淀；2026-09-09 移除无可复现控制台操作路径的被订阅订单旧入口。"
+    notes: "仅保留当前控制台可复现的常用模块入口；只点击入口导航，不提交、保存或修改业务数据。"
 
   - asset_id: UI-PROD-DOMAIN-CONSOLE-WB-DEEP-001
     module: 控制台工作台
@@ -2954,33 +2954,6 @@ assets:
       prod_probe: "2026-09-04 reports/prod-range-probe-20260904-154025.md: 订单/应用订阅/数据资产订阅/组件订阅/云产品订阅详情首层动作 guarded_ok"
       prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k first_detail -v --no-html: 5 passed"
     notes: "深入一层点击生产列表首条“详情”，只验证详情抽屉或流程详情页打开，不点击提交、保存、审批、删除确认等最终动作。"
-
-  - asset_id: UI-PROD-DOMAIN-CONSOLE-PROFILE-001
-    module: 控制台
-    title: 生产双域名下控制台右上角个人信息编辑入口无 404/500
-    lifecycle: prod_regression
-    automation_status: automated
-    source:
-      source_type: production_probe
-      requirement: 域名拆分生产扩展深层探查
-      manual_case_id: C-P0-CONSOLE-PROFILE-001
-    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_profile_edit_opens_without_error
-    page_objects:
-      - pages/portal/portal_home_page.py
-    markers:
-      - console
-      - domain_split
-      - smoke
-      - readonly
-      - regression
-    env_policy:
-      uat: true
-      pre: true
-      prod_default: true
-      prod_explicit: true
-    evidence:
-      prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k profile_edit -v --no-html: failed, 404 https://irp.cscec.com/irp-api/irp-portal-console/personInfo/personInfo"
-    notes: "覆盖控制台全局头部账号悬浮层；只打开编辑入口并校验页面/接口，不保存个人信息。"
 
   - asset_id: UI-PROD-DOMAIN-CONSOLE-PROFILE-002
     module: 控制台

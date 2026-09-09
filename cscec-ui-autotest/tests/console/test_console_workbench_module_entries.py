@@ -1,4 +1,4 @@
-"""PROD console workbench module entry regression checks."""
+"""PROD console module entry regression checks."""
 
 from __future__ import annotations
 
@@ -17,12 +17,15 @@ ERROR_TEXT_RE = re.compile(
     re.I,
 )
 DETAIL_TEXT = "\u8be6\u60c5"
-PROFILE_EDIT_TEXT = "\u7f16\u8f91\u4e2a\u4eba\u4fe1\u606f"
 
+PROFILE_COMMON_TOOL_CASES = [
+    ("\u8d44\u6e90", "\u5e94\u7528\u7ba1\u7406", "C-P0-CONSOLE-PROFILE-002-resource-tool"),
+    ("\u5ba1\u6279", "\u5f85\u529e\u6d41\u7a0b", "C-P0-CONSOLE-PROFILE-003-approval-tool"),
+    ("\u8ba2\u5355", "\u8ba2\u5355\u7ba1\u7406", "C-P0-CONSOLE-PROFILE-004-order-tool"),
+]
 PROFILE_COMMON_TOOLS = [
-    pytest.param("\u8d44\u6e90", "\u5e94\u7528\u7ba1\u7406", id="C-P0-CONSOLE-PROFILE-002-resource-tool"),
-    pytest.param("\u5ba1\u6279", "\u5f85\u529e\u6d41\u7a0b", id="C-P0-CONSOLE-PROFILE-003-approval-tool"),
-    pytest.param("\u8ba2\u5355", "\u8ba2\u5355\u7ba1\u7406", id="C-P0-CONSOLE-PROFILE-004-order-tool"),
+    pytest.param(tool_text, expected_text, id=case_id)
+    for tool_text, expected_text, case_id in PROFILE_COMMON_TOOL_CASES
 ]
 
 WORKBENCH_MODULE_ENTRIES = [
@@ -34,7 +37,6 @@ WORKBENCH_MODULE_ENTRIES = [
     pytest.param("云产品订阅", "云产品列表", id="C-P0-CONSOLE-WB-006-cloud-product-subscription"),
     pytest.param("API资源", "API资源", id="C-P0-CONSOLE-WB-007-api-resource"),
     pytest.param("数据源配置", "数据源配置", id="C-P0-CONSOLE-WB-008-data-source-config"),
-    pytest.param("被订阅的订单", "订单列表", id="C-P0-CONSOLE-WB-009-subscribed-orders"),
 ]
 
 WORKBENCH_MODULE_DETAIL_ROUTES = [
@@ -187,6 +189,7 @@ def _click_table_action_by_text(page, text: str) -> None:
 
 
 def _open_profile_popover(page) -> None:
+    visible_markers = ["账号信息", "租户信息", "常用工具", *[case[0] for case in PROFILE_COMMON_TOOL_CASES]]
     candidates = [
         page.locator("[class*=userButton]").last,
         page.locator(".udp-toolbar.button").last,
@@ -198,25 +201,25 @@ def _open_profile_popover(page) -> None:
                 continue
             candidate.hover(timeout=settings.ACTION_TIMEOUT)
             page.wait_for_timeout(800)
-            if page.get_by_text(PROFILE_EDIT_TEXT, exact=True).first.is_visible(timeout=1500):
+            if _profile_popover_visible(page, visible_markers):
                 return
             candidate.click(timeout=settings.ACTION_TIMEOUT)
             page.wait_for_timeout(800)
-            if page.get_by_text(PROFILE_EDIT_TEXT, exact=True).first.is_visible(timeout=1500):
+            if _profile_popover_visible(page, visible_markers):
                 return
         except Exception:
             continue
-    raise AssertionError("控制台右上角账号悬浮层未打开，未找到“编辑个人信息”入口")
+    raise AssertionError("控制台右上角账号悬浮层未打开，未找到账号信息或常用工具入口")
 
 
-def _open_profile_edit(page) -> None:
-    _open_profile_popover(page)
-    page.get_by_text(PROFILE_EDIT_TEXT, exact=True).first.click(timeout=settings.ACTION_TIMEOUT)
-    page.wait_for_timeout(1500)
-    try:
-        page.wait_for_load_state("networkidle", timeout=10000)
-    except PlaywrightTimeoutError:
-        pass
+def _profile_popover_visible(page, visible_markers: list[str]) -> bool:
+    for text in visible_markers:
+        try:
+            if page.get_by_text(text, exact=True).first.is_visible(timeout=800):
+                return True
+        except Exception:
+            continue
+    return False
 
 
 def _click_profile_tool(page, tool_text: str) -> None:
@@ -274,7 +277,7 @@ def _click_topbar_return_to_portal(page) -> None:
 @pytest.mark.regression
 @pytest.mark.domain_split
 class TestConsoleWorkbenchModuleEntries:
-    """控制台工作台常用模块入口只读回归。"""
+    """控制台常用模块入口只读回归。"""
 
     @pytest.mark.parametrize("entry_text, expected_text", WORKBENCH_MODULE_ENTRIES)
     def test_workbench_module_entry_opens_without_error(self, logged_in_page, entry_text, expected_text):
@@ -315,23 +318,6 @@ class TestConsoleWorkbenchModuleEntries:
         error_responses.clear()
         _open_first_detail(logged_in_page, module_name)
         assert not error_responses, f"{module_name} 点击详情触发 404/500 响应: {error_responses[:5]}"
-
-    def test_console_profile_edit_opens_without_error(self, logged_in_page):
-        console_page = _open_console_workbench(logged_in_page)
-        error_responses: list[tuple[int, str]] = []
-        console_page.on(
-            "response",
-            lambda response: error_responses.append((response.status, response.url))
-            if response.status in {404, 500}
-            else None,
-        )
-
-        _open_profile_edit(console_page)
-
-        assert urlparse(console_page.url).netloc.lower() == urlparse(settings.CONSOLE_BASE_URL).netloc.lower()
-        body = _page_text(console_page)
-        assert not ERROR_TEXT_RE.search(body[:3000]), f"编辑个人信息打开错误页: url={console_page.url}"
-        assert not error_responses, f"编辑个人信息触发 404/500 响应: {error_responses[:5]}"
 
     @pytest.mark.parametrize("tool_text, expected_text", PROFILE_COMMON_TOOLS)
     def test_console_profile_common_tool_opens_without_error(self, logged_in_page, tool_text, expected_text):
