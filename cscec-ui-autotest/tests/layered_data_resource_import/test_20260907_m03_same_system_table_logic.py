@@ -13,10 +13,10 @@ import pytest
 from config.settings import settings
 from pages.dataresources.layered_import_page import LayeredImportPage
 from tests.dataresources.import_workbooks import (
-    create_workbook_from_headers,
+    create_workbook_from_template,
+    m02_layer_rows_for_domain,
     m03_same_system_table_rows,
     m04_same_system_table_attribute_row,
-    m04_attribute_template_headers,
     read_first_sheet_headers,
     prod_business_layer_paths,
     valid_m03_app_domain,
@@ -48,6 +48,29 @@ def _finalize_import(layered_import_page: LayeredImportPage, reopen_data_resourc
         if reopen_data_resource_mgmt:
             layered_import_page.open_data_resource_mgmt()
         return
+    layered_import_page.should_show_import_finished()
+    layered_import_page.close_import_dialog()
+
+
+def _ensure_prod_layer_paths(
+    layered_import_page: LayeredImportPage,
+    tmp_path: Path,
+    run_id: str,
+    layer_paths: list[dict[str, str]],
+) -> None:
+    """Create runtime-unique M02 layer paths before PROD M03/M04 writes."""
+    if settings.ENV != "prod":
+        return
+
+    layered_import_page.open_m02_layer_import_dialog()
+    build_upload_validate(
+        layered_import_page,
+        tmp_path,
+        f"{run_id}_m02",
+        lambda headers: m02_layer_rows_for_domain(headers, "中建云测试专用", layer_paths),
+    )
+    layered_import_page.should_allow_import_after_validation()
+    layered_import_page.click_confirm_import()
     layered_import_page.should_show_import_finished()
     layered_import_page.close_import_dialog()
 
@@ -125,6 +148,7 @@ class TestM03SameSystemTableLogic20260907:
         table_english_name = f"auto_same_table_{variant}_{run_id[-8:]}"
         layer_paths = _layer_paths(run_id, variant)
 
+        _ensure_prod_layer_paths(layered_import_page, tmp_path, run_id, layer_paths)
         layered_import_page.open_m03_entity_import_dialog()
         build_upload_validate(
             layered_import_page,
@@ -148,6 +172,7 @@ class TestM03SameSystemTableLogic20260907:
         table_english_name = f"auto_same_table_import_{run_id[-8:]}"
         layer_paths = _layer_paths(run_id, "diff_l3")
 
+        _ensure_prod_layer_paths(layered_import_page, tmp_path, run_id, layer_paths)
         layered_import_page.open_m03_entity_import_dialog()
         build_upload_validate(
             layered_import_page,
@@ -175,6 +200,7 @@ class TestM03SameSystemTableLogic20260907:
         table_english_name = f"auto_same_table_nowrite_{run_id[-8:]}"
         layer_paths = _layer_paths(run_id, "diff_l2")
 
+        _ensure_prod_layer_paths(layered_import_page, tmp_path, run_id, layer_paths)
         layered_import_page.open_m03_entity_import_dialog()
         build_upload_validate(
             layered_import_page,
@@ -197,11 +223,12 @@ class TestM03SameSystemTableLogic20260907:
         table_english_name = f"auto_full_tuple_dup_{run_id[-8:]}"
         layer_paths = _layer_paths(run_id, "diff_l3")[:1]
 
+        _ensure_prod_layer_paths(layered_import_page, tmp_path, run_id, layer_paths)
         layered_import_page.open_m03_entity_import_dialog()
         template_file = layered_import_page.download_template(tmp_path)
         headers = read_first_sheet_headers(template_file)
         duplicate_rows = m03_same_system_table_rows(headers, table_english_name, [layer_paths[0], layer_paths[0]])
-        import_file = create_workbook_from_headers(tmp_path, f"{run_id}.xlsx", headers, duplicate_rows)
+        import_file = create_workbook_from_template(template_file, tmp_path / f"{run_id}.xlsx", headers, duplicate_rows)
         layered_import_page.upload_file(import_file)
         layered_import_page.click_validate_table()
         dialog_text = layered_import_page.get_dialog_text()
@@ -228,6 +255,7 @@ class TestM04SameSystemTableLocator20260907:
         imported_paths = _layer_paths(run_id, "diff_l3")
         extra_path = _m03_context() | {"l1": "中建云测试专用L1_03", "l2": "中建云测试专用L2_03", "l3": "中建云测试专用L3_03"}
 
+        _ensure_prod_layer_paths(layered_import_page, tmp_path, run_id, imported_paths)
         layered_import_page.open_m03_entity_import_dialog()
         build_upload_validate(
             layered_import_page,
@@ -240,10 +268,11 @@ class TestM04SameSystemTableLocator20260907:
         _finalize_import(layered_import_page)
 
         layered_import_page.open_m04_attribute_import_dialog()
-        m04_headers = m04_attribute_template_headers()
-        import_file_ok = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}_m04_ok.xlsx",
+        m04_template_file = layered_import_page.download_template(tmp_path)
+        m04_headers = read_first_sheet_headers(m04_template_file)
+        import_file_ok = create_workbook_from_template(
+            m04_template_file,
+            tmp_path / f"{run_id}_m04_ok.xlsx",
             m04_headers,
             m04_same_system_table_attribute_row(
                 m04_headers,
@@ -258,9 +287,11 @@ class TestM04SameSystemTableLocator20260907:
         layered_import_page.close_import_dialog()
 
         layered_import_page.open_m04_attribute_import_dialog()
-        import_file_bad = create_workbook_from_headers(
-            tmp_path,
-            f"{run_id}_m04_bad.xlsx",
+        m04_template_file = layered_import_page.download_template(tmp_path)
+        m04_headers = read_first_sheet_headers(m04_template_file)
+        import_file_bad = create_workbook_from_template(
+            m04_template_file,
+            tmp_path / f"{run_id}_m04_bad.xlsx",
             m04_headers,
             m04_same_system_table_attribute_row(
                 m04_headers,

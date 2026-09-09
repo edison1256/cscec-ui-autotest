@@ -15,8 +15,13 @@ import pytest
 
 from pages.dataresources.layered_import_page import LayeredImportPage
 from tests.dataresources.import_workbooks import (
-    create_workbook_from_headers,
+    create_workbook_from_template,
     m03_duplicate_entity_rows,
+    m03_app_domain_system_mismatch_row,
+    m03_missing_app_domain_row,
+    m03_missing_app_system_row,
+    m03_missing_layer_row,
+    m03_missing_required_field_row,
     m03_valid_like_row,
     read_first_sheet_headers,
 )
@@ -62,42 +67,58 @@ class TestM03EntryAndTemplate:
 class TestM03ReferenceDataErrors:
     """M03 引用数据校验测试（数据驱动）。"""
 
-    def test_m03_03_missing_domain_shows_error(self, layered_import_page: LayeredImportPage):
+    def test_m03_03_missing_domain_shows_error(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M03-03: B列一级应用域名称在库中不存在，断言业务校验不通过并输出错误数据行。"""
-        ds = get_m03_dataset("reference_and_required_errors")
+        run_id = import_run_id("m03_missing_domain")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["file_path"])
-        layered_import_page.click_validate_table()
+        build_upload_validate(
+            layered_import_page,
+            tmp_path,
+            run_id,
+            lambda h: m03_missing_app_domain_row(h, f"auto_{run_id}"),
+        )
         layered_import_page.should_show_import_errors(["校验失败", "错误", "行"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
 
-    def test_m03_04_missing_system_shows_error(self, layered_import_page: LayeredImportPage):
+    def test_m03_04_missing_system_shows_error(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M03-04: D列应用系统名称在库中不存在，断言业务校验不通过并输出错误数据行。"""
-        ds = get_m03_dataset("reference_and_required_errors")
+        run_id = import_run_id("m03_missing_system")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["file_path"])
-        layered_import_page.click_validate_table()
+        build_upload_validate(
+            layered_import_page,
+            tmp_path,
+            run_id,
+            lambda h: m03_missing_app_system_row(h, f"auto_{run_id}"),
+        )
         layered_import_page.should_show_import_errors(["系统", "错误", "行", "校验失败"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
 
-    def test_m03_05_domain_system_mismatch_shows_error(self, layered_import_page: LayeredImportPage):
+    def test_m03_05_domain_system_mismatch_shows_error(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M03-05: B列一级应用域与D列应用系统不对应，断言业务校验不通过并输出错误数据行。"""
-        ds = get_m03_dataset("reference_and_required_errors")
+        run_id = import_run_id("m03_domain_system_mismatch")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["file_path"])
-        layered_import_page.click_validate_table()
+        build_upload_validate(
+            layered_import_page,
+            tmp_path,
+            run_id,
+            lambda h: m03_app_domain_system_mismatch_row(h, f"auto_{run_id}"),
+        )
         layered_import_page.should_show_import_errors(["对应", "不匹配", "错误", "校验失败"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
 
-    def test_m03_06_missing_layer_shows_error(self, layered_import_page: LayeredImportPage):
+    def test_m03_06_missing_layer_shows_error(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M03-06: L1~L3分层在库中不存在或与系统不匹配，断言业务校验不通过并输出错误数据行。"""
-        ds = get_m03_dataset("reference_and_required_errors")
+        run_id = import_run_id("m03_missing_layer")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["file_path"])
-        layered_import_page.click_validate_table()
+        build_upload_validate(
+            layered_import_page,
+            tmp_path,
+            run_id,
+            lambda h: m03_missing_layer_row(h, f"auto_{run_id}"),
+        )
         layered_import_page.should_show_import_errors(["分层", "L1", "L2", "L3", "错误", "校验失败"])
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
@@ -110,12 +131,16 @@ class TestM03ReferenceDataErrors:
 class TestM03RequiredAndOptionalFields:
     """M03 必填字段与非必填字段校验测试。"""
 
-    def test_m03_07_missing_required_fields_blocked(self, layered_import_page: LayeredImportPage):
+    def test_m03_07_missing_required_fields_blocked(self, layered_import_page: LayeredImportPage, tmp_path: Path):
         """M03-07: 表中文名/表英文名/表描述/存储周期/项目组任一为空，断言业务校验不通过。"""
-        ds = get_m03_dataset("reference_and_required_errors")
+        run_id = import_run_id("m03_missing_required")
         layered_import_page.open_m03_entity_import_dialog()
-        layered_import_page.upload_file(ds["file_path"])
-        layered_import_page.click_validate_table()
+        build_upload_validate(
+            layered_import_page,
+            tmp_path,
+            run_id,
+            lambda h: m03_missing_required_field_row(h, f"auto_{run_id}"),
+        )
         layered_import_page.should_not_allow_import()
         layered_import_page.close_import_dialog()
 
@@ -129,7 +154,7 @@ class TestM03RequiredAndOptionalFields:
         row["一级应用域编号"] = ""
         row["应用系统编码"] = ""
         row["数据责任部门"] = ""
-        import_file = create_workbook_from_headers(tmp_path, f"{run_id}.xlsx", headers, row)
+        import_file = create_workbook_from_template(template_file, tmp_path / f"{run_id}.xlsx", headers, row)
 
         layered_import_page.upload_file(import_file)
         layered_import_page.click_validate_table()

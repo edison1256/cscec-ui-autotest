@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from tests.dataresources.import_workbooks import (
-    create_workbook_from_headers,
+    create_workbook_from_template,
     m03_app_domain_system_mismatch_row,
     m03_missing_app_domain_row,
     m03_missing_app_system_row,
@@ -83,9 +83,9 @@ class TestM03M04ImportBusinessErrors:
         data_resources.open_import_dialog("M03")
         template_path = data_resources.download_import_template(tmp_path, "M03")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_missing_app_domain_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_missing_app_domain_{token}.xlsx",
             headers,
             m03_missing_app_domain_row(headers, table_english_name),
         )
@@ -104,9 +104,9 @@ class TestM03M04ImportBusinessErrors:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_invalid_attribute_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_invalid_attribute_{token}.xlsx",
             headers,
             m04_invalid_attribute_row(headers, table_english_name, field_english_name),
         )
@@ -126,9 +126,9 @@ class TestM03M04ImportBusinessErrors:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_missing_required_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_missing_required_{token}.xlsx",
             headers,
             m04_missing_required_field_row(headers, table_english_name, field_english_name),
         )
@@ -153,9 +153,9 @@ class TestM03M04ImportA1BusinessErrors:
         data_resources.open_import_dialog("M03")
         template_path = data_resources.download_import_template(tmp_path, "M03")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_missing_app_system_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_missing_app_system_{token}.xlsx",
             headers,
             m03_missing_app_system_row(headers, table_english_name),
         )
@@ -173,9 +173,9 @@ class TestM03M04ImportA1BusinessErrors:
         data_resources.open_import_dialog("M03")
         template_path = data_resources.download_import_template(tmp_path, "M03")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_domain_system_mismatch_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_domain_system_mismatch_{token}.xlsx",
             headers,
             m03_app_domain_system_mismatch_row(headers, table_english_name),
         )
@@ -193,9 +193,9 @@ class TestM03M04ImportA1BusinessErrors:
         data_resources.open_import_dialog("M03")
         template_path = data_resources.download_import_template(tmp_path, "M03")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_missing_layer_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_missing_layer_{token}.xlsx",
             headers,
             m03_missing_layer_row(headers, table_english_name),
         )
@@ -213,9 +213,9 @@ class TestM03M04ImportA1BusinessErrors:
         data_resources.open_import_dialog("M03")
         template_path = data_resources.download_import_template(tmp_path, "M03")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_missing_required_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_missing_required_{token}.xlsx",
             headers,
             m03_missing_required_field_row(headers, table_english_name),
         )
@@ -234,9 +234,9 @@ class TestM03M04ImportA1BusinessErrors:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_missing_locator_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_missing_locator_{token}.xlsx",
             headers,
             m04_missing_locator_row(headers, table_english_name, field_english_name),
         )
@@ -255,9 +255,9 @@ class TestM03M04ImportA1BusinessErrors:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_locator_mismatch_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_locator_mismatch_{token}.xlsx",
             headers,
             m04_locator_mismatch_row(headers, table_english_name, field_english_name),
         )
@@ -283,9 +283,9 @@ class TestM03M04ImportA2BusinessErrors:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_missing_entity_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_missing_entity_{token}.xlsx",
             headers,
             m04_missing_entity_row(headers, table_english_name, field_english_name),
         )
@@ -303,9 +303,9 @@ class TestM03M04ImportA2BusinessErrors:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_empty_boolean_flags_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_empty_boolean_flags_{token}.xlsx",
             headers,
             m04_empty_boolean_flags_row(headers, field_english_name),
         )
@@ -330,9 +330,9 @@ class TestM03M04ImportA3PositiveContracts:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_source_system_flag_empty_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_source_system_flag_empty_{token}.xlsx",
             headers,
             m04_source_system_flag_empty_row(headers, field_english_name),
         )
@@ -359,9 +359,9 @@ class TestM03M04ImportA3PositiveContracts:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_source_system_flag_unrestricted_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_source_system_flag_unrestricted_{token}.xlsx",
             headers,
             m04_source_system_flag_unrestricted_row(headers, field_english_name),
         )
@@ -378,9 +378,9 @@ class TestM03M04ImportA3PositiveContracts:
         data_resources.open_import_dialog("M04")
         template_path = data_resources.download_import_template(tmp_path, "M04")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M04_optional_fields_empty_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M04_optional_fields_empty_{token}.xlsx",
             headers,
             m04_optional_fields_empty_row(headers, field_english_name),
         )
@@ -408,9 +408,9 @@ class TestM03ImportA5PreImportContracts:
         data_resources.open_import_dialog("M03")
         template_path = data_resources.download_import_template(tmp_path, "M03")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_pre_import_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_pre_import_{token}.xlsx",
             headers,
             m03_valid_pre_import_row(headers, table_english_name),
         )
@@ -439,9 +439,9 @@ class TestM03ImportA6DialogState:
         data_resources.open_import_dialog("M03")
         template_path = data_resources.download_import_template(tmp_path, "M03")
         headers = read_first_sheet_headers(template_path)
-        import_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_multiple_error_rows_{token}.xlsx",
+        import_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_multiple_error_rows_{token}.xlsx",
             headers,
             m03_multiple_error_rows(headers, table_english_name),
         )
@@ -463,15 +463,15 @@ class TestM03ImportA6DialogState:
         data_resources.open_import_dialog("M03")
         template_path = data_resources.download_import_template(tmp_path, "M03")
         headers = read_first_sheet_headers(template_path)
-        invalid_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_reupload_invalid_{token}.xlsx",
+        invalid_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_reupload_invalid_{token}.xlsx",
             headers,
             m03_missing_app_domain_row(headers, invalid_table_english_name),
         )
-        valid_file = create_workbook_from_headers(
-            tmp_path,
-            f"M03_reupload_valid_{token}.xlsx",
+        valid_file = create_workbook_from_template(
+            template_path,
+            tmp_path / f"M03_reupload_valid_{token}.xlsx",
             headers,
             m03_valid_pre_import_row(headers, valid_table_english_name),
         )
@@ -488,3 +488,5 @@ class TestM03ImportA6DialogState:
 
         data_resources.search_by_keyword(valid_table_english_name)
         data_resources.should_show_no_search_results()
+
+

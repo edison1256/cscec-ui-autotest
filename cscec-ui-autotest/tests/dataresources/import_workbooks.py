@@ -204,6 +204,28 @@ def create_workbook_from_headers(
     return path
 
 
+def create_workbook_from_template(
+    template_path: Path,
+    output_path: Path,
+    headers: list[str],
+    row_values: dict[str, str] | list[dict[str, str]],
+) -> Path:
+    """Create an xlsx by preserving the downloaded template and filling data rows."""
+    rows = row_values if isinstance(row_values, list) else [row_values]
+    data_rows = [[row.get(header, "") for header in headers] for row in rows]
+
+    with zipfile.ZipFile(template_path, "r") as source:
+        updated_sheet_xml = _worksheet_xml_from_template(
+            source.read("xl/worksheets/sheet1.xml"),
+            data_rows,
+        )
+        with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as target:
+            for item in source.infolist():
+                content = updated_sheet_xml if item.filename == "xl/worksheets/sheet1.xml" else source.read(item.filename)
+                target.writestr(item, content)
+    return output_path
+
+
 def create_m03_column_mismatch_workbook(tmp_path: Path, table_english_name: str) -> Path:
     """Create an M03 workbook whose header intentionally mismatches the template."""
     headers = [
@@ -780,6 +802,51 @@ def _worksheet_xml(rows: list[list[str]]) -> str:
         f'<sheetData>{"".join(row_xml)}</sheetData>'
         "</worksheet>"
     )
+
+
+def _worksheet_xml_from_template(worksheet_xml: bytes, data_rows: list[list[str]]) -> bytes:
+    """Replace template data rows while keeping worksheet metadata and cell styles."""
+    ElementTree.register_namespace("", _MAIN_NS["main"])
+    root = ElementTree.fromstring(worksheet_xml)
+    sheet_data = root.find("main:sheetData", _MAIN_NS)
+    if sheet_data is None:
+        raise AssertionError("模板缺少 sheetData，无法生成导入文件")
+
+    template_rows = sheet_data.findall("main:row", _MAIN_NS)
+    if not template_rows:
+        raise AssertionError("模板缺少表头行，无法生成导入文件")
+
+    header_row = template_rows[0]
+    header_cells = header_row.findall("main:c", _MAIN_NS)
+    style_row = template_rows[1] if len(template_rows) > 1 else header_row
+    style_cells = style_row.findall("main:c", _MAIN_NS)
+
+    for row in list(sheet_data):
+        sheet_data.remove(row)
+    sheet_data.append(header_row)
+
+    for row_index, values in enumerate(data_rows, start=2):
+        new_row = ElementTree.Element(f"{{{_MAIN_NS['main']}}}row", {"r": str(row_index)})
+        for column_index, value in enumerate(values, start=1):
+            style_cell = style_cells[column_index - 1] if column_index <= len(style_cells) else None
+            if style_cell is None and column_index <= len(header_cells):
+                style_cell = header_cells[column_index - 1]
+            attrs = {"r": f"{_column_name(column_index)}{row_index}", "t": "inlineStr"}
+            if style_cell is not None and style_cell.attrib.get("s"):
+                attrs["s"] = style_cell.attrib["s"]
+            cell = ElementTree.Element(f"{{{_MAIN_NS['main']}}}c", attrs)
+            inline_string = ElementTree.SubElement(cell, f"{{{_MAIN_NS['main']}}}is")
+            text = ElementTree.SubElement(inline_string, f"{{{_MAIN_NS['main']}}}t")
+            text.text = str(value)
+            new_row.append(cell)
+        sheet_data.append(new_row)
+
+    dimension = root.find("main:dimension", _MAIN_NS)
+    if dimension is not None:
+        last_col = _column_name(max(len(header_cells), len(data_rows[0]) if data_rows else 1))
+        dimension.set("ref", f"A1:{last_col}{max(1, len(data_rows) + 1)}")
+
+    return ElementTree.tostring(root, encoding="utf-8", xml_declaration=True)
 
 
 def _column_name(index: int) -> str:

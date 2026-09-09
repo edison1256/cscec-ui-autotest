@@ -9,7 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 
-from tests.dataresources.import_workbooks import create_workbook_from_headers, read_first_sheet_headers
+from tests.dataresources.import_workbooks import create_workbook_from_template, read_first_sheet_headers
 
 
 def build_upload_validate(
@@ -29,9 +29,10 @@ def build_upload_validate(
     返回:
         (headers, row_values)，供需要复用行值/表头的用例使用。
     """
-    headers = read_first_sheet_headers(page.download_template(tmp_path))
+    template_file = page.download_template(tmp_path)
+    headers = read_first_sheet_headers(template_file)
     row_values = row_builder(headers)
-    import_file = create_workbook_from_headers(tmp_path, f"{run_id}.xlsx", headers, row_values)
+    import_file = create_workbook_from_template(template_file, tmp_path / f"{run_id}.xlsx", headers, row_values)
     page.upload_file(import_file)
     page.click_validate_table()
     return headers, row_values

@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+from pathlib import Path
+from zipfile import ZipFile
+
 from tests.dataresources.import_workbooks import (
+    create_workbook_from_template,
     m02_duplicate_layer_rows,
     m02_unique_layer_row,
     m03_duplicate_entity_rows,
     m03_valid_like_row,
     m04_missing_security_classification_row,
     m04_optional_fields_empty_row,
+    read_first_sheet_headers,
 )
 
 
@@ -51,6 +56,19 @@ def test_m03_valid_like_row_accepts_unique_table_english_name():
     row = m03_valid_like_row(headers, "auto_m03_unique")
 
     assert row["表英文名称"] == "auto_m03_unique"
+
+
+def test_create_workbook_from_template_preserves_downloaded_template_package(tmp_path: Path):
+    template_file = Path("test_assets/datasets/pre/layered_import/M03数据实体清单.xlsx")
+    headers = read_first_sheet_headers(template_file)
+    row = m03_valid_like_row(headers, "auto_template_copy")
+
+    output_file = create_workbook_from_template(template_file, tmp_path / "m03_from_template.xlsx", headers, row)
+
+    assert read_first_sheet_headers(output_file) == headers
+    with ZipFile(template_file) as template_archive, ZipFile(output_file) as output_archive:
+        assert "xl/styles.xml" in output_archive.namelist()
+        assert output_archive.read("xl/styles.xml") == template_archive.read("xl/styles.xml")
 
 
 def test_m04_missing_security_classification_row_keeps_locator_valid():
