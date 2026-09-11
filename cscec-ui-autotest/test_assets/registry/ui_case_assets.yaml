@@ -3181,7 +3181,7 @@ assets:
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
-      manual_case_id: P0-PORTAL-SUPP-001~004
+      manual_case_id: P0-PORTAL-SUPP-001~005
     test_path: tests/portal/test_portal_p0_readonly_supp.py::TestPortalP0ReadonlySupp
     page_objects:
       - pages/portal/portal_home_page.py
@@ -3194,4 +3194,4 @@ assets:
       pre: true
       prod_default: false
       prod_explicit: true
-    notes: "覆盖门户链接、用户浮层、未授权拦截和图片渲染；候选阶段不进入生产默认 smoke。"
+    notes: "覆盖门户链接、用户浮层、未授权拦截、图片渲染，以及组织选择页组织树接口返回可选组织数据；候选阶段不进入生产默认 smoke。"
