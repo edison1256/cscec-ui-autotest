@@ -6,6 +6,7 @@ from playwright.sync_api import Locator, Page, expect
 
 from config.settings import settings
 from core.base_page import BasePage
+from core.interaction_evidence import click_and_expect, require_actionable
 from core.logger import get_logger
 
 
@@ -32,15 +33,15 @@ class RoleManagementPage(BasePage):
     def open_from_console_menu(self) -> "RoleManagementPage":
         """Open 权限管理 -> 角色管理 through the visible console menu."""
         permission_menu = self.page.get_by_text("权限管理", exact=True).first
-        permission_menu.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
-        permission_menu.click()
+        require_actionable(permission_menu, "打开权限管理菜单").click()
 
         role_menu = self.page.get_by_text("角色管理", exact=True).first
-        role_menu.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
-        role_menu.click()
-
-        self.page.get_by_text("角色列表", exact=True).wait_for(
-            state="visible", timeout=settings.NAVIGATION_TIMEOUT
+        click_and_expect(
+            role_menu,
+            lambda: expect(self.page.get_by_text("角色列表", exact=True)).to_be_visible(
+                timeout=settings.NAVIGATION_TIMEOUT
+            ),
+            action_name="权限管理进入角色管理",
         )
         self.assertions.url_contains("roleManage")
         logger.info("[导航] 权限管理 -> 角色管理")
@@ -49,29 +50,31 @@ class RoleManagementPage(BasePage):
     def open_first_role_details(self) -> "RoleManagementPage":
         """Open the first available role without changing role data."""
         detail_button = self.page.get_by_role("button", name="详情", exact=True).first
-        detail_button.wait_for(state="visible", timeout=settings.NAVIGATION_TIMEOUT)
-        detail_button.click()
-
-        self.page.get_by_text("角色详情", exact=True).wait_for(
-            state="visible", timeout=settings.ACTION_TIMEOUT
+        click_and_expect(
+            detail_button,
+            lambda: expect(self.page.get_by_text("角色详情", exact=True)).to_be_visible(
+                timeout=settings.ACTION_TIMEOUT
+            ),
+            action_name="打开首个角色详情",
         )
-        self.page.get_by_role("tab", name="成员", exact=True).wait_for(
-            state="visible", timeout=settings.ACTION_TIMEOUT
-        )
+        expect(self.page.get_by_role("tab", name="成员", exact=True)).to_be_visible()
         logger.info("[只读交互] 打开首个角色详情")
         return self
 
     def open_function_permissions(self) -> "RoleManagementPage":
         """Switch to 功能权限 and wait for either content or a rendered error."""
         function_tab = self.page.get_by_role("tab", name="功能权限", exact=True)
-        function_tab.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
+        require_actionable(function_tab, "切换角色功能权限 Tab")
         panel_id = function_tab.get_attribute("aria-controls")
         assert panel_id, "功能权限 Tab 缺少 aria-controls，无法定位内容面板"
 
-        function_tab.click()
-        expect(function_tab).to_have_attribute("aria-selected", "true")
         panel = self.page.locator(f"#{panel_id}")
-        panel.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
+        click_and_expect(
+            function_tab,
+            lambda: expect(function_tab).to_have_attribute("aria-selected", "true"),
+            action_name="切换角色功能权限 Tab",
+        )
+        expect(panel).to_be_visible(timeout=settings.ACTION_TIMEOUT)
 
         self.page.wait_for_function(
             """panelId => {

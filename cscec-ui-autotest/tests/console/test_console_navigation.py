@@ -9,6 +9,8 @@
 import pytest
 
 from core.navigation_helpers import EntryNotExposed
+from core.browser_health import BrowserHealthMonitor
+from pages.console.console_global_navigation_page import ConsoleGlobalNavigationPage
 from pages.portal.portal_home_page import PortalHomePage
 
 
@@ -18,12 +20,19 @@ class TestConsoleNavigation:
     """控制台导航测试"""
 
     @pytest.mark.smoke
+    @pytest.mark.prod_mandatory
     def test_console_home_accessible(self, logged_in_page):
         """测试控制台首页可访问"""
-        portal = PortalHomePage(logged_in_page)
-        portal.open()
-        console = portal.navigate_to_console()
-        console.should_be_on_console()
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "UI-BASE-CONSOLE-001",
+            "控制台首页",
+        ).start()
+        try:
+            ConsoleGlobalNavigationPage(logged_in_page).open_console_home()
+        finally:
+            health.stop()
+        health.assert_healthy()
 
     @pytest.mark.regression
     def test_navigate_to_service_supply(self, logged_in_page):

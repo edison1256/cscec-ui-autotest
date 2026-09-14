@@ -60,6 +60,7 @@ def main() -> None:
 Examples:
   python run_tests.py --env uat --refresh-auth -m smoke
   python run_tests.py --env prod --dry-run
+  python run_tests.py --env prod --prod-suite mandatory
   python run_tests.py --env prod -m "write or destructive"
   python run_tests.py --env pre -p console -k service
         """,
@@ -77,6 +78,11 @@ Examples:
     parser.add_argument("--no-html", action="store_true", help="Disable pytest-html defaults")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose pytest output")
     parser.add_argument("--env", choices=["uat", "pre", "prod"], help="Target environment")
+    parser.add_argument(
+        "--prod-suite",
+        choices=["mandatory", "conditional", "probe", "controlled-write"],
+        help="Select one production execution-responsibility suite",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Collect tests without executing them")
     parser.add_argument("--refresh-auth", action="store_true", help="Force login and rewrite auth_states/<env>.json")
 
@@ -88,11 +94,24 @@ Examples:
         os.environ["HEADLESS"] = "true" if args.headless else "false"
 
     target_env = os.environ.get("ENV", "uat").lower()
-    explicit_selection = bool(args.mark or args.path or args.keyword)
+    if args.prod_suite and target_env != "prod":
+        parser.error("--prod-suite can only be used with --env prod")
+    if args.prod_suite and args.mark:
+        parser.error("--prod-suite and --mark cannot be used together")
+
+    explicit_selection = bool(args.mark or args.path or args.keyword or args.prod_suite)
 
     cmd = [_project_python(), "-m", "pytest", _normalize_test_path(args.path)]
 
-    if args.mark:
+    prod_suite_marks = {
+        "mandatory": "prod_mandatory and readonly",
+        "conditional": "prod_conditional and readonly",
+        "probe": "prod_probe and readonly",
+        "controlled-write": "controlled_write and (write or destructive)",
+    }
+    if args.prod_suite:
+        cmd.extend(["-m", prod_suite_marks[args.prod_suite]])
+    elif args.mark:
         cmd.extend(["-m", args.mark])
     elif target_env == "prod" and not explicit_selection:
         cmd.extend(["-m", "smoke and readonly"])
@@ -116,6 +135,8 @@ Examples:
     print(f"HEADLESS={os.environ.get('HEADLESS', '')}")
     if target_env == "prod" and not explicit_selection:
         print("Default prod selection: -m \"smoke and readonly\"")
+    if args.prod_suite:
+        print(f"Production responsibility suite: {args.prod_suite}")
 
     exit_code = _run(cmd)
 

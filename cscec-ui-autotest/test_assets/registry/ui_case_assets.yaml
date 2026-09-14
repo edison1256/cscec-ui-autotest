@@ -263,6 +263,7 @@ assets:
       - console
       - smoke
       - readonly
+      - prod_mandatory
       - regression
       - domain_split
     env_policy:
@@ -272,6 +273,7 @@ assets:
       prod_explicit: true
     evidence:
       prod_probe: "2026-09-14 真实 UI 路径稳定复现：角色详情 -> 功能权限显示 TypeError，console.error 为 _.checkedKeys.join is not a function"
+      prod_run: "2026-09-14 python run_tests.py --env prod --prod-suite mandatory --no-html -v: 7 passed；角色功能权限连续两轮正常渲染"
     notes: "生产发布门禁用例；只打开首个角色详情并切换功能权限 Tab，不点击编辑。入口、角色列表或详情缺失均失败，不允许 skip。"
 
   - asset_id: UI-REG-CONSOLE-001
@@ -2995,12 +2997,13 @@ assets:
       manual_case_id: C-P0-CONSOLE-PROFILE-002~004
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_profile_common_tool_opens_without_error
     page_objects:
-      - pages/portal/portal_home_page.py
+      - pages/console/console_global_navigation_page.py
     markers:
       - console
       - domain_split
       - smoke
       - readonly
+      - prod_mandatory
       - regression
     env_policy:
       uat: true
@@ -3010,6 +3013,7 @@ assets:
     evidence:
       prod_probe: "2026-09-04 reports/prod-hidden-surface-probe-20260904-profile-topbar.json: 资源/审批/订单账号浮层入口均进入 irp 控制台页面且无 404/500"
       prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k profile_common_tool -v --no-html: 3 passed"
+      prod_mandatory: "2026-09-14 python run_tests.py --env prod --prod-suite mandatory --no-html -v: 3 个账号浮层常用工具入口通过"
     notes: "覆盖 hover 后才出现的账号浮层常用工具入口；只验证导航打开，不进入提交、保存、删除确认等写入动作。"
 
   - asset_id: UI-PROD-DOMAIN-CONSOLE-TOPBAR-001
@@ -3023,12 +3027,13 @@ assets:
       manual_case_id: C-P0-CONSOLE-TOPBAR-001
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_topbar_return_to_portal_opens_without_error
     page_objects:
-      - pages/portal/portal_home_page.py
+      - pages/console/console_global_navigation_page.py
     markers:
       - console
       - domain_split
       - smoke
       - readonly
+      - prod_mandatory
       - regression
     env_policy:
       uat: true
@@ -3038,6 +3043,7 @@ assets:
     evidence:
       prod_probe: "2026-09-04 reports/prod-hidden-surface-probe-20260904-profile-topbar.json: 顶部返回图标进入 https://cloud.cscec.com/ 且无 404/500"
       prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k topbar_return_to_portal -v --no-html: passed"
+      prod_mandatory: "2026-09-14 python run_tests.py --env prod --prod-suite mandatory --no-html -v: 顶部返回门户入口通过"
     notes: "覆盖图标型全局头部入口；只校验控制台到 cloud 门户的导航和错误响应。"
 
   - asset_id: UI-PROD-SUPP-CONSOLE-001

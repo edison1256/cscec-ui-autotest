@@ -3,7 +3,9 @@
 import pytest
 
 from core.navigation_helpers import EntryNotExposed
+from core.browser_health import BrowserHealthMonitor
 from pages.console.console_home_page import ConsoleHomePage
+from pages.console.console_global_navigation_page import ConsoleGlobalNavigationPage
 from pages.portal.portal_home_page import PortalHomePage
 
 
@@ -75,11 +77,19 @@ def _open_console(logged_in_page) -> ConsoleHomePage:
 class TestConsoleP0ReadonlyRegression:
     """控制台 P0 只读页面回归。"""
 
+    @pytest.mark.prod_mandatory
     def test_console_workbench_accessible_and_search_safe(self, logged_in_page):
-        console = _open_console(logged_in_page)
-        console.should_be_on_console()
-        console.should_be_readonly_page_ready(["常用模块"])
-        console.fill_and_clear_menu_search()
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "C-P0-CONSOLE-001",
+            "控制台工作台菜单搜索",
+        ).start()
+        try:
+            console = ConsoleGlobalNavigationPage(logged_in_page).open_console_home()
+            console.verify_menu_search_round_trip()
+        finally:
+            health.stop()
+        health.assert_healthy()
 
     def test_console_all_menu_view_accessible(self, logged_in_page):
         console = _open_console(logged_in_page)

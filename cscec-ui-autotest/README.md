@@ -75,6 +75,8 @@ python run_tests.py --env uat --refresh-auth -m smoke
 
 - `python run_tests.py --env prod` 默认只跑 `smoke and readonly`。
 - `python run_tests.py --env prod --dry-run` 只收集 `smoke and readonly`。
+- `python run_tests.py --env prod --prod-suite mandatory` 运行当前 7 条控制台严格发布门禁。
+- `--prod-suite conditional/probe/controlled-write` 分别选择条件、探查和受控写入责任套件；迁移完成前可能尚未收集全部契约用例。
 - 如果显式传入 `-m`、`-p` 或 `-k`，按用户指定执行，不额外阻断写操作。
 
 UAT/PRE 不限制写入类用例：
@@ -91,6 +93,7 @@ python run_tests.py --env uat -m write
 python -m pytest --collect-only
 python run_tests.py --env uat --dry-run
 python run_tests.py --env prod --dry-run
+python run_tests.py --env prod --prod-suite mandatory
 python run_tests.py --env uat --refresh-auth -m smoke
 python run_tests.py --env prod -m "write or destructive"
 ```
@@ -105,6 +108,10 @@ python run_tests.py --env prod -m "write or destructive"
 | `smoke` | 核心冒烟验证 |
 | `regression` | 回归验证 |
 | `e2e` | 端到端流程 |
+| `prod_mandatory` | 生产强制门禁，不允许跳过或软通过 |
+| `prod_conditional` | 生产条件用例，前置条件满足时严格执行 |
+| `prod_probe` | 生产非阻断探查，单独统计 |
+| `controlled_write` | 生产受控写入，要求显式授权和数据白名单 |
 | `login` | 登录模块 |
 | `console` | 控制台模块 |
 | `doccenter` | 文档中心模块 |
@@ -148,11 +155,13 @@ self.antd.click_save_button()
 
 ```powershell
 .\.venv\Scripts\python.exe .\tools\validate_ui_assets.py --registry .\test_assets\registry\ui_case_assets.yaml
+.\.venv\Scripts\python.exe .\tools\validate_prod_console_contracts.py
 ```
 
 资产登记文件：
 
 - `test_assets/registry/ui_case_assets.yaml`：当前已自动化、候选、待稳定和写入类资产。
+- `test_assets/registry/prod_console_case_contracts.yaml`：44 条生产控制台 Case 的执行责任、入口、深度和证据契约。
 - `test_assets/incoming/`：新需求黑盒用例转换出的候选清单。
 - `test_assets/schema/ui-case-asset.schema.json`：资产字段约束。
 

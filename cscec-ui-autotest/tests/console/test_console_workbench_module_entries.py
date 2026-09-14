@@ -10,6 +10,7 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from config.settings import settings
 from core.browser_health import BrowserHealthMonitor
+from pages.console.console_global_navigation_page import ConsoleGlobalNavigationPage
 from pages.portal.portal_home_page import PortalHomePage
 
 
@@ -25,7 +26,7 @@ PROFILE_COMMON_TOOL_CASES = [
     ("\u8ba2\u5355", "\u8ba2\u5355\u7ba1\u7406", "C-P0-CONSOLE-PROFILE-004-order-tool"),
 ]
 PROFILE_COMMON_TOOLS = [
-    pytest.param(tool_text, expected_text, id=case_id)
+    pytest.param(tool_text, expected_text, case_id.rsplit("-", 2)[0], id=case_id)
     for tool_text, expected_text, case_id in PROFILE_COMMON_TOOL_CASES
 ]
 
@@ -189,89 +190,6 @@ def _click_table_action_by_text(page, text: str) -> None:
         raise AssertionError(f"未找到可点击的表格操作: {text}")
 
 
-def _open_profile_popover(page) -> None:
-    visible_markers = ["账号信息", "租户信息", "常用工具", *[case[0] for case in PROFILE_COMMON_TOOL_CASES]]
-    candidates = [
-        page.locator("[class*=userButton]").last,
-        page.locator(".udp-toolbar.button").last,
-        page.locator("[class*=headerIcon]").last,
-    ]
-    for candidate in candidates:
-        try:
-            if candidate.count() == 0 or not candidate.is_visible(timeout=1000):
-                continue
-            candidate.hover(timeout=settings.ACTION_TIMEOUT)
-            page.wait_for_timeout(800)
-            if _profile_popover_visible(page, visible_markers):
-                return
-            candidate.click(timeout=settings.ACTION_TIMEOUT)
-            page.wait_for_timeout(800)
-            if _profile_popover_visible(page, visible_markers):
-                return
-        except Exception:
-            continue
-    raise AssertionError("控制台右上角账号悬浮层未打开，未找到账号信息或常用工具入口")
-
-
-def _profile_popover_visible(page, visible_markers: list[str]) -> bool:
-    for text in visible_markers:
-        try:
-            if page.get_by_text(text, exact=True).first.is_visible(timeout=800):
-                return True
-        except Exception:
-            continue
-    return False
-
-
-def _click_profile_tool(page, tool_text: str) -> None:
-    _open_profile_popover(page)
-    clicked = page.evaluate(
-        """target => {
-            const isVisible = el => {
-                const rect = el.getBoundingClientRect();
-                const style = window.getComputedStyle(el);
-                return rect.width > 0 && rect.height > 0
-                    && style.visibility !== 'hidden'
-                    && style.display !== 'none'
-                    && style.pointerEvents !== 'none';
-            };
-            const candidates = [...document.querySelectorAll('body *')]
-                .filter(el => (el.innerText || el.textContent || '').trim() === target && isVisible(el))
-                .map(el => ({el, rect: el.getBoundingClientRect()}))
-                .filter(item => item.rect.left > window.innerWidth * 0.55)
-                .sort((a, b) => a.rect.top - b.rect.top || a.rect.left - b.rect.left);
-            if (!candidates.length) return false;
-            const textNode = candidates[0].el;
-            const clickable = textNode.closest('a, button, [role="button"], [role="link"], [onclick], .tool-item') || textNode;
-            clickable.scrollIntoView({block: 'center', inline: 'center'});
-            clickable.click();
-            return true;
-        }""",
-        tool_text,
-    )
-    if not clicked:
-        raise AssertionError(f"控制台右上角账号浮层未找到常用工具入口: {tool_text}")
-    page.wait_for_timeout(1500)
-    try:
-        page.wait_for_load_state("networkidle", timeout=10000)
-    except PlaywrightTimeoutError:
-        pass
-
-
-def _click_topbar_return_to_portal(page) -> None:
-    icon = page.locator(".anticon-rollback").last
-    try:
-        icon.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
-    except PlaywrightTimeoutError as exc:
-        pytest.skip(f"控制台顶部返回门户图标未暴露: {exc}")
-    icon.click(timeout=settings.ACTION_TIMEOUT)
-    page.wait_for_timeout(1500)
-    try:
-        page.wait_for_load_state("networkidle", timeout=10000)
-    except PlaywrightTimeoutError:
-        pass
-
-
 @pytest.mark.console
 @pytest.mark.smoke
 @pytest.mark.readonly
@@ -311,30 +229,37 @@ class TestConsoleWorkbenchModuleEntries:
             health.stop()
         health.assert_healthy()
 
-    @pytest.mark.parametrize("tool_text, expected_text", PROFILE_COMMON_TOOLS)
-    def test_console_profile_common_tool_opens_without_error(self, logged_in_page, tool_text, expected_text):
-        console_page = _open_console_workbench(logged_in_page)
-        health = BrowserHealthMonitor(console_page, f"账号浮层常用工具 {tool_text}").start()
+    @pytest.mark.parametrize("tool_text, expected_text, case_id", PROFILE_COMMON_TOOLS)
+    @pytest.mark.prod_mandatory
+    def test_console_profile_common_tool_opens_without_error(
+        self,
+        logged_in_page,
+        tool_text,
+        expected_text,
+        case_id,
+    ):
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            case_id,
+            f"账号浮层常用工具 {tool_text}",
+        ).start()
         try:
-            _click_profile_tool(console_page, tool_text)
+            console = ConsoleGlobalNavigationPage(logged_in_page).open_console_home()
+            console.open_profile_tool(tool_text, expected_text)
         finally:
             health.stop()
-
-        assert urlparse(console_page.url).netloc.lower() == urlparse(settings.CONSOLE_BASE_URL).netloc.lower()
-        body = _page_text(console_page)
-        assert expected_text in body, f"账号浮层常用工具未打开预期页面: tool={tool_text}, url={console_page.url}"
-        assert not ERROR_TEXT_RE.search(body[:3000]), f"账号浮层常用工具打开错误页: tool={tool_text}, url={console_page.url}"
         health.assert_healthy()
 
+    @pytest.mark.prod_mandatory
     def test_console_topbar_return_to_portal_opens_without_error(self, logged_in_page):
-        console_page = _open_console_workbench(logged_in_page)
-        health = BrowserHealthMonitor(console_page, "控制台顶部返回门户").start()
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "C-P0-CONSOLE-TOPBAR-001",
+            "控制台顶部返回门户",
+        ).start()
         try:
-            _click_topbar_return_to_portal(console_page)
+            console = ConsoleGlobalNavigationPage(logged_in_page).open_console_home()
+            console.return_to_portal()
         finally:
             health.stop()
-
-        assert urlparse(console_page.url).netloc.lower() == urlparse(settings.PORTAL_BASE_URL).netloc.lower()
-        body = _page_text(console_page)
-        assert not ERROR_TEXT_RE.search(body[:3000]), f"控制台顶部返回门户打开错误页: url={console_page.url}"
         health.assert_healthy()

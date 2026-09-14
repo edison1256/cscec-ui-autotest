@@ -1,0 +1,410 @@
+version: 1
+
+mandatory_defaults: &mandatory_defaults
+  classification: mandatory
+  prerequisites:
+    - type: tenant
+      expected: 中建云
+  owner_note: 中建云生产发布强制门禁
+  ignore_rules: []
+  critical_api_rationale: ''
+
+conditional_role_defaults: &conditional_role_defaults
+  classification: conditional
+  prerequisites:
+    - type: permission_or_module
+      expected: 当前测试账号已登记为可见
+  critical_api_patterns: []
+  owner_note: 入口适用范围取决于账号权限或工作台配置
+  ignore_rules: []
+  critical_api_rationale: ''
+
+conditional_data_defaults: &conditional_data_defaults
+  classification: conditional
+  prerequisites:
+    - type: stable_business_sample
+      expected: 资产登记中存在唯一且允许只读查看的生产样本
+  critical_api_patterns: []
+  owner_note: 执行前必须验证稳定业务样本
+  ignore_rules: []
+  critical_api_rationale: ''
+
+probe_defaults: &probe_defaults
+  classification: probe
+  prerequisites: []
+  critical_api_patterns: []
+  owner_note: 非阻断探查，不计入 Mandatory 通过率
+  ignore_rules: []
+  critical_api_rationale: ''
+
+cases:
+  - <<: *mandatory_defaults
+    case_id: UI-BASE-CONSOLE-001
+    test_path: tests/console/test_console_navigation.py::TestConsoleNavigation::test_console_home_accessible
+    parameter_id: null
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [控制台域名、工作台标题和页面主体可见]
+    critical_api_patterns:
+      - /portal/login/checkToken$
+      - /irp-api/irp-portal-console/workbench/overview/commonfunctions/list
+
+  - <<: *mandatory_defaults
+    case_id: C-P0-CONSOLE-001
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_workbench_accessible_and_search_safe
+    parameter_id: null
+    entry_type: HYBRID
+    max_depth: L2
+    expected_state: [菜单搜索框成功填充并清空]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/workbench/overview/commonfunctions/list
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-002
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_all_menu_view_accessible
+    parameter_id: null
+    entry_type: HYBRID
+    max_depth: L2
+    expected_state: [全部菜单视图打开且菜单搜索可交互]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-003
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-003-subscription-service
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [订阅服务菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-004
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-004-approval-flow
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [审批流程菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-005
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-005-order-center
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [订单中心菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-006
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-006-ticket-center
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [工单中心菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-007
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-007-evaluation-center
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [评价中心菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-008
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-008-system-config
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [系统配置菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-009
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-009-metering-statistics
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [计量统计菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-010
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-010-ops-monitoring
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [运维监控菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-011
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-011-operation-management
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [运营管理菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-012
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
+    parameter_id: C-P0-CONSOLE-012-permission-management
+    entry_type: HYBRID
+    max_depth: L1
+    expected_state: [权限管理菜单组可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-013
+    test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_flow_page_accessible
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    expected_state: [流程页面和 flowmodel 路由可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-WB-001
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-001-order-management
+    entry_type: UI
+    max_depth: L1
+    expected_state: [订单管理页面可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-WB-002
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-002-app-subscription
+    entry_type: UI
+    max_depth: L1
+    expected_state: [应用订阅页面可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-WB-003
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-003-data-asset-subscription
+    entry_type: UI
+    max_depth: L1
+    expected_state: [数据资产订阅页面可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-WB-004
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-004-api-subscription
+    entry_type: UI
+    max_depth: L1
+    expected_state: [API订阅页面可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-WB-005
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-005-component-subscription
+    entry_type: UI
+    max_depth: L1
+    expected_state: [组件订阅页面可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-WB-006
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-006-cloud-product-subscription
+    entry_type: UI
+    max_depth: L1
+    expected_state: [云产品订阅页面可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-WB-007
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-007-api-resource
+    entry_type: UI
+    max_depth: L1
+    expected_state: [API资源页面可见]
+
+  - <<: *conditional_role_defaults
+    case_id: C-P0-CONSOLE-WB-008
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-008-data-source-config
+    entry_type: UI
+    max_depth: L1
+    expected_state: [数据源配置页面可见]
+
+  - <<: *conditional_data_defaults
+    case_id: C-P0-CONSOLE-WB-DEEP-001
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-DEEP-001-order-detail
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [订单详情和唯一业务标识可见]
+
+  - <<: *conditional_data_defaults
+    case_id: C-P0-CONSOLE-WB-DEEP-002
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-DEEP-002-app-subscription-detail
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [应用订阅详情和唯一业务标识可见]
+
+  - <<: *conditional_data_defaults
+    case_id: C-P0-CONSOLE-WB-DEEP-003
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-DEEP-003-data-asset-subscription-detail
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [数据资产订阅详情和唯一业务标识可见]
+
+  - <<: *conditional_data_defaults
+    case_id: C-P0-CONSOLE-WB-DEEP-004
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-DEEP-004-component-subscription-detail
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [组件订阅详情和唯一业务标识可见]
+
+  - <<: *conditional_data_defaults
+    case_id: C-P0-CONSOLE-WB-DEEP-005
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
+    parameter_id: C-P0-CONSOLE-WB-DEEP-005-cloud-product-subscription-detail
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [云产品订阅详情和唯一业务标识可见]
+
+  - <<: *mandatory_defaults
+    case_id: C-P0-CONSOLE-PROFILE-002
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_profile_common_tool_opens_without_error
+    parameter_id: C-P0-CONSOLE-PROFILE-002-resource-tool
+    entry_type: UI
+    max_depth: L1
+    expected_state: [账号浮层资源入口打开应用管理页面]
+    critical_api_patterns: [/irp-api/irp-portal-console/app-list/console-list]
+
+  - <<: *mandatory_defaults
+    case_id: C-P0-CONSOLE-PROFILE-003
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_profile_common_tool_opens_without_error
+    parameter_id: C-P0-CONSOLE-PROFILE-003-approval-tool
+    entry_type: UI
+    max_depth: L1
+    expected_state: [账号浮层审批入口打开待办流程页面]
+    critical_api_patterns: []
+    critical_api_rationale: 当前入口只切换已加载的控制台路由，无稳定的页面专属 JSON 请求；使用目标 URL、待办流程标题及全局浏览器错误作为证据
+
+  - <<: *mandatory_defaults
+    case_id: C-P0-CONSOLE-PROFILE-004
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_profile_common_tool_opens_without_error
+    parameter_id: C-P0-CONSOLE-PROFILE-004-order-tool
+    entry_type: UI
+    max_depth: L1
+    expected_state: [账号浮层订单入口打开订单管理页面]
+    critical_api_patterns: [/engine/metadata/getMenuPageName]
+
+  - <<: *mandatory_defaults
+    case_id: C-P0-CONSOLE-TOPBAR-001
+    test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_console_topbar_return_to_portal_opens_without_error
+    parameter_id: null
+    entry_type: UI
+    max_depth: L1
+    expected_state: [返回 cloud 门户域名且页面主体可见]
+    critical_api_patterns: [/portal/login/checkToken$]
+    ignore_rules:
+      - category: requestfailed
+        detail_pattern: '^(GET|POST) https://irp\.cscec\.com/.*: net::ERR_ABORTED$'
+        reason: 跨域返回 cloud 时浏览器会取消旧 irp 工作台尚未完成的只读请求
+        expires_on: 2027-03-14
+
+  - <<: *conditional_data_defaults
+    case_id: M1-01
+    test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_01_resource_list_search_available
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L2
+    expected_state: [指定资源搜索结果可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M1-02
+    test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_02_resource_detail_accessible
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [指定资源详情唯一标识和核心字段可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M1-03
+    test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_03_resource_edit_readonly_check
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [指定资源编辑页只读回显可见]
+
+  - <<: *probe_defaults
+    case_id: M1-04
+    test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_04_portal_search_and_open_resource
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L2
+    expected_state: [cloud 服务中心目标资源详情可见]
+
+  - <<: *probe_defaults
+    case_id: M2-01
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_01_navigate_to_apply_page
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L1
+    expected_state: [真实 UI 申请路径和目标资源表单可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M2-03
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_03_order_list_search
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L2
+    expected_state: [指定订单搜索结果可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M2-04
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_04_order_detail_info_visible
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [指定订单详情唯一标识和流转字段可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M3-01
+    test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L2
+    expected_state: [指定待办搜索结果可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M3-02
+    test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_02_approval_detail_form_visible
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [指定审批详情业务对象和流程字段可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M3-04
+    test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_04_message_bell_click_and_navigate
+    parameter_id: null
+    entry_type: UI
+    max_depth: L3
+    expected_state: [消息面板和指定消息目标页面可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M4-01
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_01_ticket_list_search_accessible
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L2
+    expected_state: [指定工单搜索结果可见]
+
+  - <<: *conditional_data_defaults
+    case_id: M4-02
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_02_ticket_detail_info_visible
+    parameter_id: null
+    entry_type: DIRECT
+    max_depth: L3
+    expected_state: [指定工单详情唯一标识和核心字段可见]
+
+  - <<: *mandatory_defaults
+    case_id: C-P0-CONSOLE-014
+    test_path: tests/console/test_role_management_readonly_regression.py::TestRoleManagementReadonlyRegression::test_first_role_function_permissions_render_without_runtime_error
+    parameter_id: null
+    entry_type: UI
+    max_depth: L4
+    expected_state: [角色功能权限 Tab 激活且权限树正常渲染]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/tenant-role/pageConsole
+      - /irp-api/irp-portal-console/tenant-role/pageMembers
+      - /irp-api/irp-portal-console/tenant-role/getPermissionTree

@@ -13,6 +13,7 @@ from pages.console.role_management_page import RoleManagementPage
 @pytest.mark.readonly
 @pytest.mark.regression
 @pytest.mark.domain_split
+@pytest.mark.prod_mandatory
 class TestRoleManagementReadonlyRegression:
     """Cover list -> details -> permission-tab rendering through the real UI path."""
 
@@ -22,8 +23,10 @@ class TestRoleManagementReadonlyRegression:
         """C-P0-CONSOLE-014: a role's function-permission tree renders safely."""
         role_page = RoleManagementPage(logged_in_page).open_console_home()
 
-        health = BrowserHealthMonitor(
-            logged_in_page, "角色管理首个角色的功能权限 Tab"
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "C-P0-CONSOLE-014",
+            "角色管理首个角色的功能权限 Tab",
         ).start()
         try:
             role_page.open_from_console_menu().open_first_role_details()

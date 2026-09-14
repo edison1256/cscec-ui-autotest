@@ -138,6 +138,64 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     terminalreporter.write_line(f"skipped: {skipped}")
     terminalreporter.write_line(f"env: {settings.ENV}({settings.env_label})")
 
+    contract_summary = _build_contract_summary(terminalreporter)
+    if contract_summary["total"]:
+        terminalreporter.write_sep("-", "Production console contract summary")
+        for classification, counts in contract_summary["classifications"].items():
+            terminalreporter.write_line(
+                f"{classification}: passed={counts['passed']} failed={counts['failed']} "
+                f"not_applicable={counts['not_applicable']} skipped={counts['skipped']}"
+            )
+        summary_path = settings.REPORTS_DIR / "prod-console-contract-summary.json"
+        summary_path.write_text(
+            json.dumps(contract_summary, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        terminalreporter.write_line(f"contract report: {summary_path}")
+
+
+def _build_contract_summary(terminalreporter) -> dict:
+    """Build execution-responsibility counts from final pytest reports."""
+    marker_by_classification = {
+        "mandatory": "prod_mandatory",
+        "conditional": "prod_conditional",
+        "probe": "prod_probe",
+        "controlled_write": "controlled_write",
+    }
+    reports = []
+    for outcome in ("passed", "failed", "skipped"):
+        reports.extend(terminalreporter.stats.get(outcome, []))
+
+    final_by_node = {}
+    outcome_priority = {"passed": 1, "skipped": 2, "failed": 3}
+    for report in reports:
+        if report.when not in {"setup", "call", "teardown"}:
+            continue
+        previous = final_by_node.get(report.nodeid)
+        if previous is None or outcome_priority[report.outcome] > outcome_priority[previous.outcome]:
+            final_by_node[report.nodeid] = report
+
+    classifications = {}
+    total = 0
+    for classification, marker in marker_by_classification.items():
+        counts = {"passed": 0, "failed": 0, "not_applicable": 0, "skipped": 0}
+        for report in final_by_node.values():
+            if marker not in report.keywords:
+                continue
+            total += 1
+            if report.outcome == "skipped" and "NOT_APPLICABLE[" in str(report.longrepr):
+                counts["not_applicable"] += 1
+            else:
+                counts[report.outcome] += 1
+        classifications[classification] = counts
+
+    return {
+        "environment": settings.ENV,
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "total": total,
+        "classifications": classifications,
+    }
+
 
 def _configure_page_timeouts(page: Page) -> None:
     page.set_default_timeout(settings.DEFAULT_TIMEOUT)
