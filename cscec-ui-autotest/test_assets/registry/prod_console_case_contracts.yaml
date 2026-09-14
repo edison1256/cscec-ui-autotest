@@ -19,6 +19,17 @@ conditional_role_defaults: &conditional_role_defaults
   ignore_rules: []
   critical_api_rationale: ''
 
+conditional_menu_defaults: &conditional_menu_defaults
+  classification: conditional
+  prerequisites:
+    - type: permission_or_module
+      expected: 当前菜单接口向测试账号下发目标顶层节点
+  critical_api_patterns:
+    - /engine/metadata/getMenuTreeForPortal\?moduleCode=
+  owner_note: 先按菜单接口判断当前账号适用性，接口下发后 UI 缺失必须失败
+  ignore_rules: []
+  critical_api_rationale: ''
+
 conditional_data_defaults: &conditional_data_defaults
   classification: conditional
   prerequisites:
@@ -59,7 +70,7 @@ cases:
     critical_api_patterns:
       - /irp-api/irp-portal-console/workbench/overview/commonfunctions/list
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-002
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_all_menu_view_accessible
     parameter_id: null
@@ -67,7 +78,7 @@ cases:
     max_depth: L2
     expected_state: [全部菜单视图打开且菜单搜索可交互]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-003
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-003-subscription-service
@@ -75,7 +86,7 @@ cases:
     max_depth: L1
     expected_state: [订阅服务菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-004
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-004-approval-flow
@@ -83,7 +94,7 @@ cases:
     max_depth: L1
     expected_state: [审批流程菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-005
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-005-order-center
@@ -91,7 +102,7 @@ cases:
     max_depth: L1
     expected_state: [订单中心菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-006
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-006-ticket-center
@@ -99,7 +110,7 @@ cases:
     max_depth: L1
     expected_state: [工单中心菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-007
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-007-evaluation-center
@@ -107,7 +118,7 @@ cases:
     max_depth: L1
     expected_state: [评价中心菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-008
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-008-system-config
@@ -115,7 +126,7 @@ cases:
     max_depth: L1
     expected_state: [系统配置菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-009
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-009-metering-statistics
@@ -123,7 +134,7 @@ cases:
     max_depth: L1
     expected_state: [计量统计菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-010
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-010-ops-monitoring
@@ -131,7 +142,7 @@ cases:
     max_depth: L1
     expected_state: [运维监控菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-011
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-011-operation-management
@@ -139,7 +150,7 @@ cases:
     max_depth: L1
     expected_state: [运营管理菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-012
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_p0_menu_group_visible
     parameter_id: C-P0-CONSOLE-012-permission-management
@@ -147,7 +158,7 @@ cases:
     max_depth: L1
     expected_state: [权限管理菜单组可见]
 
-  - <<: *conditional_role_defaults
+  - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-013
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_flow_page_accessible
     parameter_id: null

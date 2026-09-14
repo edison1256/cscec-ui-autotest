@@ -30,6 +30,20 @@ EXPECTED_COUNTS = {
     CaseClassification.PROBE: 2,
     CaseClassification.CONTROLLED_WRITE: 0,
 }
+MIGRATED_CONDITIONAL_IDS = {
+    "C-P0-CONSOLE-002",
+    "C-P0-CONSOLE-003",
+    "C-P0-CONSOLE-004",
+    "C-P0-CONSOLE-005",
+    "C-P0-CONSOLE-006",
+    "C-P0-CONSOLE-007",
+    "C-P0-CONSOLE-008",
+    "C-P0-CONSOLE-009",
+    "C-P0-CONSOLE-010",
+    "C-P0-CONSOLE-011",
+    "C-P0-CONSOLE-012",
+    "C-P0-CONSOLE-013",
+}
 
 
 def collect_console_nodes(marker: str | None = None) -> list[str]:
@@ -73,6 +87,7 @@ def validate_contracts(
     registry: CaseContractRegistry,
     collected_nodes: list[str],
     mandatory_nodes: list[str],
+    conditional_nodes: list[str] | None = None,
 ) -> list[str]:
     """Return all contract errors without stopping at the first defect."""
     errors: list[str] = []
@@ -126,6 +141,38 @@ def validate_contracts(
             f"prod_mandatory collects {len(mandatory_nodes)} nodes, expected "
             f"{EXPECTED_COUNTS[CaseClassification.MANDATORY]}"
         )
+
+    if conditional_nodes is not None:
+        migrated_ids: set[str] = set()
+        for node in conditional_nodes:
+            matches = [
+                contract for contract in contracts if contract.matches_node(node)
+            ]
+            if len(matches) != 1:
+                errors.append(
+                    f"prod_conditional node must match one contract: {node}: "
+                    f"matches={len(matches)}"
+                )
+                continue
+            contract = matches[0]
+            migrated_ids.add(contract.case_id)
+            if contract.classification is not CaseClassification.CONDITIONAL:
+                errors.append(
+                    f"{contract.case_id}: prod_conditional marker conflicts with "
+                    f"{contract.classification.value} contract"
+                )
+            if not contract.critical_api_patterns:
+                errors.append(
+                    f"{contract.case_id}: migrated Conditional requires a critical API"
+                )
+            errors.extend(_validate_conditional_test_source(contract))
+
+        if migrated_ids != MIGRATED_CONDITIONAL_IDS:
+            errors.append(
+                "prod_conditional migrated IDs differ: "
+                f"missing={sorted(MIGRATED_CONDITIONAL_IDS - migrated_ids)}, "
+                f"unexpected={sorted(migrated_ids - MIGRATED_CONDITIONAL_IDS)}"
+            )
 
     return errors
 
@@ -209,6 +256,59 @@ def _validate_test_source(contract: CaseContract) -> list[str]:
     return errors
 
 
+def _validate_conditional_test_source(contract: CaseContract) -> list[str]:
+    """Require migrated Conditional tests to delegate N/A before UI actions."""
+    parts = contract.test_path.split("::")
+    file_path = PROJECT_ROOT / parts[0]
+    if not file_path.exists() or len(parts) != 3:
+        return [f"{contract.case_id}: invalid test_path {contract.test_path}"]
+
+    tree = ast.parse(file_path.read_text(encoding="utf-8"))
+    class_node = next(
+        (
+            node
+            for node in tree.body
+            if isinstance(node, ast.ClassDef) and node.name == parts[1]
+        ),
+        None,
+    )
+    if class_node is None:
+        return [f"{contract.case_id}: test class not found: {parts[1]}"]
+    function_node = next(
+        (
+            node
+            for node in class_node.body
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name == parts[2]
+        ),
+        None,
+    )
+    if function_node is None:
+        return [f"{contract.case_id}: test function not found: {parts[2]}"]
+
+    errors: list[str] = []
+    decorators = [ast.unparse(node) for node in class_node.decorator_list]
+    decorators.extend(ast.unparse(node) for node in function_node.decorator_list)
+    if not any("pytest.mark.prod_conditional" in value for value in decorators):
+        errors.append(f"{contract.case_id}: prod_conditional marker is missing")
+
+    source_calls = [
+        ast.unparse(node.func)
+        for node in ast.walk(function_node)
+        if isinstance(node, ast.Call)
+    ]
+    prohibited = {"pytest.skip", "pytest.xfail", "time.sleep"}
+    for call_name in sorted(prohibited.intersection(source_calls)):
+        errors.append(
+            f"{contract.case_id}: migrated Conditional uses prohibited {call_name}"
+        )
+    if any(name.endswith(".wait_for_timeout") for name in source_calls):
+        errors.append(
+            f"{contract.case_id}: migrated Conditional uses prohibited wait_for_timeout"
+        )
+    return errors
+
+
 def _project_python() -> str:
     candidate = PROJECT_ROOT / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
     return str(candidate) if candidate.exists() else sys.executable
@@ -219,7 +319,13 @@ def main() -> int:
         registry = CaseContractRegistry.load()
         collected_nodes = collect_console_nodes()
         mandatory_nodes = collect_console_nodes("prod_mandatory")
-        errors = validate_contracts(registry, collected_nodes, mandatory_nodes)
+        conditional_nodes = collect_console_nodes("prod_conditional")
+        errors = validate_contracts(
+            registry,
+            collected_nodes,
+            mandatory_nodes,
+            conditional_nodes,
+        )
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
@@ -237,6 +343,7 @@ def main() -> int:
         + ", ".join(f"{name}={count}" for name, count in sorted(counts.items()))
     )
     print(f"prod_mandatory collected: {len(mandatory_nodes)}")
+    print(f"prod_conditional collected: {len(conditional_nodes)}")
     return 0
 
 

@@ -76,7 +76,8 @@ python run_tests.py --env uat --refresh-auth -m smoke
 - `python run_tests.py --env prod` 默认只跑 `smoke and readonly`。
 - `python run_tests.py --env prod --dry-run` 只收集 `smoke and readonly`。
 - `python run_tests.py --env prod --prod-suite mandatory` 运行当前 7 条控制台严格发布门禁。
-- `--prod-suite conditional/probe/controlled-write` 分别选择条件、探查和受控写入责任套件；迁移完成前可能尚未收集全部契约用例。
+- `python run_tests.py --env prod --prod-suite conditional` 当前运行已迁移的 12 条控制台菜单类条件用例；前置条件不满足时单独统计 `NOT_APPLICABLE`。
+- `--prod-suite probe/controlled-write` 分别选择探查和受控写入责任套件；迁移完成前可能尚未收集全部契约用例。
 - 如果显式传入 `-m`、`-p` 或 `-k`，按用户指定执行，不额外阻断写操作。
 
 UAT/PRE 不限制写入类用例：

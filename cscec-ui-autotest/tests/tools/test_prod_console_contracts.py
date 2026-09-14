@@ -30,6 +30,7 @@ def test_contracts_match_collection_and_mandatory_markers() -> None:
         registry,
         collect_console_nodes(),
         collect_console_nodes("prod_mandatory"),
+        collect_console_nodes("prod_conditional"),
     )
 
     assert errors == []

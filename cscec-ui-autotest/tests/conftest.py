@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import json
 import sys
 from datetime import datetime
@@ -12,6 +13,8 @@ import pytest
 from playwright.sync_api import Browser, BrowserContext, Page
 
 from config.settings import settings
+from core.browser_health import BrowserHealthMonitor
+from core.execution_contract import PrerequisiteResult
 from core.logger import get_logger
 from pages.console.console_home_page import ConsoleHomePage
 from pages.portal.login_page import LoginPage
@@ -102,6 +105,33 @@ def console_home_page(logged_in_page: Page):
     return ConsoleHomePage(logged_in_page)
 
 
+@pytest.fixture(scope="function")
+def require_case_prerequisite() -> Callable[..., None]:
+    """Convert a declared Conditional prerequisite miss into structured N/A."""
+    from core.execution_contract import (
+        CaseContractRegistry,
+        ConditionalNotApplicable,
+    )
+
+    registry = CaseContractRegistry.load()
+
+    def require(
+        case_id: str,
+        result: PrerequisiteResult,
+        *,
+        health_monitor: BrowserHealthMonitor | None = None,
+    ) -> None:
+        contract = registry.require(case_id)
+        try:
+            result.require_for(contract)
+        except ConditionalNotApplicable as exc:
+            if health_monitor is not None:
+                health_monitor.stop().assert_healthy()
+            pytest.skip(f"NOT_APPLICABLE[{case_id}][{exc}]")
+
+    return require
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
@@ -172,7 +202,11 @@ def _build_contract_summary(terminalreporter) -> dict:
         if report.when not in {"setup", "call", "teardown"}:
             continue
         previous = final_by_node.get(report.nodeid)
-        if previous is None or outcome_priority[report.outcome] > outcome_priority[previous.outcome]:
+        if (
+            previous is None
+            or outcome_priority[report.outcome]
+            > outcome_priority[previous.outcome]
+        ):
             final_by_node[report.nodeid] = report
 
     classifications = {}

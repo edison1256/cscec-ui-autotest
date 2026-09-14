@@ -198,12 +198,14 @@ assets:
         - C-P0-CONSOLE-012
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression
     page_objects:
-      - pages/portal/portal_home_page.py
-      - pages/console/console_home_page.py
+      - pages/console/console_global_navigation_page.py
+      - pages/console/console_menu_page.py
     markers:
       - console
       - smoke
       - readonly
+      - prod_mandatory
+      - prod_conditional
       - regression
     env_policy:
       uat: true
@@ -213,7 +215,8 @@ assets:
     evidence:
       prod: "2026-08-11 python run_tests.py --env prod -p console -k \"p0_readonly\" -m \"smoke and readonly\" -v: 13 passed"
       prod_default: "2026-08-11 python run_tests.py --env prod -m \"smoke and readonly\" -v: 24 passed, 8 deselected"
-    notes: "覆盖控制台工作台、菜单总览和主要菜单组。PROD 当前未稳定暴露“查看全部菜单”，自动化以当前菜单视图为准；子菜单默认展开情况只记录，不作为 P0 阻断。"
+      prod_conditional: "2026-09-14 python run_tests.py --env prod --prod-suite conditional --no-html -v: 菜单树与 10 个菜单组共 11 条通过，无 skip/N/A"
+    notes: "C-P0-CONSOLE-001 属于 Mandatory；C-P0-CONSOLE-002~012 属于 Conditional。后者以菜单接口为前置条件，接口下发后严格校验顶层节点、菜单展开和直属子项渲染。"
 
   - asset_id: UI-P0-CONSOLE-002
     module: 控制台
@@ -228,12 +231,13 @@ assets:
         - C-P0-CONSOLE-013
     test_path: tests/console/test_console_p0_readonly_regression.py::TestConsoleP0ReadonlyRegression::test_console_flow_page_accessible
     page_objects:
-      - pages/portal/portal_home_page.py
-      - pages/console/console_home_page.py
+      - pages/console/console_global_navigation_page.py
+      - pages/console/console_menu_page.py
     markers:
       - console
       - smoke
       - readonly
+      - prod_conditional
       - regression
     env_policy:
       uat: true
@@ -243,7 +247,8 @@ assets:
     evidence:
       prod: "2026-08-11 python run_tests.py --env prod -p console -k \"p0_readonly\" -m \"smoke and readonly\" -v: 13 passed"
       prod_default: "2026-08-11 python run_tests.py --env prod -m \"smoke and readonly\" -v: 24 passed, 8 deselected"
-    notes: "从控制台菜单进入流程页面，验证 flowmodel 路由、页面健康状态和菜单搜索框只读交互。"
+      prod_conditional: "2026-09-14 python run_tests.py --env prod --prod-suite conditional --no-html -v: 流程入口通过，无 skip/N/A"
+    notes: "以菜单接口为前置条件，从 irp 控制台左侧菜单真实点击流程并严格验证 flowmodel 路由和浏览器健康。"
 
   - asset_id: UI-P0-CONSOLE-003
     module: 控制台
