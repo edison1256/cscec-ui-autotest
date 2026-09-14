@@ -9,6 +9,7 @@ import pytest
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from config.settings import settings
+from core.browser_health import BrowserHealthMonitor
 from pages.portal.portal_home_page import PortalHomePage
 
 
@@ -282,15 +283,11 @@ class TestConsoleWorkbenchModuleEntries:
     @pytest.mark.parametrize("entry_text, expected_text", WORKBENCH_MODULE_ENTRIES)
     def test_workbench_module_entry_opens_without_error(self, logged_in_page, entry_text, expected_text):
         console_page = _open_console_workbench(logged_in_page)
-        error_responses: list[tuple[int, str]] = []
-        console_page.on(
-            "response",
-            lambda response: error_responses.append((response.status, response.url))
-            if response.status in {404, 500}
-            else None,
-        )
-
-        _click_entry(console_page, entry_text, expected_text)
+        health = BrowserHealthMonitor(console_page, f"控制台入口 {entry_text}").start()
+        try:
+            _click_entry(console_page, entry_text, expected_text)
+        finally:
+            health.stop()
 
         current_host = urlparse(console_page.url).netloc.lower()
         expected_host = urlparse(settings.CONSOLE_BASE_URL).netloc.lower()
@@ -299,58 +296,45 @@ class TestConsoleWorkbenchModuleEntries:
         body = _page_text(console_page)
         assert expected_text in body, f"控制台入口未打开预期页面: entry={entry_text}, url={console_page.url}"
         assert not ERROR_TEXT_RE.search(body[:3000]), f"控制台入口打开错误页: entry={entry_text}, url={console_page.url}"
-        assert not error_responses, f"控制台入口触发 404/500 响应: entry={entry_text}, responses={error_responses[:5]}"
+        health.assert_healthy()
 
     @pytest.mark.parametrize("route, module_name", WORKBENCH_MODULE_DETAIL_ROUTES)
     def test_workbench_module_first_detail_opens_without_error(self, logged_in_page, route, module_name):
-        error_responses: list[tuple[int, str]] = []
-        logged_in_page.on(
-            "response",
-            lambda response: error_responses.append((response.status, response.url))
-            if response.status in {404, 500}
-            else None,
-        )
-
         _open_console_route(logged_in_page, route)
         assert urlparse(logged_in_page.url).netloc.lower() == urlparse(settings.CONSOLE_BASE_URL).netloc.lower()
         assert module_name in _page_text(logged_in_page), f"{module_name} 列表页未正常加载: {logged_in_page.url}"
 
-        error_responses.clear()
-        _open_first_detail(logged_in_page, module_name)
-        assert not error_responses, f"{module_name} 点击详情触发 404/500 响应: {error_responses[:5]}"
+        health = BrowserHealthMonitor(logged_in_page, f"{module_name} 首条详情").start()
+        try:
+            _open_first_detail(logged_in_page, module_name)
+        finally:
+            health.stop()
+        health.assert_healthy()
 
     @pytest.mark.parametrize("tool_text, expected_text", PROFILE_COMMON_TOOLS)
     def test_console_profile_common_tool_opens_without_error(self, logged_in_page, tool_text, expected_text):
         console_page = _open_console_workbench(logged_in_page)
-        error_responses: list[tuple[int, str]] = []
-        console_page.on(
-            "response",
-            lambda response: error_responses.append((response.status, response.url))
-            if response.status in {404, 500}
-            else None,
-        )
-
-        _click_profile_tool(console_page, tool_text)
+        health = BrowserHealthMonitor(console_page, f"账号浮层常用工具 {tool_text}").start()
+        try:
+            _click_profile_tool(console_page, tool_text)
+        finally:
+            health.stop()
 
         assert urlparse(console_page.url).netloc.lower() == urlparse(settings.CONSOLE_BASE_URL).netloc.lower()
         body = _page_text(console_page)
         assert expected_text in body, f"账号浮层常用工具未打开预期页面: tool={tool_text}, url={console_page.url}"
         assert not ERROR_TEXT_RE.search(body[:3000]), f"账号浮层常用工具打开错误页: tool={tool_text}, url={console_page.url}"
-        assert not error_responses, f"账号浮层常用工具触发 404/500 响应: tool={tool_text}, responses={error_responses[:5]}"
+        health.assert_healthy()
 
     def test_console_topbar_return_to_portal_opens_without_error(self, logged_in_page):
         console_page = _open_console_workbench(logged_in_page)
-        error_responses: list[tuple[int, str]] = []
-        console_page.on(
-            "response",
-            lambda response: error_responses.append((response.status, response.url))
-            if response.status in {404, 500}
-            else None,
-        )
-
-        _click_topbar_return_to_portal(console_page)
+        health = BrowserHealthMonitor(console_page, "控制台顶部返回门户").start()
+        try:
+            _click_topbar_return_to_portal(console_page)
+        finally:
+            health.stop()
 
         assert urlparse(console_page.url).netloc.lower() == urlparse(settings.PORTAL_BASE_URL).netloc.lower()
         body = _page_text(console_page)
         assert not ERROR_TEXT_RE.search(body[:3000]), f"控制台顶部返回门户打开错误页: url={console_page.url}"
-        assert not error_responses, f"控制台顶部返回门户触发 404/500 响应: {error_responses[:5]}"
+        health.assert_healthy()

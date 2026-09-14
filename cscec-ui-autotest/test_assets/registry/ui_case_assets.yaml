@@ -1,5 +1,5 @@
 registry_version: 1
-updated_at: "2026-08-12"
+updated_at: "2026-09-14"
 asset_lifecycle:
   - new_requirement
   - candidate
@@ -244,6 +244,35 @@ assets:
       prod: "2026-08-11 python run_tests.py --env prod -p console -k \"p0_readonly\" -m \"smoke and readonly\" -v: 13 passed"
       prod_default: "2026-08-11 python run_tests.py --env prod -m \"smoke and readonly\" -v: 24 passed, 8 deselected"
     notes: "从控制台菜单进入流程页面，验证 flowmodel 路由、页面健康状态和菜单搜索框只读交互。"
+
+  - asset_id: UI-P0-CONSOLE-003
+    module: 控制台
+    title: PROD 角色管理功能权限深层只读回归
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: production_defect_regression
+      requirement: 生产深度走查补漏
+      checklist: docs/prod-p0-readonly-regression-checklist.md
+      checklist_ids:
+        - C-P0-CONSOLE-014
+    test_path: tests/console/test_role_management_readonly_regression.py::TestRoleManagementReadonlyRegression::test_first_role_function_permissions_render_without_runtime_error
+    page_objects:
+      - pages/console/role_management_page.py
+    markers:
+      - console
+      - smoke
+      - readonly
+      - regression
+      - domain_split
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: true
+      prod_explicit: true
+    evidence:
+      prod_probe: "2026-09-14 真实 UI 路径稳定复现：角色详情 -> 功能权限显示 TypeError，console.error 为 _.checkedKeys.join is not a function"
+    notes: "生产发布门禁用例；只打开首个角色详情并切换功能权限 Tab，不点击编辑。入口、角色列表或详情缺失均失败，不允许 skip。"
 
   - asset_id: UI-REG-CONSOLE-001
     module: 控制台
