@@ -300,3 +300,129 @@
 - 角色功能权限是当前唯一明确达到 L4 且没有跳过通道的控制台默认用例。
 - 下一轮不应立即扩张页面数量，应先处理 GAP-C-001 至 GAP-C-005，否则新增用例仍可能继续产生虚假覆盖率。
 - 本文档中的菜单和交互范围是静态基线；实际生产可见菜单、Tab 和按钮数量必须在后续只读探查阶段补齐。
+
+## 9. 公共框架升级设计（Step 3）
+
+本节定义实现边界。Step 4 首批只改造 7 条 Mandatory，用实际运行验证公共能力后，
+再分批迁移 Conditional 和 Probe，避免一次性重写 44 条用例。
+
+### 9.1 执行责任与功能属性分离
+
+现有 `smoke`、`readonly`、`write`、`destructive` 描述测试功能和风险，不能表达发布责任。
+新增以下正交 marker：
+
+| Marker | 用途 |
+| --- | --- |
+| `prod_mandatory` | 生产发布强制门禁，只允许通过或失败 |
+| `prod_conditional` | 生产条件用例，允许结构化 `NOT_APPLICABLE` |
+| `prod_probe` | 生产非阻断探查，单独执行和统计 |
+| `controlled_write` | 生产受控写入，必须同时具备 `write` 或 `destructive` |
+
+迁移期间 `python run_tests.py --env prod` 暂时保留现有 `smoke and readonly` 选择，新增显式参数：
+
+```powershell
+python run_tests.py --env prod --prod-suite mandatory
+python run_tests.py --env prod --prod-suite conditional
+python run_tests.py --env prod --prod-suite probe
+python run_tests.py --env prod --prod-suite controlled-write
+```
+
+当门户、移动端和控制台的 Mandatory 全部完成分类与迁移后，再把生产默认选择切换为 `prod_mandatory and readonly`。
+
+### 9.2 机器可读执行契约
+
+新增 `test_assets/registry/prod_console_case_contracts.yaml`，以 44 个展开后的 Case ID 为粒度记录：
+
+- `case_id`：矩阵中的稳定业务 ID；
+- `node_id`：对应 pytest 节点或参数化节点模式；
+- `classification`：Mandatory、Conditional、Probe 或 Controlled Write；
+- `entry_type`：UI、DIRECT 或 HYBRID；
+- `max_depth`：L0~L6；
+- `prerequisites`：角色、模块配置和业务样本等前置条件；
+- `expected_state`：动作后 URL、Tab、弹窗、抽屉或业务对象证据；
+- `critical_api_patterns`：本动作必须检查的关键接口 URL 模式；
+- `owner_note`：业务人员可识别的适用范围和数据说明。
+
+该文件作为控制台执行分类的单一机器事实来源；Markdown 矩阵保留为评审视图。
+
+### 9.3 前置条件与结果模型
+
+新增 `core/execution_contract.py`，负责加载契约和判断前置条件：
+
+- Mandatory 前置条件不满足时抛出失败，不允许转成 `skip`；
+- Conditional 只允许在测试动作开始前产生 `NOT_APPLICABLE[case_id][reason]`；
+- 测试动作开始后出现入口缺失、定位失败或数据消失，一律记为失败；
+- Probe 未发现目标入口时记为 `NOT_OBSERVED`，不伪装成通过；
+- Controlled Write 未满足授权条件时不收集，满足条件后必须执行完整结果核验。
+
+pytest 报告增加分类统计，并生成 `reports/prod-console-contract-summary.json`，至少包含：
+Mandatory 通过/失败/未执行、Conditional 通过/失败/不适用、Probe 发现结果和 Controlled Write 执行范围。
+
+### 9.4 动作与状态变化证据
+
+新增轻量 `core/interaction_evidence.py`，不把业务流程封装成通用大函数，只提供可复用检查点：
+
+- `require_actionable(locator, action_name)`：元素必须可见、可用且可交互；
+- `click_and_expect(locator, expectation, action_name)`：点击后必须满足调用方提供的 Web-First 期望；
+- `require_surface_change(before, after, action_name)`：验证 URL、活动 Tab、弹窗、抽屉或内容区发生目标变化；
+- `require_business_identity(locator, expected, object_name)`：验证详情对象唯一标识；
+- 所有失败信息携带 Case ID、动作名、当前 URL 和预期状态。
+
+业务定位器和期望状态仍放在对应 POM 中，测试层只编排意图，避免形成新的万能工具类。
+
+### 9.5 浏览器健康监控升级
+
+扩展 `core/browser_health.py`：
+
+1. 从单 Page 监听提升为 Context 范围，自动覆盖弹窗和新开页面；
+2. 增加 `requestfailed`，保留 `console.error`、`pageerror`、404 和 5xx；
+3. 只对契约声明的关键 XHR/Fetch 且响应为 JSON 的接口读取载荷，避免扫描图片、文件和无关大响应；
+4. 支持按接口声明成功业务码、成功标志或必需数据结构；HTTP 200 但业务失败必须记录为 `business_response`；
+5. 忽略规则使用精确 URL/错误模式、原因和失效日期，过期规则使校验失败；
+6. `assert_healthy()` 输出请求 URL、HTTP 状态、业务码、消息和触发动作，便于直接定位问题。
+
+业务响应规则不使用全局的“非 0 即失败”猜测，每个关键接口由 Case 契约声明，防止不同后台编码约定造成误报。
+
+### 9.6 UI 路径与直链探活分离
+
+- Mandatory POM 禁止调用 `navigate_with_fallback()`，也禁止菜单失败后直达路由；
+- UI 路径必须从控制台公开入口逐级点击，并验证每一层可见状态；
+- DIRECT 路径保留为 Probe，验证路由和页面服务是否存活，但不再计作菜单覆盖；
+- HYBRID 必须明确哪一段是 UI、哪一段是初始化辅助，报告中不能简写成完整用户路径；
+- 导航结果记录实际入口类型，契约为 UI 但运行结果为 DIRECT 时直接失败。
+
+### 9.7 等待和异常处理门禁
+
+- 新增或改造的 Mandatory 代码禁止 `time.sleep()` 和 `page.wait_for_timeout()`；
+- 使用 Playwright locator 自动等待、`expect()`、URL、活动 Tab、遮罩消失或目标响应完成作为等待条件；
+- 禁止 `except Exception: pass/continue`；确需兼容多个 UI 形态时，只捕获预期的 Playwright 超时并在所有候选失败后抛出包含证据的异常；
+- Mandatory 测试和其直接 POM 中禁止调用 `pytest.skip()`；Conditional 的不适用只能由前置条件层产生。
+
+### 9.8 契约验证器
+
+新增 `tools/validate_prod_console_contracts.py`，在提交前检查：
+
+- 44 个 Case ID 是否全部且仅登记一次；
+- pytest 实际收集节点是否能与契约匹配；
+- 每个 Case 是否恰好属于一个执行分类；
+- Mandatory 是否同时为 `readonly`、`entry_type: UI/HYBRID` 且不存在 DIRECT 兜底；
+- Controlled Write 是否具备写入 marker、授权变量和数据白名单字段；
+- Mandatory 测试函数是否存在显式 `pytest.skip`、`xfail` 或固定等待；
+- 契约中的关键接口规则、预期状态和前置条件是否完整。
+
+现有 `tools/validate_ui_assets.py` 继续负责资产登记合法性，新验证器只负责生产控制台执行契约，职责不混合。
+
+### 9.9 Step 4 首批改造范围与退出条件
+
+首批正好覆盖 7 条 Mandatory：
+
+1. `UI-BASE-CONSOLE-001`；
+2. `C-P0-CONSOLE-001`；
+3. `C-P0-CONSOLE-PROFILE-002`；
+4. `C-P0-CONSOLE-PROFILE-003`；
+5. `C-P0-CONSOLE-PROFILE-004`；
+6. `C-P0-CONSOLE-TOPBAR-001`；
+7. `C-P0-CONSOLE-014`。
+
+Step 4 完成必须同时满足：7 条均带 `prod_mandatory`、无跳过和直链兜底、无固定等待、
+动作均有状态变化证据、全部接入升级后的健康监控、契约验证器通过，并完成 UAT dry-run 与生产只读试运行。
