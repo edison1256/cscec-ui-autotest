@@ -2947,21 +2947,23 @@ assets:
       manual_case_id: C-P0-CONSOLE-WB-001~008
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_entry_opens_without_error
     page_objects:
-      - pages/portal/portal_home_page.py
+      - pages/console/console_workbench_page.py
     markers:
       - console
       - domain_split
       - smoke
       - readonly
       - regression
+      - prod_conditional
     env_policy:
       uat: true
       pre: true
       prod_default: true
       prod_explicit: true
     evidence:
-      prod_probe: "2026-09-04 reports/prod-range-probe-20260904-141751.md: 工作台入口探查沉淀；2026-09-09 移除无可复现控制台操作路径的被订阅订单旧入口。"
-    notes: "仅保留当前控制台可复现的常用模块入口；只点击入口导航，不提交、保存或修改业务数据。"
+      prod_probe: "2026-09-04 reports/prod-range-probe-20260904-141751.md: 工作台入口探查沉淀；2026-09-09 移除无可复现控制台操作路径的被订阅订单旧入口；2026-09-15 按工作台配置接口、精确卡片、目标路由、业务面板标题和关键业务接口升级为严格条件用例。"
+      prod_execution: "2026-09-15 入口批次 7 条通过；数据源配置因 data.cscec.com/auth/resolve/getNoGrantButtons 返回业务码 1401 严格失败。"
+    notes: "仅保留当前控制台真实工作台可复现的常用模块入口；前置条件不满足记 NOT_APPLICABLE，满足后任何导航、页面或关键接口异常均失败；不提交、保存或修改业务数据。"
 
   - asset_id: UI-PROD-DOMAIN-CONSOLE-WB-DEEP-001
     module: 控制台工作台

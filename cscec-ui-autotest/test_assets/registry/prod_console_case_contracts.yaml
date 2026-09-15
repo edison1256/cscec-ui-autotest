@@ -173,6 +173,8 @@ cases:
     entry_type: UI
     max_depth: L1
     expected_state: [订单管理页面可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-002
@@ -181,6 +183,8 @@ cases:
     entry_type: UI
     max_depth: L1
     expected_state: [应用订阅页面可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/console/rsc/app/apply/history/list$
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-003
@@ -189,6 +193,8 @@ cases:
     entry_type: UI
     max_depth: L1
     expected_state: [数据资产订阅页面可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/workbench/rsc/data/apply/history/list$
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-004
@@ -197,6 +203,8 @@ cases:
     entry_type: UI
     max_depth: L1
     expected_state: [API订阅页面可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/console/rsc/api/apply/history/list$
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-005
@@ -205,6 +213,8 @@ cases:
     entry_type: UI
     max_depth: L1
     expected_state: [组件订阅页面可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/console/rsc/compt/apply/history/list$
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-006
@@ -213,6 +223,8 @@ cases:
     entry_type: UI
     max_depth: L1
     expected_state: [云产品订阅页面可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/cloud/applyList$
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-007
@@ -221,6 +233,8 @@ cases:
     entry_type: UI
     max_depth: L1
     expected_state: [API资源页面可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/app/list-businessArea-app$
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-008
@@ -229,6 +243,8 @@ cases:
     entry_type: UI
     max_depth: L1
     expected_state: [数据源配置页面可见]
+    critical_api_patterns:
+      - https://data\.cscec\.com/auth/resolve/getNoGrantButtons$
 
   - <<: *conditional_data_defaults
     case_id: C-P0-CONSOLE-WB-DEEP-001

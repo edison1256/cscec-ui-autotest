@@ -11,7 +11,7 @@ from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 from config.settings import settings
 from core.browser_health import BrowserHealthMonitor
 from pages.console.console_global_navigation_page import ConsoleGlobalNavigationPage
-from pages.portal.portal_home_page import PortalHomePage
+from pages.console.console_workbench_page import ConsoleWorkbenchPage
 
 
 ERROR_TEXT_RE = re.compile(
@@ -31,14 +31,62 @@ PROFILE_COMMON_TOOLS = [
 ]
 
 WORKBENCH_MODULE_ENTRIES = [
-    pytest.param("订单管理", "订单列表", id="C-P0-CONSOLE-WB-001-order-management"),
-    pytest.param("应用订阅", "应用列表", id="C-P0-CONSOLE-WB-002-app-subscription"),
-    pytest.param("数据资产订阅", "数据资产列表", id="C-P0-CONSOLE-WB-003-data-asset-subscription"),
-    pytest.param("API订阅", "API列表", id="C-P0-CONSOLE-WB-004-api-subscription"),
-    pytest.param("组件订阅", "组件列表", id="C-P0-CONSOLE-WB-005-component-subscription"),
-    pytest.param("云产品订阅", "云产品列表", id="C-P0-CONSOLE-WB-006-cloud-product-subscription"),
-    pytest.param("API资源", "API资源", id="C-P0-CONSOLE-WB-007-api-resource"),
-    pytest.param("数据源配置", "数据源配置", id="C-P0-CONSOLE-WB-008-data-source-config"),
+    pytest.param(
+        "订单管理",
+        "订单列表",
+        r"/orderCenter/myOrders(?:[?]|$)",
+        "C-P0-CONSOLE-WB-001",
+        id="C-P0-CONSOLE-WB-001-order-management",
+    ),
+    pytest.param(
+        "应用订阅",
+        "应用列表",
+        r"/subscription/app/appInfo(?:[?]|$)",
+        "C-P0-CONSOLE-WB-002",
+        id="C-P0-CONSOLE-WB-002-app-subscription",
+    ),
+    pytest.param(
+        "数据资产订阅",
+        "数据资产列表",
+        r"/subscription/dataAssets(?:[?]|$)",
+        "C-P0-CONSOLE-WB-003",
+        id="C-P0-CONSOLE-WB-003-data-asset-subscription",
+    ),
+    pytest.param(
+        "API订阅",
+        "API列表",
+        r"/subscription/apiResource(?:[?]|$)",
+        "C-P0-CONSOLE-WB-004",
+        id="C-P0-CONSOLE-WB-004-api-subscription",
+    ),
+    pytest.param(
+        "组件订阅",
+        "组件列表",
+        r"/subscription/comp(?:[?]|$)",
+        "C-P0-CONSOLE-WB-005",
+        id="C-P0-CONSOLE-WB-005-component-subscription",
+    ),
+    pytest.param(
+        "云产品订阅",
+        "云产品列表",
+        r"/subscription/cloud(?:[?]|$)",
+        "C-P0-CONSOLE-WB-006",
+        id="C-P0-CONSOLE-WB-006-cloud-product-subscription",
+    ),
+    pytest.param(
+        "API资源",
+        "API资源",
+        r"/resource/apiResource(?:[?]|$)",
+        "C-P0-CONSOLE-WB-007",
+        id="C-P0-CONSOLE-WB-007-api-resource",
+    ),
+    pytest.param(
+        "数据源配置",
+        "数据源配置",
+        r"/systemManage/dataSourceManage(?:[?]|$)",
+        "C-P0-CONSOLE-WB-008",
+        id="C-P0-CONSOLE-WB-008-data-source-config",
+    ),
 ]
 
 WORKBENCH_MODULE_DETAIL_ROUTES = [
@@ -68,42 +116,6 @@ WORKBENCH_MODULE_DETAIL_ROUTES = [
         id="C-P0-CONSOLE-WB-DEEP-005-cloud-product-subscription-detail",
     ),
 ]
-
-
-def _open_console_workbench(logged_in_page):
-    portal = PortalHomePage(logged_in_page)
-    portal.open()
-    console_page = portal.open_console_page()
-    return console_page
-
-
-def _click_entry(page, entry_text: str, expected_text: str) -> None:
-    entry = page.get_by_text(entry_text, exact=True).first
-    try:
-        entry.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
-    except PlaywrightTimeoutError as exc:
-        pytest.skip(f"控制台工作台常用模块未暴露: {entry_text}: {exc}")
-    entry.click(timeout=settings.ACTION_TIMEOUT)
-    try:
-        page.wait_for_load_state("networkidle", timeout=15000)
-    except PlaywrightTimeoutError:
-        pass
-    try:
-        page.wait_for_function(
-            """([expected, errorPattern]) => {
-                const text = document.body ? document.body.innerText : '';
-                return text.includes(expected) || new RegExp(errorPattern, 'i').test(text);
-            }""",
-            arg=[expected_text, ERROR_TEXT_RE.pattern],
-            timeout=30000,
-        )
-    except PlaywrightTimeoutError:
-        pass
-    page.wait_for_timeout(1500)
-    try:
-        page.wait_for_load_state("networkidle", timeout=8000)
-    except PlaywrightTimeoutError:
-        pass
 
 
 def _page_text(page) -> str:
@@ -198,22 +210,36 @@ def _click_table_action_by_text(page, text: str) -> None:
 class TestConsoleWorkbenchModuleEntries:
     """控制台常用模块入口只读回归。"""
 
-    @pytest.mark.parametrize("entry_text, expected_text", WORKBENCH_MODULE_ENTRIES)
-    def test_workbench_module_entry_opens_without_error(self, logged_in_page, entry_text, expected_text):
-        console_page = _open_console_workbench(logged_in_page)
-        health = BrowserHealthMonitor(console_page, f"控制台入口 {entry_text}").start()
+    @pytest.mark.parametrize(
+        "entry_text, expected_text, route_pattern, case_id",
+        WORKBENCH_MODULE_ENTRIES,
+    )
+    @pytest.mark.prod_conditional
+    def test_workbench_module_entry_opens_without_error(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+        entry_text: str,
+        expected_text: str,
+        route_pattern: str,
+        case_id: str,
+    ) -> None:
+        """Open one configured card and require its target business response."""
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            case_id,
+            f"控制台工作台入口 {entry_text}",
+        ).start()
         try:
-            _click_entry(console_page, entry_text, expected_text)
+            workbench = ConsoleWorkbenchPage(logged_in_page).open()
+            require_case_prerequisite(
+                case_id,
+                workbench.module_prerequisite(entry_text),
+                health_monitor=health,
+            )
+            workbench.open_module(entry_text, expected_text, route_pattern)
         finally:
             health.stop()
-
-        current_host = urlparse(console_page.url).netloc.lower()
-        expected_host = urlparse(settings.CONSOLE_BASE_URL).netloc.lower()
-        assert current_host == expected_host, f"控制台入口跳转域名异常: {console_page.url}"
-
-        body = _page_text(console_page)
-        assert expected_text in body, f"控制台入口未打开预期页面: entry={entry_text}, url={console_page.url}"
-        assert not ERROR_TEXT_RE.search(body[:3000]), f"控制台入口打开错误页: entry={entry_text}, url={console_page.url}"
         health.assert_healthy()
 
     @pytest.mark.parametrize("route, module_name", WORKBENCH_MODULE_DETAIL_ROUTES)
