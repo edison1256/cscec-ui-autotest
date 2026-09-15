@@ -250,41 +250,75 @@ cases:
     case_id: C-P0-CONSOLE-WB-DEEP-001
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
     parameter_id: C-P0-CONSOLE-WB-DEEP-001-order-detail
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L3
-    expected_state: [订单详情和唯一业务标识可见]
+    prerequisites:
+      - type: api_list_record
+        expected: 订单列表接口至少返回一条允许只读查看的记录
+    expected_state: [精确订单行详情打开且详情接口返回同一订单和资源]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/orderDetail[?]
+      - /irp-api/irp-portal-console/order/change/list[?]
+    owner_note: 以本次列表接口首条订单编码和订单 ID 动态定位，不固化生产数据
 
   - <<: *conditional_data_defaults
     case_id: C-P0-CONSOLE-WB-DEEP-002
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
     parameter_id: C-P0-CONSOLE-WB-DEEP-002-app-subscription-detail
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L3
-    expected_state: [应用订阅详情和唯一业务标识可见]
+    prerequisites:
+      - type: api_list_record
+        expected: 应用订阅列表接口至少返回一条允许只读查看的记录
+    expected_state: [精确订阅行详情打开且详情接口返回同一订单和资源]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/orderDetail[?]
+      - /irp-api/irp-portal-console/order/change/list[?]
+    owner_note: 以本次列表接口首条订阅 ID 和订单 ID 动态定位，不固化生产数据
 
   - <<: *conditional_data_defaults
     case_id: C-P0-CONSOLE-WB-DEEP-003
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
     parameter_id: C-P0-CONSOLE-WB-DEEP-003-data-asset-subscription-detail
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L3
-    expected_state: [数据资产订阅详情和唯一业务标识可见]
+    prerequisites:
+      - type: api_list_record
+        expected: 数据资产订阅列表接口至少返回一条允许只读查看的记录
+    expected_state: [精确订阅行详情打开且详情接口和页面显示同一数据资产]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/orderDetail[?]
+      - /irp-api/irp-portal-console/order/change/list[?]
+    owner_note: 以本次列表接口首条订阅 ID、订单 ID 和资源名动态定位
 
   - <<: *conditional_data_defaults
     case_id: C-P0-CONSOLE-WB-DEEP-004
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
     parameter_id: C-P0-CONSOLE-WB-DEEP-004-component-subscription-detail
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L3
-    expected_state: [组件订阅详情和唯一业务标识可见]
+    prerequisites:
+      - type: api_list_record
+        expected: 组件订阅列表接口至少返回一条允许只读查看的记录
+    expected_state: [精确订阅行详情弹窗显示同一订单 ID]
+    critical_api_patterns: []
+    critical_api_rationale: 组件详情仅使用列表记录打开本地弹窗，不触发页面专属详情接口；以同一行订阅 ID 和弹窗订单 ID 作为业务对象证据
+    owner_note: 以本次列表接口首条订阅 ID 和订单 ID 动态定位，不固化生产数据
 
   - <<: *conditional_data_defaults
     case_id: C-P0-CONSOLE-WB-DEEP-005
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
     parameter_id: C-P0-CONSOLE-WB-DEEP-005-cloud-product-subscription-detail
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L3
-    expected_state: [云产品订阅详情和唯一业务标识可见]
+    prerequisites:
+      - type: api_list_record
+        expected: 云产品订阅列表接口至少返回一条允许只读查看的记录
+    expected_state: [精确订阅行详情打开且详情接口返回同一订单和资源]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/orderDetail[?]
+      - /irp-api/irp-portal-console/order/change/list[?]
+    owner_note: 以本次列表接口首条订阅 ID 和订单 ID 动态定位，不固化生产数据
 
   - <<: *mandatory_defaults
     case_id: C-P0-CONSOLE-PROFILE-002

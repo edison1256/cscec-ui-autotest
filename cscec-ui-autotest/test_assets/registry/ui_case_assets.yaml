@@ -2976,13 +2976,14 @@ assets:
       manual_case_id: C-P0-CONSOLE-WB-DEEP-001~005
     test_path: tests/console/test_console_workbench_module_entries.py::TestConsoleWorkbenchModuleEntries::test_workbench_module_first_detail_opens_without_error
     page_objects:
-      - pages/portal/portal_home_page.py
+      - pages/console/console_workbench_page.py
     markers:
       - console
       - domain_split
       - smoke
       - readonly
       - regression
+      - prod_conditional
     env_policy:
       uat: true
       pre: true
@@ -2991,7 +2992,8 @@ assets:
     evidence:
       prod_probe: "2026-09-04 reports/prod-range-probe-20260904-154025.md: 订单/应用订阅/数据资产订阅/组件订阅/云产品订阅详情首层动作 guarded_ok"
       prod_run: "2026-09-04 python run_tests.py --env prod -p tests/console/test_console_workbench_module_entries.py -k first_detail -v --no-html: 5 passed"
-    notes: "深入一层点击生产列表首条“详情”，只验证详情抽屉或流程详情页打开，不点击提交、保存、审批、删除确认等最终动作。"
+      prod_conditional: "2026-09-15 真实工作台卡片 -> API 首条精确列表行 -> 详情：5 passed, 0 failed, 0 skipped, 0 not_applicable。"
+    notes: "列表接口动态确定样本并严格校验业务码；只点击包含同一订单编码/订阅 ID 的行内详情，核对详情接口订单 ID 和资源名或弹窗订单 ID；不点击提交、保存、审批、取消订阅等最终动作。"
 
   - asset_id: UI-PROD-DOMAIN-CONSOLE-PROFILE-002
     module: 控制台

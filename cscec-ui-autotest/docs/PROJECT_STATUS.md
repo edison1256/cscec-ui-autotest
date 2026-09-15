@@ -1,14 +1,14 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-15 09:18。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-15 09:45。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：260
-- **生产默认收集（smoke + readonly）**：67 / 260
-- **被默认排除（write / destructive）**：193
+- **总用例数**：264
+- **生产默认收集（smoke + readonly）**：67 / 264
+- **被默认排除（write / destructive）**：197
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 

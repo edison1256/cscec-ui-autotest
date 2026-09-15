@@ -51,6 +51,11 @@ MIGRATED_CONDITIONAL_IDS = {
     "C-P0-CONSOLE-WB-006",
     "C-P0-CONSOLE-WB-007",
     "C-P0-CONSOLE-WB-008",
+    "C-P0-CONSOLE-WB-DEEP-001",
+    "C-P0-CONSOLE-WB-DEEP-002",
+    "C-P0-CONSOLE-WB-DEEP-003",
+    "C-P0-CONSOLE-WB-DEEP-004",
+    "C-P0-CONSOLE-WB-DEEP-005",
 }
 
 
@@ -169,9 +174,13 @@ def validate_contracts(
                     f"{contract.case_id}: prod_conditional marker conflicts with "
                     f"{contract.classification.value} contract"
                 )
-            if not contract.critical_api_patterns:
+            if (
+                not contract.critical_api_patterns
+                and not contract.critical_api_rationale.strip()
+            ):
                 errors.append(
-                    f"{contract.case_id}: migrated Conditional requires a critical API"
+                    f"{contract.case_id}: migrated Conditional requires a "
+                    "critical API or an explicit rationale"
                 )
             errors.extend(_validate_conditional_test_source(contract))
 
