@@ -366,25 +366,47 @@ cases:
     case_id: M1-01
     test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_01_resource_list_search_available
     parameter_id: null
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L2
-    expected_state: [指定资源搜索结果可见]
+    prerequisites:
+      - type: authorized_menu
+        expected: 资源管理下发可用的数据资源管理直属菜单
+    expected_state: [真实菜单进入数据资源列表且首条接口记录与页面行一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/data-resource/tableList$
+    owner_note: 列表记录从本次接口响应动态获取，不接受空态或列表标题替代业务行
 
   - <<: *conditional_data_defaults
     case_id: M1-02
     test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_02_resource_detail_accessible
     parameter_id: null
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L3
-    expected_state: [指定资源详情唯一标识和核心字段可见]
+    prerequisites:
+      - type: authorized_menu
+        expected: 资源管理下发可用的数据资源管理直属菜单
+      - type: stable_test_data
+        expected: 生产首屏唯一展示中建云测试专用/cloudtest
+    expected_state: [专用测试表行的数据项属性弹窗显示相同中英文表名]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/data-resource/tableList$
+    owner_note: 仅打开数据项属性并返回，不执行新增、编辑或删除数据项
 
   - <<: *conditional_data_defaults
     case_id: M1-03
     test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_03_resource_edit_readonly_check
     parameter_id: null
-    entry_type: DIRECT
-    max_depth: L3
-    expected_state: [指定资源编辑页只读回显可见]
+    entry_type: UI
+    max_depth: L5
+    prerequisites:
+      - type: authorized_menu
+        expected: 资源管理下发可用的数据资源管理直属菜单
+      - type: stable_test_data
+        expected: 生产首屏唯一展示中建云测试专用/cloudtest及约定L1/L2/L3
+    expected_state: [专用测试表编辑弹窗三个元数据Tab回显一致且提交按钮可触达但未点击]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/data-resource/tableList$
+    owner_note: 仅打开编辑、切换业务/技术/管理元数据Tab并点击返回，绝不点击提交
 
   - <<: *probe_defaults
     case_id: M1-04

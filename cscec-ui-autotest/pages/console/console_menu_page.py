@@ -109,6 +109,39 @@ class ConsoleMenuPage(ConsoleGlobalNavigationPage):
             actual=actual,
         )
 
+    def child_menu_prerequisite(
+        self,
+        parent_title: str,
+        child_title: str,
+    ) -> PrerequisiteResult:
+        """Describe whether an exact child menu was granted before opening it."""
+        parent = self._require_snapshot().top_level(parent_title)
+        child = next(
+            (
+                candidate
+                for candidate in parent.children
+                if candidate.title == child_title
+            ),
+            None,
+        ) if parent is not None else None
+        satisfied = (
+            parent is not None
+            and parent.available
+            and child is not None
+            and child.available
+        )
+        available_children = (
+            tuple(candidate.title for candidate in parent.children if candidate.available)
+            if parent is not None
+            else ()
+        )
+        return PrerequisiteResult(
+            satisfied=satisfied,
+            reason=f"菜单接口未下发可用路径“{parent_title} -> {child_title}”",
+            expected=f"直属菜单“{child_title}”已授权且可用",
+            actual=", ".join(available_children) or "<empty>",
+        )
+
     def verify_menu_tree_rendered(self) -> "ConsoleMenuPage":
         """Require every available API top-level node to render in the sidebar."""
         snapshot = self._require_snapshot()

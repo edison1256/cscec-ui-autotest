@@ -56,6 +56,9 @@ MIGRATED_CONDITIONAL_IDS = {
     "C-P0-CONSOLE-WB-DEEP-003",
     "C-P0-CONSOLE-WB-DEEP-004",
     "C-P0-CONSOLE-WB-DEEP-005",
+    "M1-01",
+    "M1-02",
+    "M1-03",
 }
 
 

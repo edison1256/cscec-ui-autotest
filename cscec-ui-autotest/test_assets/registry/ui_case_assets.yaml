@@ -1067,6 +1067,7 @@ assets:
     page_objects:
       - pages/console/resource_mgmt_page.py
     markers:
+      - prod_conditional
       - resource
       - smoke
       - readonly
@@ -1090,6 +1091,7 @@ assets:
     page_objects:
       - pages/console/resource_mgmt_page.py
     markers:
+      - prod_conditional
       - resource
       - smoke
       - readonly
@@ -1113,6 +1115,7 @@ assets:
     page_objects:
       - pages/console/resource_mgmt_page.py
     markers:
+      - prod_conditional
       - resource
       - smoke
       - readonly
