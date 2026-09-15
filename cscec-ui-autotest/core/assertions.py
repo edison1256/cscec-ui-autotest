@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from urllib.parse import urlparse
 
-from playwright.sync_api import Locator, Page
+from playwright.sync_api import Frame, Locator, Page
 
 from config.settings import settings
 from core.logger import get_logger
@@ -78,8 +79,9 @@ class AssertionHelper:
         )
         assert not login_like_url, f"Page redirected to login-like URL: {self.page.url}"
 
-        login_form_like = "密码" in compact_text and ("用户名" in compact_text or "账号" in compact_text)
-        assert not login_form_like, f"Page looks like a login form, current URL: {self.page.url}"
+        assert not self._has_visible_login_form(), (
+            f"Page contains a visible login form, current URL: {self.page.url}"
+        )
 
         error_indicators = [
             "404 Not Found",
@@ -98,3 +100,32 @@ class AssertionHelper:
                 f"Page contains error indicator '{indicator}', current URL: {self.page.url}"
             )
         return self
+
+    def _has_visible_login_form(self) -> bool:
+        """Detect login controls, not credential words in business details."""
+        login_name = re.compile(r"^(?:登\s*录|log\s*in|sign\s*in)$", re.I)
+        for frame in self.page.frames:
+            if not self._frame_is_visible(frame):
+                continue
+            for password in frame.locator('input[type="password"]').all():
+                if not password.is_visible() or not password.is_editable():
+                    continue
+                # Keep a site's navigation login link outside a business form.
+                forms = frame.locator("form").filter(has=password)
+                scope = forms.first if forms.count() else frame.locator("body")
+                login_controls = scope.get_by_role("button", name=login_name).or_(
+                    scope.get_by_role("link", name=login_name)
+                ).or_(scope.locator("#pwdLoginButton"))
+                if any(control.is_visible() for control in login_controls.all()):
+                    return True
+        return False
+
+    @staticmethod
+    def _frame_is_visible(frame: Frame) -> bool:
+        """Exclude login widgets hidden by any ancestor iframe."""
+        current = frame
+        while current.parent_frame is not None:
+            if not current.frame_element().is_visible():
+                return False
+            current = current.parent_frame
+        return True
