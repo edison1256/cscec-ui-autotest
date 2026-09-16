@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import pytest
 
+from core.browser_health import BrowserHealthMonitor
 from pages.console.ticket_center_page import TicketCenterPage
 
 
@@ -20,21 +21,58 @@ class TestTicketBasicChain:
 
     @pytest.mark.smoke
     @pytest.mark.readonly
-    def test_m4_01_ticket_list_search_accessible(self, logged_in_page):
+    @pytest.mark.prod_conditional
+    def test_m4_01_ticket_list_search_accessible(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
         """M4-01 固定工单处理人可打开工单列表并查询。"""
-        ticket_page = TicketCenterPage(logged_in_page)
-        ticket_page.open_ticket_list()
-        ticket_page.search_ticket("TCK-SMOKE")
-        ticket_page.should_find_ticket("TCK-SMOKE")
+        ticket_page = TicketCenterPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M4-01", ticket_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M4-01",
+            "工单列表查询",
+        ).start()
+        try:
+            snapshot = ticket_page.open_ticket_management()
+            require_case_prerequisite(
+                "M4-01",
+                ticket_page.sample_prerequisite(snapshot),
+            )
+            ticket_page.query_existing_ticket(snapshot)
+        finally:
+            health.stop()
+        health.assert_healthy()
 
     @pytest.mark.smoke
     @pytest.mark.readonly
-    def test_m4_02_ticket_detail_info_visible(self, logged_in_page):
+    @pytest.mark.prod_conditional
+    def test_m4_02_ticket_detail_info_visible(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
         """M4-02 工单详情核心信息可见。"""
-        ticket_page = TicketCenterPage(logged_in_page)
-        ticket_page.open_ticket_list()
-        ticket_page.open_ticket_detail()
-        ticket_page.verify_ticket_detail_fields()
+        ticket_page = TicketCenterPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M4-02", ticket_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M4-02",
+            "工单详情及处理记录",
+        ).start()
+        try:
+            snapshot = ticket_page.open_ticket_management()
+            require_case_prerequisite(
+                "M4-02",
+                ticket_page.sample_prerequisite(snapshot),
+            )
+            selected = ticket_page.query_existing_ticket(snapshot)
+            ticket_page.inspect_ticket_detail(selected)
+        finally:
+            health.stop()
+        health.assert_healthy()
 
     @pytest.mark.write
     def test_m4_03_process_ticket_minimal_status_sync(self, logged_in_page):

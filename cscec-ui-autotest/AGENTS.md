@@ -4,7 +4,7 @@
 - **Mandatory Suite**: All 67 PC + Mobile read-only smoke cases defined in `docs/prod-release-mandatory-walkthrough-suite.md` are mandatory on every release.
 - **Production Execution**: `python run_tests.py --env prod` automatically executes the full 67-case mandatory suite with 0 write risk.
 - **Strict Console Gate**: `python run_tests.py --env prod --prod-suite mandatory` executes the 7 strict console Mandatory cases with no skip or soft-pass path.
-- **Conditional Console Gate**: `python run_tests.py --env prod --prod-suite conditional` currently executes 33 API-gated console cases (12 menu, 8 workbench module-entry, 5 workbench detail, 3 data-resource, 2 order, and 3 approval/message cases) and reports unmet preconditions as `NOT_APPLICABLE`.
+- **Conditional Console Gate**: `python run_tests.py --env prod --prod-suite conditional` currently executes 35 API-gated console cases (12 menu, 8 workbench module-entry, 5 workbench detail, 3 data-resource, 2 order, 3 approval/message, and 2 ticket cases) and reports unmet preconditions as `NOT_APPLICABLE`.
 
 ## Automatic Git & DevOps Maintenance
 

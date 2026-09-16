@@ -2,16 +2,49 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from collections.abc import Mapping
+from dataclasses import dataclass
+import re
+from typing import Any, Optional
 
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Page, Response, TimeoutError as PlaywrightTimeoutError, expect
 
 from config.settings import settings
 from core.base_page import BasePage
+from core.execution_contract import PrerequisiteResult
 from core.logger import get_logger
 from core.navigation_helpers import EntryNotExposed
+from pages.console.console_menu_page import ConsoleMenuPage
 
 logger = get_logger("ticket_center_page")
+
+
+@dataclass(frozen=True)
+class TicketRecord:
+    """Stable identity and display fields for one real ticket."""
+
+    ticket_id: str
+    code: str
+    title: str
+    description: str
+    type_description: str
+    creator_name: str
+    assignee_name: str
+    created_at: str
+
+
+@dataclass(frozen=True)
+class TicketListSnapshot:
+    """Validated ticket list response used by the next interaction."""
+
+    records: tuple[TicketRecord, ...]
+    total: int
+
+    @property
+    def first_record(self) -> TicketRecord:
+        """Return the first validated sample."""
+        assert self.records, "工单列表没有可用样本"
+        return self.records[0]
 
 
 class TicketCenterPage(BasePage):
@@ -19,6 +52,236 @@ class TicketCenterPage(BasePage):
 
     PAGE_NAME = "工单中心"
     PAGE_URL_PATTERN = "ticket"
+
+    LIST_API = re.compile(
+        r"/irp-api/irp-portal-console/work-order/allWorkOrderList$"
+    )
+    DETAIL_API = re.compile(
+        r"/irp-api/irp-portal-console/work-order/detail[?]"
+    )
+    PROCESS_API = re.compile(
+        r"/irp-api/irp-portal-console/work-order/processList$"
+    )
+
+    def __init__(self, page: Page) -> None:
+        super().__init__(page)
+        self._menu: ConsoleMenuPage | None = None
+
+    def prepare_console_menu(self) -> "TicketCenterPage":
+        """Load authorized menus before evaluating the ticket prerequisite."""
+        self._menu = ConsoleMenuPage(self.page).open_console_home()
+        return self
+
+    def menu_prerequisite(self) -> PrerequisiteResult:
+        """Require the real console ticket-management child menu."""
+        return self._require_menu().child_menu_prerequisite("工单中心", "工单管理")
+
+    def open_ticket_management(self) -> TicketListSnapshot:
+        """Enter ticket management through the real menu and validate its list."""
+        self._require_menu().expand_menu_group("工单中心")
+        entry = self.page.get_by_role("menuitem").filter(
+            has=self.page.get_by_text("工单管理", exact=True)
+        )
+        expect(entry).to_have_count(1)
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            entry.click()
+        expect(self.page).to_have_url(re.compile(r"/workOrderCenter/allManageOrder[?]"))
+        expect(self.page.get_by_text("工单管理", exact=True).first).to_be_visible()
+        expect(self.page.get_by_placeholder("请输入工单编号", exact=True)).to_be_visible()
+        return self._parse_list_response(captured.value)
+
+    @staticmethod
+    def sample_prerequisite(snapshot: TicketListSnapshot) -> PrerequisiteResult:
+        """Describe whether a real ticket can be queried and opened read-only."""
+        return PrerequisiteResult(
+            satisfied=bool(snapshot.records),
+            reason="工单管理列表没有可供只读查询和查看的现有工单",
+            expected="至少一条包含完整身份字段的现有工单",
+            actual=f"valid_records={len(snapshot.records)}, total={snapshot.total}",
+        )
+
+    def query_existing_ticket(
+        self,
+        snapshot: TicketListSnapshot,
+    ) -> TicketListSnapshot:
+        """Query the current first ticket and prove request, response and row agree."""
+        expected = snapshot.first_record
+        field = self.page.get_by_placeholder("请输入工单编号", exact=True)
+        field.fill(expected.code)
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            self.page.get_by_role("button", name=re.compile(r"^查\s*询$")).click()
+        result = self._parse_list_response(captured.value)
+        self._validate_query_result(
+            captured.value.request.post_data_json,
+            result,
+            expected,
+        )
+        expect(field).to_have_value(expected.code)
+        row = self._ticket_row(expected.code)
+        expect(row).to_have_count(1)
+        expect(row).to_be_visible()
+        return result
+
+    def inspect_ticket_detail(self, snapshot: TicketListSnapshot) -> None:
+        """Open the selected ticket dialog and validate detail and process data."""
+        expected = snapshot.first_record
+        row = self._ticket_row(expected.code)
+        view_button = row.get_by_role("button", name="查看", exact=True)
+        expect(view_button).to_be_enabled()
+        with self.page.expect_response(
+            lambda response: bool(self.DETAIL_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as detail_capture:
+            with self.page.expect_response(
+                lambda response: bool(self.PROCESS_API.search(response.url)),
+                timeout=settings.NAVIGATION_TIMEOUT,
+            ) as process_capture:
+                view_button.click()
+
+        detail = self._validate_detail_response(detail_capture.value, expected)
+        self._validate_process_response(process_capture.value, expected.ticket_id)
+        dialog = self.page.get_by_role("dialog").filter(
+            has=self.page.get_by_text("工单详情", exact=True)
+        )
+        if dialog.count() == 0:
+            dialog = self.page.get_by_role("dialog").filter(
+                has=self.page.get_by_text("工单ID", exact=False)
+            )
+        expect(dialog).to_have_count(1)
+        expect(dialog).to_be_visible()
+        for value in (
+            expected.ticket_id,
+            expected.title,
+            expected.description,
+            expected.creator_name,
+            expected.assignee_name,
+        ):
+            expect(dialog.get_by_text(value, exact=False).first).to_be_visible()
+        assert str(detail.get("workOrderCode")) == expected.code
+
+        close_button = dialog.get_by_role("button", name=re.compile(r"关闭|Close"))
+        if close_button.count() == 0:
+            close_button = dialog.locator(
+                ".ant-modal-close, .el-dialog__headerbtn, [aria-label='close']"
+            )
+        expect(close_button.first).to_be_visible()
+        close_button.first.click()
+        expect(dialog).to_have_count(0)
+        expect(self.page.get_by_placeholder("请输入工单编号", exact=True)).to_be_visible()
+
+    @classmethod
+    def _parse_list_response(cls, response: Response) -> TicketListSnapshot:
+        """Validate the ticket-list transport, envelope and required identity."""
+        assert response.status == 200, "工单列表接口 HTTP 失败"
+        payload = response.json()
+        assert isinstance(payload, dict), "工单列表接口不是对象"
+        assert type(payload.get("code")) is int and payload["code"] == 0, (
+            "工单列表接口业务失败"
+        )
+        data = payload.get("data")
+        assert isinstance(data, Mapping), "工单列表 data 不是对象"
+        raw_records = data.get("records")
+        assert isinstance(raw_records, list), "工单列表 records 不是列表"
+        raw_total = data.get("total")
+        try:
+            total = int(raw_total)
+        except (TypeError, ValueError):
+            raise AssertionError("工单列表 total 不是整数") from None
+        assert total >= len(raw_records), "工单列表 total 小于本页记录数"
+        records = tuple(cls._parse_ticket_record(row) for row in raw_records)
+        return TicketListSnapshot(records=records, total=total)
+
+    @staticmethod
+    def _parse_ticket_record(raw: Any) -> TicketRecord:
+        assert isinstance(raw, Mapping), "工单列表记录不是对象"
+        fields = {
+            "ticket_id": raw.get("id"),
+            "code": raw.get("workOrderCode"),
+            "title": raw.get("title"),
+            "description": raw.get("workOrderDescription"),
+            "type_description": raw.get("workOrderTypeDesc"),
+            "creator_name": raw.get("creatorName"),
+            "assignee_name": raw.get("assigneeName"),
+            "created_at": raw.get("insertDt"),
+        }
+        missing = [name for name, value in fields.items() if not str(value or "").strip()]
+        assert not missing, f"工单记录缺少必需字段: {', '.join(missing)}"
+        return TicketRecord(**{name: str(value).strip() for name, value in fields.items()})
+
+    @staticmethod
+    def _validate_query_result(
+        request: Any,
+        result: TicketListSnapshot,
+        expected: TicketRecord,
+    ) -> None:
+        assert isinstance(request, dict), "工单查询请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, dict), "工单查询缺少 queryfilter"
+        assert query.get("workOrderCode") == expected.code, "工单查询未提交目标编号"
+        assert result.records, "工单查询未返回已知存在的样本"
+        assert len(result.records) == 1, "工单编号未唯一命中"
+        assert all(record.code == expected.code for record in result.records), (
+            "工单查询返回了其他编号的记录"
+        )
+        assert result.first_record.ticket_id == expected.ticket_id, (
+            "查询工单 ID 与原列表不一致"
+        )
+
+    @staticmethod
+    def _validate_detail_response(
+        response: Response,
+        expected: TicketRecord,
+    ) -> Mapping[str, Any]:
+        assert response.status == 200, "工单详情接口 HTTP 失败"
+        payload = response.json()
+        assert isinstance(payload, dict), "工单详情接口不是对象"
+        assert type(payload.get("code")) is int and payload["code"] == 0, (
+            "工单详情接口业务失败"
+        )
+        data = payload.get("data")
+        assert isinstance(data, Mapping), "工单详情 data 不是对象"
+        assert str(data.get("id")) == expected.ticket_id, "工单详情返回了其他工单"
+        assert str(data.get("workOrderCode")) == expected.code, "工单详情编号不一致"
+        assert str(data.get("title")) == expected.title, "工单详情标题不一致"
+        assert str(data.get("workOrderDescription")) == expected.description, (
+            "工单详情描述不一致"
+        )
+        return data
+
+    @staticmethod
+    def _validate_process_response(response: Response, ticket_id: str) -> list[dict]:
+        assert response.status == 200, "工单处理记录接口 HTTP 失败"
+        request = response.request.post_data_json
+        assert isinstance(request, dict), "工单处理记录请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, dict), "工单处理记录请求缺少 queryfilter"
+        assert str(query.get("workOrderId")) == ticket_id, "处理记录请求了其他工单"
+        payload = response.json()
+        assert isinstance(payload, dict), "工单处理记录接口不是对象"
+        assert type(payload.get("code")) is int and payload["code"] == 0, (
+            "工单处理记录接口业务失败"
+        )
+        data = payload.get("data")
+        assert isinstance(data, Mapping), "工单处理记录 data 不是对象"
+        records = data.get("records")
+        assert isinstance(records, list), "工单处理记录 records 不是列表"
+        assert all(isinstance(row, dict) for row in records), "工单处理记录含非对象项"
+        return records
+
+    def _ticket_row(self, code: str):
+        return self.page.locator(".table-row").filter(
+            has=self.page.get_by_text(code, exact=True)
+        )
+
+    def _require_menu(self) -> ConsoleMenuPage:
+        assert self._menu is not None, "尚未加载控制台菜单树"
+        return self._menu
 
     def open_ticket_list(self) -> "TicketCenterPage":
         """进入工单列表（M4-01）。"""
