@@ -1196,7 +1196,7 @@ assets:
 
   - asset_id: UI-SMOKE-M2-003
     module: 订单管理
-    title: M2-03 订单列表可查询到低影响测试订单
+    title: M2-03 真实菜单查询现有订单并验证身份
     lifecycle: uat_automated
     automation_status: automated
     source:
@@ -1207,6 +1207,7 @@ assets:
     page_objects:
       - pages/console/order_mgmt_page.py
     markers:
+      - prod_conditional
       - order
       - smoke
       - readonly
@@ -1219,7 +1220,7 @@ assets:
 
   - asset_id: UI-SMOKE-M2-004
     module: 订单管理
-    title: M2-04 测试订单详情核心信息和流转信息可见
+    title: M2-04 现有订单详情和流转明细只读验证
     lifecycle: uat_automated
     automation_status: automated
     source:
@@ -1230,6 +1231,7 @@ assets:
     page_objects:
       - pages/console/order_mgmt_page.py
     markers:
+      - prod_conditional
       - order
       - smoke
       - readonly

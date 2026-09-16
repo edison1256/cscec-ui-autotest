@@ -428,17 +428,35 @@ cases:
     case_id: M2-03
     test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_03_order_list_search
     parameter_id: null
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L2
-    expected_state: [指定订单搜索结果可见]
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: existing_order
+        expected: 本次列表至少一条可只读查询的订单
+    owner_note: 使用本次列表样本，不创建测试订单；查询后无结果必须失败
+    expected_state: [真实菜单进入并查询现有订单编码，请求条件及返回订单身份一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
 
   - <<: *conditional_data_defaults
     case_id: M2-04
     test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_04_order_detail_info_visible
     parameter_id: null
-    entry_type: DIRECT
-    max_depth: L3
-    expected_state: [指定订单详情唯一标识和流转字段可见]
+    entry_type: UI
+    max_depth: L4
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: existing_order
+        expected: 本次列表至少一条可只读查看的订单
+    owner_note: 仅详情和流转Tab后返回，不审批、撤回、下单
+    expected_state: [查询同一订单并打开详情，核对身份及流转接口，切换流转明细后返回]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
+      - /irp-api/irp-portal-console/order/orderDetail[?]
+      - /irp-api/irp-portal-console/order/change/list[?]
 
   - <<: *conditional_data_defaults
     case_id: M3-01

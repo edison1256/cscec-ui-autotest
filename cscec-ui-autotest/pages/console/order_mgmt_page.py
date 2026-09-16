@@ -2,15 +2,24 @@
 
 from __future__ import annotations
 
+import re
 import time
-from typing import Optional
+from collections.abc import Mapping
+from typing import Any, Optional
+from urllib.parse import parse_qs, urlparse
 
-from playwright.sync_api import Page, TimeoutError as PlaywrightTimeoutError
+from playwright.sync_api import Page, Response, TimeoutError as PlaywrightTimeoutError, expect
 
 from config.settings import settings
 from core.base_page import BasePage
+from core.execution_contract import PrerequisiteResult
 from core.logger import get_logger
 from core.navigation_helpers import EntryNotExposed
+from pages.console.console_menu_page import ConsoleMenuPage
+from pages.console.console_workbench_page import (
+    ConsoleWorkbenchPage,
+    WorkbenchListSnapshot,
+)
 
 logger = get_logger("order_mgmt_page")
 
@@ -20,6 +29,142 @@ class OrderMgmtPage(BasePage):
 
     PAGE_NAME = "订单与订阅管理"
     PAGE_URL_PATTERN = "order"
+
+    LIST_API = re.compile(r"/irp-api/irp-portal-console/order/page$")
+
+    def __init__(self, page: Page) -> None:
+        super().__init__(page)
+        self._menu: ConsoleMenuPage | None = None
+
+    def prepare_console_menu(self) -> "OrderMgmtPage":
+        """Load authorized menus before evaluating the order entry prerequisite."""
+        self._menu = ConsoleMenuPage(self.page).open_console_home()
+        return self
+
+    def menu_prerequisite(self) -> PrerequisiteResult:
+        """Require the real console order-management child menu."""
+        return self._require_menu().child_menu_prerequisite("订单中心", "订单管理")
+
+    def open_console_orders(self) -> WorkbenchListSnapshot:
+        """Enter the order list from the sidebar and validate its response."""
+        self._require_menu().expand_menu_group("订单中心")
+        entry = self.page.get_by_role("menuitem").filter(
+            has=self.page.get_by_text("订单管理", exact=True)
+        )
+        expect(entry).to_have_count(1)
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            entry.click()
+        expect(self.page).to_have_url(re.compile(r"/orderCenter/myOrders[?]"))
+        expect(self.page.get_by_text("订单列表", exact=True)).to_be_visible()
+        expect(self.page.get_by_placeholder("请输入订单编码", exact=True)).to_be_visible()
+        return ConsoleWorkbenchPage._parse_list_response(captured.value, "订单管理")
+
+    def query_existing_order(
+        self, snapshot: WorkbenchListSnapshot,
+    ) -> WorkbenchListSnapshot:
+        """Search a real order code and prove request, response and row agree."""
+        record = snapshot.first_record
+        code = str(record.get("orderCode") or "")
+        assert code, "订单样本缺少订单编码"
+        field = self.page.get_by_placeholder("请输入订单编码", exact=True)
+        field.fill(code)
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            self.page.get_by_role("button", name=re.compile(r"^查\s*询$")).click()
+        response = captured.value
+        result = ConsoleWorkbenchPage._parse_list_response(response, "订单查询")
+        self._validate_query_result(response.request.post_data_json, result, record)
+        expect(field).to_have_value(code)
+        row = self.page.locator(".table-row").filter(
+            has=self.page.get_by_text(code, exact=True)
+        )
+        expect(row).to_have_count(1)
+        expect(row).to_be_visible()
+        return result
+
+    @staticmethod
+    def _validate_query_result(
+        request: Any, result: WorkbenchListSnapshot, expected: Mapping[str, Any],
+    ) -> None:
+        """Reject ignored filters, unrelated records and missing target orders."""
+        assert isinstance(request, dict), "订单查询请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, dict), "订单查询缺少 queryfilter"
+        code = expected.get("orderCode")
+        assert code and query.get("orderCode") == code, "订单查询未提交目标编码"
+        assert result.records, "订单查询未返回已知存在的样本"
+        assert all(row.get("orderCode") == code for row in result.records), (
+            "订单查询返回了其他编码的记录"
+        )
+        assert len(result.records) == 1, "订单编码未唯一命中"
+        assert str(result.first_record.get("id")) == str(expected.get("id")), (
+            "查询订单 ID 与原列表不一致"
+        )
+
+    def inspect_order_detail(self, snapshot: WorkbenchListSnapshot) -> None:
+        """Verify the selected order and its flow tab, then return without writes."""
+        order_id = str(snapshot.first_record["id"])
+        with self.page.expect_response(
+            lambda response: "/order/change/list?" in response.url
+            and parse_qs(urlparse(response.url).query).get("orderId") == [order_id],
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as history_response:
+            ConsoleWorkbenchPage(self.page).open_first_detail(
+                snapshot,
+                row_identity_field="orderCode",
+                detail_identity_field="id",
+                required_labels=("基础信息", "订单编码", "资源信息", "审批进度"),
+                detail_api_pattern=r"/order/orderDetail[?]",
+            )
+        history = self._validate_history(history_response.value, order_id)
+        overlay = self.page.locator(
+            ".ant-drawer:visible, .ant-modal:visible, .el-dialog:visible, .el-drawer:visible"
+        )
+        expect(overlay).to_have_count(1)
+        tab = overlay.get_by_role("tab", name="流转明细", exact=True)
+        tab.click()
+        expect(tab).to_have_attribute("aria-selected", "true")
+        panel_id = tab.get_attribute("aria-controls")
+        assert panel_id, "流转明细 Tab 未关联面板"
+        panel = overlay.locator(f'[id="{panel_id}"]')
+        expect(panel).to_be_visible()
+        if history:
+            expect(panel.get_by_text("时间：", exact=False).first).to_be_visible()
+        else:
+            expect(panel.get_by_text("暂无数据", exact=True)).to_be_visible()
+        overlay.get_by_role("button", name=re.compile(r"^返\s*回$")).click()
+        expect(overlay).to_have_count(0)
+        expect(self.page.get_by_placeholder("请输入订单编码", exact=True)).to_be_visible()
+
+    @staticmethod
+    def _validate_history(response: Response, order_id: str) -> list[dict]:
+        """Require flow history to belong to the selected order."""
+        assert response.status == 200, "订单流转接口 HTTP 失败"
+        payload = response.json()
+        assert isinstance(payload, dict), "订单流转接口不是对象"
+        assert type(payload.get("code")) is int and payload["code"] == 0, (
+            "订单流转接口业务失败"
+        )
+        data = payload.get("data")
+        assert isinstance(data, dict), "订单流转 data 不是对象"
+        assert str(data.get("orderId")) == order_id, "订单流转返回了其他订单"
+        records = data.get("orderChangeList")
+        assert isinstance(records, list), "订单流转记录不是列表"
+        assert all(
+            isinstance(row, dict) and str(row.get("orderId")) == order_id
+            for row in records
+        ), "订单流转记录混入其他订单"
+        return records
+
+    def _require_menu(self) -> ConsoleMenuPage:
+        """Return the prepared menu or fail with an actionable message."""
+        assert self._menu is not None, "尚未加载控制台菜单树"
+        return self._menu
 
     def open_apply_form(self) -> "OrderMgmtPage":
         """进入资源申请/订阅表单页（M2-01）。"""
