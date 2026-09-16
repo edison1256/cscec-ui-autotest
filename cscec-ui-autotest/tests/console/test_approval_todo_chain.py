@@ -4,7 +4,7 @@
 - M3-01 真实菜单待办查询与空态一致性
 - M3-02 已办业务表单与审批流程详情只读验证
 - M3-03 审批同意后订单状态同步更新 (write)
-- M3-04 消息/小铃铛/待办跳转详情可用
+- M3-04 铃铛面板与未读消息业务跳转严格验证
 """
 
 from __future__ import annotations
@@ -83,8 +83,35 @@ class TestApprovalTodoChain:
 
     @pytest.mark.smoke
     @pytest.mark.readonly
-    def test_m3_04_message_bell_click_and_navigate(self, logged_in_page):
-        """M3-04 消息/小铃铛/待办跳转详情可用。"""
-        msg_page = MessageCenterPage(logged_in_page)
-        msg_page.open_message_bell()
-        msg_page.open_message_item_and_navigate()
+    @pytest.mark.prod_conditional
+    def test_m3_04_message_bell_click_and_navigate(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M3-04 铃铛面板与未读消息业务跳转严格验证。"""
+        msg_page = MessageCenterPage(logged_in_page).open_console_home()
+        panel_health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M3-04",
+            "消息铃铛和未读接口",
+        ).start()
+        try:
+            snapshot = msg_page.open_message_bell()
+        finally:
+            panel_health.stop()
+        panel_health.assert_healthy()
+
+        require_case_prerequisite(
+            "M3-04",
+            msg_page.navigable_message_prerequisite(snapshot),
+        )
+        target_health = BrowserHealthMonitor(
+            logged_in_page,
+            "未读消息业务落地",
+        ).start()
+        try:
+            msg_page.open_message_target(snapshot)
+        finally:
+            target_health.stop()
+        target_health.assert_healthy()

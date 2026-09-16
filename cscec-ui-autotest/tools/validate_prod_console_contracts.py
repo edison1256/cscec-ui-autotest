@@ -63,6 +63,7 @@ MIGRATED_CONDITIONAL_IDS = {
     "M2-04",
     "M3-01",
     "M3-02",
+    "M3-04",
 }
 
 

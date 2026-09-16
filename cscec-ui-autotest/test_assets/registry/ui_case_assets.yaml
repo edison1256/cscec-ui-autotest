@@ -1292,6 +1292,9 @@ assets:
       pre: true
       prod_default: true
       prod_explicit: true
+    evidence:
+      prod_conditional: "2026-09-16 已办接口首条精确行、业务表单身份及嵌套审批流程详情只读验证：1 passed。"
+    notes: "只查看历史已办记录并返回；不审批、不撤回、不导出。"
 
   - asset_id: UI-SMOKE-M3-003
     module: 审批待办
@@ -1318,7 +1321,7 @@ assets:
 
   - asset_id: UI-SMOKE-M3-004
     module: 审批待办
-    title: M3-04 消息/小铃铛/待办跳转详情可用
+    title: M3-04 铃铛面板与未读消息业务跳转严格验证
     lifecycle: uat_automated
     automation_status: automated
     source:
@@ -1329,6 +1332,7 @@ assets:
     page_objects:
       - pages/portal/message_center_page.py
     markers:
+      - prod_conditional
       - approval
       - smoke
       - readonly
@@ -1338,6 +1342,9 @@ assets:
       pre: true
       prod_default: true
       prod_explicit: true
+    evidence:
+      prod_conditional: "2026-09-16 铃铛、审批/任务/通知 Tab、未读接口和空态验证通过；records=0, navigable=0，详情按契约记录 NOT_APPLICABLE。"
+    notes: "铃铛只展示未读消息；不绕过 UI 使用 316 条已读历史冒充消息跳转覆盖。"
 
   - asset_id: UI-SMOKE-M4-001
     module: 工单中心
@@ -2970,9 +2977,6 @@ assets:
       pre: true
       prod_default: true
       prod_explicit: true
-    evidence:
-      prod_conditional: "2026-09-16 已办接口首条精确行、业务表单身份及嵌套审批流程详情只读验证：1 passed。"
-    notes: "只查看历史已办记录并返回；不审批、不撤回、不导出。"
     evidence:
       prod_probe: "2026-09-04 reports/prod-range-probe-20260904-141751.md: 工作台入口探查沉淀；2026-09-09 移除无可复现控制台操作路径的被订阅订单旧入口；2026-09-15 按工作台配置接口、精确卡片、目标路由、业务面板标题和关键业务接口升级为严格条件用例。"
       prod_execution: "2026-09-15 入口批次 7 条通过；数据源配置因 data.cscec.com/auth/resolve/getNoGrantButtons 返回业务码 1401 严格失败。"

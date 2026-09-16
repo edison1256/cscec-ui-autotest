@@ -495,7 +495,13 @@ cases:
     parameter_id: null
     entry_type: UI
     max_depth: L3
-    expected_state: [消息面板和指定消息目标页面可见]
+    prerequisites:
+      - type: navigable_unread_message
+        expected: 未读消息接口至少返回一条带业务跳转地址的记录
+    expected_state: [铃铛三类消息面板、未读接口和精确消息业务落地一致]
+    critical_api_patterns:
+      - /message/messageReceiver/page[?]
+    owner_note: 铃铛仅展示未读消息；无未读样本时在接口和空态验证后记录 NOT_APPLICABLE，不绕过 UI 使用已读历史
 
   - <<: *conditional_data_defaults
     case_id: M4-01
