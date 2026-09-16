@@ -1244,7 +1244,7 @@ assets:
 
   - asset_id: UI-SMOKE-M3-001
     module: 审批待办
-    title: M3-01 固定审批处理人可打开待办列表
+    title: M3-01 真实菜单待办查询与空态一致性
     lifecycle: uat_automated
     automation_status: automated
     source:
@@ -1255,6 +1255,7 @@ assets:
     page_objects:
       - pages/console/approval_center_page.py
     markers:
+      - prod_conditional
       - approval
       - smoke
       - readonly
@@ -1264,10 +1265,13 @@ assets:
       pre: true
       prod_default: true
       prod_explicit: true
+    evidence:
+      prod_conditional: "2026-09-16 真实菜单进入待办，唯一无匹配流程名的请求条件、接口空结果与页面空态一致：1 passed。"
+    notes: "生产当前待办为 0；用唯一不存在的流程名验证查询契约，不创建审批数据。"
 
   - asset_id: UI-SMOKE-M3-002
     module: 审批待办
-    title: M3-02 审批详情业务表单和流程信息可见
+    title: M3-02 已办业务表单与审批流程详情只读验证
     lifecycle: uat_automated
     automation_status: automated
     source:
@@ -1278,6 +1282,7 @@ assets:
     page_objects:
       - pages/console/approval_center_page.py
     markers:
+      - prod_conditional
       - approval
       - smoke
       - readonly
@@ -2965,6 +2970,9 @@ assets:
       pre: true
       prod_default: true
       prod_explicit: true
+    evidence:
+      prod_conditional: "2026-09-16 已办接口首条精确行、业务表单身份及嵌套审批流程详情只读验证：1 passed。"
+    notes: "只查看历史已办记录并返回；不审批、不撤回、不导出。"
     evidence:
       prod_probe: "2026-09-04 reports/prod-range-probe-20260904-141751.md: 工作台入口探查沉淀；2026-09-09 移除无可复现控制台操作路径的被订阅订单旧入口；2026-09-15 按工作台配置接口、精确卡片、目标路由、业务面板标题和关键业务接口升级为严格条件用例。"
       prod_execution: "2026-09-15 入口批次 7 条通过；数据源配置因 data.cscec.com/auth/resolve/getNoGrantButtons 返回业务码 1401 严格失败。"

@@ -462,17 +462,32 @@ cases:
     case_id: M3-01
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
     parameter_id: null
-    entry_type: DIRECT
+    entry_type: UI
     max_depth: L2
-    expected_state: [指定待办搜索结果可见]
+    prerequisites:
+      - type: authorized_menu
+        expected: 审批流程下发审批中心菜单
+    expected_state: [真实菜单进入待办流程，唯一无匹配查询的请求条件、接口空结果和页面空态一致]
+    critical_api_patterns:
+      - /workflow/portal/getPortalApproveTask$
+    owner_note: 待办可为空；使用唯一不存在的流程名验证查询契约，不创建审批数据
 
   - <<: *conditional_data_defaults
     case_id: M3-02
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_02_approval_detail_form_visible
     parameter_id: null
-    entry_type: DIRECT
-    max_depth: L3
-    expected_state: [指定审批详情业务对象和流程字段可见]
+    entry_type: UI
+    max_depth: L4
+    prerequisites:
+      - type: authorized_menu
+        expected: 审批流程下发审批中心菜单
+      - type: completed_approval
+        expected: 已办流程至少存在一条可只读查看的历史记录
+    expected_state: [已办列表对象、业务表单路由身份和嵌套审批流程页面一致]
+    critical_api_patterns:
+      - /workflow/portal/getPortalApproveTask$
+    critical_api_rationale: 业务表单和流程详情为同域微前端路由，无稳定专属JSON请求；使用列表接口身份、目标URL参数和详情业务字段作为证据
+    owner_note: 仅查看已办业务表单和审批流程并返回，不撤回、不审批、不导出
 
   - <<: *conditional_data_defaults
     case_id: M3-04
