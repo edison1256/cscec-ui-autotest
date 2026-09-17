@@ -117,6 +117,49 @@ def test_system_resource_records_preserve_visible_identity(
     ) == expected
 
 
+@pytest.mark.parametrize(
+    "payload,id_fields,name_fields,expected",
+    [
+        (
+            {"code": 0, "data": {"list": [{"id": "D-1", "name": "资源一"}]}},
+            ("id",),
+            ("name",),
+            SystemListRecord("D-1", "资源一"),
+        ),
+        (
+            {"code": 0, "data": [{"id": "I-1", "taskName": "日常巡检"}]},
+            ("id",),
+            ("taskName",),
+            SystemListRecord("I-1", "日常巡检"),
+        ),
+        (
+            {
+                "code": 0,
+                "data": [
+                    {
+                        "categoryCode": "LIB-1",
+                        "categoryName": "生产工单",
+                        "children": [],
+                    }
+                ],
+            },
+            ("categoryCode", "libraryCode", "key"),
+            ("categoryName", "libraryName", "title"),
+            SystemListRecord("LIB-1", "生产工单"),
+        ),
+    ],
+)
+def test_remaining_system_configuration_records_preserve_identity(
+    payload, id_fields, name_fields, expected
+) -> None:
+    assert SystemConfigurationPage._record_from_response(  # noqa: SLF001
+        FakeResponse(payload),
+        "系统配置",
+        id_fields=id_fields,
+        name_fields=name_fields,
+    ) == expected
+
+
 def test_metering_record_preserves_tenant_identity() -> None:
     response = FakeResponse(
         {

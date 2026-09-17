@@ -762,3 +762,13 @@ Step 4 完成必须同时满足：7 条均带 `prod_mandatory`、无跳过和直
 | SYSCFG-MANUFACTURER-001 | 系统配置 → 厂商管理 | `/manufacturer/page` 与动态厂商身份 | 正常 |
 
 本批仅验证真实入口、关键接口和动态身份。新增、编辑、停用、删除、导入等写动作均不执行；数据系统维护不使用直链兜底。早期探查脚本未等待中间菜单展开曾回退工作台，正式 POM 逐级验证 `aria-expanded` 后生产运行正常，说明该现象属于探查脚本时序问题而非产品缺陷。
+
+## 25. Batch F：系统配置剩余页面候选
+
+| 用例 | 真实菜单路径 | 关键接口与身份 | 只读边界 |
+|---|---|---|---|
+| SYSCFG-DEVELOPER-001 | 系统配置 → 门户管理 → 开发者平台配置 | `/developer-platform-resource-portal/page` 首条资源 | 新增、上移、下移、删除仅验证可见 |
+| SYSCFG-INSPECTION-001 | 系统配置 → 巡检配置 | `/irpTaskTpl/getIrpTaskTplList` 首条人工巡检模板 | 人工/自动 Tab 和动作入口可见，不进入编辑 |
+| SYSCFG-WORKORDER-001 | 系统配置 → 工单配置 | `/work-order-config/getCategory` 首个根分类 | 修改分类、全局处理人仅验证可见 |
+
+三页生产探查均未出现 HTTP 404/5xx、业务失败、`console.error` 或 `pageerror`。候选用例必须从真实菜单进入并以本次接口返回的动态身份反证 UI；不固定依赖 CKafka、金仓数据库或生产工单分类数据。

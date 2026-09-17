@@ -1,27 +1,27 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:17。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:27。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：441
-- **生产默认收集（smoke + readonly）**：67 / 441
-- **被默认排除（write / destructive）**：374
+- **总用例数**：447
+- **生产默认收集（smoke + readonly）**：67 / 447
+- **被默认排除（write / destructive）**：380
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：143
+- **登记资产总数**：146
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
-| candidate | 34 |
+| candidate | 37 |
 | prod_regression | 13 |
 
 ### 按自动化状态（automation_status）
@@ -29,7 +29,7 @@
 | automation_status | 数量 |
 | --- | --- |
 | automated | 115 |
-| needs_stabilization | 28 |
+| needs_stabilization | 31 |
 
 ### 按模块（module）
 
@@ -38,8 +38,8 @@
 | 分层数据资源导入 | 53 |
 | 数据资源导入功能优化 | 24 |
 | 移动端 | 12 |
+| 系统配置 | 10 |
 | 控制台 | 8 |
-| 系统配置 | 7 |
 | 权限管理 | 5 |
 | 资源管理 | 5 |
 | 订单管理 | 5 |
@@ -55,7 +55,7 @@
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **28** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **31** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -87,6 +87,9 @@
 | UI-PROD-BATCH-E-SYSCFG-LAYER-001 | 系统配置 | 数据分层设置只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖数据分层设置；校验数据类目接口与动态应用域身份，不导入、不新增或修改层级。 |
 | UI-PROD-BATCH-E-SYSCFG-DATASYSTEM-001 | 系统配置 | 数据系统维护真实菜单路由探活候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_data_system_maintenance_real_menu_route` | 严格验证逐级菜单点击后进入 systemMaintain 且页面标题可见；不用直链绕过，不执行维护写操作。 |
 | UI-PROD-BATCH-E-SYSCFG-MANUFACTURER-001 | 系统配置 | 厂商管理列表只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖厂商管理；校验列表接口与动态厂商身份，不触发新增、编辑或删除。 |
+| UI-PROD-BATCH-F-SYSCFG-DEVELOPER-001 | 系统配置 | 开发者平台配置资源列表只读探查候选 | `tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page` | 参数化覆盖开发者平台配置；校验真实三级菜单、分页接口和动态资源身份，仅验证新增、上下移和删除入口可见。 |
+| UI-PROD-BATCH-F-SYSCFG-INSPECTION-001 | 系统配置 | 巡检配置模板列表只读探查候选 | `tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page` | 参数化覆盖巡检配置；校验人工/自动巡检 Tab、模板接口和动态模板身份，不新增、编辑、删除或编辑模板。 |
+| UI-PROD-BATCH-F-SYSCFG-WORKORDER-001 | 系统配置 | 工单配置分类树只读探查候选 | `tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page` | 参数化覆盖工单配置；校验分类接口与动态根分类身份，仅验证修改分类和全局处理人入口可见。 |
 
 ## 4. 复用与维护约定
 

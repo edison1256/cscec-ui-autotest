@@ -32,6 +32,9 @@ class SystemConfigurationPage(ConsoleMenuPage):
     SPECIFICATION_API = "/category-backend/queryCategoryTreeList"
     LAYER_API = "/data-system/dataCategoryList"
     MANUFACTURER_API = "/manufacturer/page"
+    DEVELOPER_API = "/developer-platform-resource-portal/page"
+    INSPECTION_API = "/irpTaskTpl/getIrpTaskTplList"
+    WORK_ORDER_CONFIG_API = "/work-order-config/getCategory"
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -144,6 +147,51 @@ class SystemConfigurationPage(ConsoleMenuPage):
             id_fields=("id",),
             name_fields=("manufacturerName",),
         )
+
+    def open_developer_platform_configuration(self) -> "SystemConfigurationPage":
+        """Open 开发者平台配置 and bind a displayed resource identity."""
+        page = self._open_identity_page(
+            ("系统配置", "门户管理", "开发者平台配置"),
+            self.DEVELOPER_API,
+            r"[#/]sub/resource/systemManage/portal/developerConfig(?:[/?]|$)",
+            "开发者平台配置",
+            id_fields=("id",),
+            name_fields=("name",),
+        )
+        for action in ("新 增", "上移", "下移", "删除"):
+            expect(self.page.get_by_role("button", name=action, exact=True).first).to_be_visible()
+        return page
+
+    def open_inspection_configuration(self) -> "SystemConfigurationPage":
+        """Open 巡检配置 and bind a manual-inspection template identity."""
+        page = self._open_identity_page(
+            ("系统配置", "巡检配置"),
+            self.INSPECTION_API,
+            r"[#/]sub/resource/systemManage/inspectionConfig(?:[/?]|$)",
+            "巡检配置",
+            id_fields=("id",),
+            name_fields=("taskName",),
+        )
+        for tab in ("人工巡检", "自动巡检"):
+            expect(self.page.get_by_text(tab, exact=True).first).to_be_visible()
+        for action in ("新 增", "编辑", "删除", "编辑模版"):
+            expect(self.page.get_by_role("button", name=action, exact=True).first).to_be_visible()
+        return page
+
+    def open_work_order_configuration(self) -> "SystemConfigurationPage":
+        """Open 工单配置 and bind a root category identity."""
+        page = self._open_identity_page(
+            ("系统配置", "工单配置"),
+            self.WORK_ORDER_CONFIG_API,
+            r"[#/]sub/resource/systemManage/workOrderConfig(?:[/?]|$)",
+            "工单配置",
+            id_fields=("categoryCode", "libraryCode", "key"),
+            name_fields=("categoryName", "libraryName", "title"),
+        )
+        for action in ("修改分类", "全局处理人"):
+            expect(self.page.get_by_role("button", name=action, exact=True)).to_be_visible()
+        expect(self.page.get_by_text("工单类型", exact=True)).to_be_visible()
+        return page
 
     def _open_identity_page(
         self,

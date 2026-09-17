@@ -3545,3 +3545,39 @@ assets:
     markers: [console, readonly, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
     notes: "参数化覆盖厂商管理；校验列表接口与动态厂商身份，不触发新增、编辑或删除。"
+
+  - asset_id: UI-PROD-BATCH-F-SYSCFG-DEVELOPER-001
+    module: 系统配置
+    title: 开发者平台配置资源列表只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch F, manual_case_id: SYSCFG-DEVELOPER-001}
+    test_path: tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page
+    page_objects: [pages/console/system_configuration_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "参数化覆盖开发者平台配置；校验真实三级菜单、分页接口和动态资源身份，仅验证新增、上下移和删除入口可见。"
+
+  - asset_id: UI-PROD-BATCH-F-SYSCFG-INSPECTION-001
+    module: 系统配置
+    title: 巡检配置模板列表只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch F, manual_case_id: SYSCFG-INSPECTION-001}
+    test_path: tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page
+    page_objects: [pages/console/system_configuration_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "参数化覆盖巡检配置；校验人工/自动巡检 Tab、模板接口和动态模板身份，不新增、编辑、删除或编辑模板。"
+
+  - asset_id: UI-PROD-BATCH-F-SYSCFG-WORKORDER-001
+    module: 系统配置
+    title: 工单配置分类树只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch F, manual_case_id: SYSCFG-WORKORDER-001}
+    test_path: tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page
+    page_objects: [pages/console/system_configuration_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "参数化覆盖工单配置；校验分类接口与动态根分类身份，仅验证修改分类和全局处理人入口可见。"
