@@ -283,7 +283,7 @@ assets:
 
   - asset_id: UI-PROD-PERM-ROLE-001
     module: 权限管理
-    title: 角色成员、数据权限与编辑回显深层只读候选
+    title: 角色成员、数据权限与编辑回显深层只读回归
     lifecycle: candidate
     automation_status: automated
     source:
@@ -298,6 +298,7 @@ assets:
       - readonly
       - regression
       - domain_split
+      - prod_conditional
     env_policy:
       uat: true
       pre: true
@@ -305,11 +306,12 @@ assets:
       prod_explicit: true
     evidence:
       prod_run: "2026-09-17 生产定向运行：1 passed；同一动态角色完成成员、数据权限、编辑回显和取消确认，未保存。"
-    notes: "从角色列表接口动态建立角色身份；验证成员表、数据权限两个业务接口、所属租户/后端类目/领域及禁用的全量数据开关；编辑仅检查回显与禁用保存，随后取消并确认，不修改角色。候选阶段不进入默认生产门禁。"
+      prod_conditional: "2026-09-17 权限管理 5 条合并回归：5 passed；已晋级生产 Conditional。"
+    notes: "从角色列表接口动态建立角色身份；验证成员表、数据权限两个业务接口、所属租户/后端类目/领域及禁用的全量数据开关；编辑仅检查回显与禁用保存，随后取消并确认，不修改角色。"
 
   - asset_id: UI-PROD-PERM-LOGIN-001
     module: 权限管理
-    title: 4A登录资源、组织与部门用户深层只读候选
+    title: 4A登录资源、组织与部门用户深层只读回归
     lifecycle: candidate
     automation_status: automated
     source:
@@ -324,6 +326,7 @@ assets:
       - readonly
       - regression
       - domain_split
+      - prod_conditional
     env_policy:
       uat: true
       pre: true
@@ -331,11 +334,12 @@ assets:
       prod_explicit: true
     evidence:
       prod_run: "2026-09-17 生产定向运行：1 passed；动态资源、组织树、部门用户和认证级别一致，未执行授权或取消授权。"
-    notes: "从资源与组织接口动态建立身份，选择组织后严格核对 userPage 请求中的资源 ID、组织编码和首条用户回显；授权登录、取消授权仅验证可见，不点击。候选阶段不进入默认生产门禁。"
+      prod_conditional: "2026-09-17 权限管理 5 条合并回归：5 passed；已晋级生产 Conditional。"
+    notes: "从资源与组织接口动态建立身份，选择组织后严格核对 userPage 请求中的资源 ID、组织编码和首条用户回显；授权登录、取消授权仅验证可见，不点击。"
 
   - asset_id: UI-PROD-PERM-LOGIN-002
     module: 权限管理
-    title: 组织登录资源与组织树深层只读候选
+    title: 组织登录资源与组织树深层只读回归
     lifecycle: candidate
     automation_status: automated
     source:
@@ -350,6 +354,7 @@ assets:
       - readonly
       - regression
       - domain_split
+      - prod_conditional
     env_policy:
       uat: true
       pre: true
@@ -357,11 +362,12 @@ assets:
       prod_explicit: true
     evidence:
       prod_run: "2026-09-17 生产定向运行：1 passed；当前资源与 orgPage 组织树、认证级别一致，未执行授权或取消授权。"
-    notes: "资源身份由 cloud/page 与页面选中项共同证明，组织树由当前资源 ID 查询并严格校验业务码和根组织回显；授权按钮只检查展示。候选阶段不进入默认生产门禁。"
+      prod_conditional: "2026-09-17 权限管理 5 条合并回归：5 passed；已晋级生产 Conditional。"
+    notes: "资源身份由 cloud/page 与页面选中项共同证明，组织树由当前资源 ID 查询并严格校验业务码和根组织回显；授权按钮只检查展示。"
 
   - asset_id: UI-PROD-PERM-USER-001
     module: 权限管理
-    title: 当前用户精确查询、详情与重置深层只读候选
+    title: 当前用户精确查询、详情与重置深层只读回归
     lifecycle: candidate
     automation_status: automated
     source:
@@ -376,6 +382,7 @@ assets:
       - readonly
       - regression
       - domain_split
+      - prod_conditional
     env_policy:
       uat: true
       pre: true
@@ -383,11 +390,12 @@ assets:
       prod_explicit: true
     evidence:
       prod_run: "2026-09-17 生产定向运行：1 passed；当前登录用户精确查询、详情回显和查询重置均正常，未修改用户。"
-    notes: "以当前登录账号建立可解密的用户身份；生产后端会拒绝查看其他用户详情并返回 10006，因此不再随机选择首行用户。详情仅检查禁用字段并返回，重置仅清空查询条件。候选阶段不进入默认生产门禁。"
+      prod_conditional: "2026-09-17 权限管理 5 条合并回归：5 passed；已晋级生产 Conditional。"
+    notes: "以当前登录账号建立可解密的用户身份；生产后端会拒绝查看其他用户详情并返回 10006，因此不再随机选择首行用户。详情仅检查禁用字段并返回，重置仅清空查询条件。"
 
   - asset_id: UI-PROD-PERM-TENANT-001
     module: 权限管理
-    title: 中建云租户身份与成员空查询深层只读候选
+    title: 中建云租户身份与成员空查询深层只读回归
     lifecycle: candidate
     automation_status: automated
     source:
@@ -402,6 +410,7 @@ assets:
       - readonly
       - regression
       - domain_split
+      - prod_conditional
     env_policy:
       uat: true
       pre: true
@@ -409,7 +418,8 @@ assets:
       prod_explicit: true
     evidence:
       prod_run: "2026-09-17 生产定向运行：1 passed；中建云租户身份、唯一不存在成员查询的接口空结果和页面空态一致。"
-    notes: "固定核对当前中建云租户 100000 / ZH_01_0000；成员表本身有数据，测试使用每次唯一的不存在关键字验证严格空结果。添加、待加入和批量移出入口仅检查可见，不点击。候选阶段不进入默认生产门禁。"
+      prod_conditional: "2026-09-17 权限管理 5 条合并回归：5 passed；已晋级生产 Conditional。"
+    notes: "固定核对当前中建云租户 100000 / ZH_01_0000；成员表本身有数据，测试使用每次唯一的不存在关键字验证严格空结果。添加、待加入和批量移出入口仅检查可见，不点击。"
 
   - asset_id: UI-REG-CONSOLE-001
     module: 控制台

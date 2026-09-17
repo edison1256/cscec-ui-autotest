@@ -610,3 +610,65 @@ cases:
       - /irp-api/irp-portal-console/tenant-role/pageConsole
       - /irp-api/irp-portal-console/tenant-role/pageMembers
       - /irp-api/irp-portal-console/tenant-role/getPermissionTree
+
+  - <<: *conditional_role_defaults
+    case_id: PERM-ROLE-001
+    test_path: tests/console/test_role_management_readonly_regression.py::TestRoleManagementDeepReadonlyCandidate::test_role_members_data_permissions_and_edit_preview
+    parameter_id: null
+    entry_type: UI
+    max_depth: L5
+    expected_state: [同一角色的成员、数据权限与编辑回显一致，取消编辑且不保存]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/tenant-role/pageConsole$
+      - /irp-api/irp-portal-console/tenant-role/pageMembers$
+      - /irp-api/irp-portal-console/tenant-role/getDataPermissionDimensionConfig[?]
+      - /irp-api/irp-portal-console/tenant-role/getDataPermission[?]
+    owner_note: 只读查看动态角色；编辑弹窗仅核对回显后取消，不添加成员、不保存权限
+
+  - <<: *conditional_role_defaults
+    case_id: PERM-LOGIN-001
+    test_path: tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_4a_login_resource_organization_and_users
+    parameter_id: null
+    entry_type: UI
+    max_depth: L3
+    expected_state: [4A登录资源、组织树、部门用户和认证级别接口与页面一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/cloud/page$
+      - /irp-api/irp-portal-console/permission/userPage$
+    owner_note: 仅切换查询上下文，不点击授权登录或取消授权
+
+  - <<: *conditional_role_defaults
+    case_id: PERM-LOGIN-002
+    test_path: tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_organization_login_resource_and_tree
+    parameter_id: null
+    entry_type: UI
+    max_depth: L3
+    expected_state: [组织登录资源、组织树和认证级别接口与页面一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/cloud/page$
+      - /irp-api/irp-portal-console/permission/orgPage[?]
+    owner_note: 组织树响应过大时只读重取同一接口；不点击授权登录或取消授权
+
+  - <<: *conditional_role_defaults
+    case_id: PERM-USER-001
+    test_path: tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_user_list_exact_query_detail_and_reset
+    parameter_id: null
+    entry_type: UI
+    max_depth: L3
+    expected_state: [当前登录用户精确查询唯一，详情禁用字段回显一致，重置清空查询]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/permission/page$
+      - /irp-api/irp-portal-console/resource-encrypt/getDecryptInfo$
+    owner_note: 仅查看当前登录用户，生产禁止查看其他用户详情；不修改用户或授权状态
+
+  - <<: *conditional_role_defaults
+    case_id: PERM-TENANT-001
+    test_path: tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_current_tenant_identity_and_empty_member_query
+    parameter_id: null
+    entry_type: UI
+    max_depth: L3
+    expected_state: [中建云租户身份正确，唯一不存在成员查询的接口零记录与页面空态一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/tenant/view[?]
+      - /irp-api/irp-portal-console/tenant-member/page$
+    owner_note: 不新建租户，不点击待加入、添加或批量移出成员

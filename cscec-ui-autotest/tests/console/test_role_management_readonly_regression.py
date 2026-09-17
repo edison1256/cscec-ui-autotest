@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from core.browser_health import BrowserHealthMonitor, BusinessResponseRule
+from core.browser_health import BrowserHealthMonitor
 from pages.console.role_management_page import RoleManagementPage
 
 
@@ -42,6 +42,7 @@ class TestRoleManagementReadonlyRegression:
 @pytest.mark.readonly
 @pytest.mark.regression
 @pytest.mark.domain_split
+@pytest.mark.prod_conditional
 class TestRoleManagementDeepReadonlyCandidate:
     """Candidate coverage that remains outside the production default gate."""
 
@@ -50,15 +51,10 @@ class TestRoleManagementDeepReadonlyCandidate:
     ) -> None:
         """PERM-ROLE-001: inspect one role deeply without changing it."""
         role_page = RoleManagementPage(logged_in_page).open_console_home()
-        health = BrowserHealthMonitor(
+        health = BrowserHealthMonitor.for_case(
             logged_in_page,
+            "PERM-ROLE-001",
             "角色成员、数据权限和编辑确认前",
-            business_rules=(
-                BusinessResponseRule(r"/tenant-role/pageConsole$"),
-                BusinessResponseRule(r"/tenant-role/pageMembers$"),
-                BusinessResponseRule(r"/tenant-role/getDataPermissionDimensionConfig[?]"),
-                BusinessResponseRule(r"/tenant-role/getDataPermission[?]"),
-            ),
         ).start()
         try:
             role_page.open_from_console_menu().open_first_role_details()
