@@ -77,6 +77,11 @@ cases:
     entry_type: HYBRID
     max_depth: L2
     expected_state: [全部菜单视图打开且菜单搜索可交互]
+    ignore_rules:
+      - category: requestfailed
+        detail_pattern: '^GET https://irp\.cscec\.com/udpweb/portal/image/skeleton-screen\.png: net::ERR_ABORTED$'
+        reason: 工作台骨架占位图在页面完成渲染后被浏览器取消，不影响菜单业务状态
+        expires_on: 2026-12-31
 
   - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-003
@@ -85,6 +90,11 @@ cases:
     entry_type: HYBRID
     max_depth: L1
     expected_state: [订阅服务菜单组可见]
+    ignore_rules:
+      - category: requestfailed
+        detail_pattern: '^GET https://irp\.cscec\.com/udpweb/portal/image/skeleton-screen\.png: net::ERR_ABORTED$'
+        reason: 工作台骨架占位图在页面完成渲染后被浏览器取消，不影响菜单业务状态
+        expires_on: 2026-12-31
 
   - <<: *conditional_menu_defaults
     case_id: C-P0-CONSOLE-004
@@ -165,6 +175,11 @@ cases:
     entry_type: UI
     max_depth: L2
     expected_state: [流程页面和 flowmodel 路由可见]
+    ignore_rules:
+      - category: requestfailed
+        detail_pattern: '^GET https://irp\.cscec\.com/udpweb/portal/image/skeleton-screen\.png: net::ERR_ABORTED$'
+        reason: 工作台骨架占位图在页面完成渲染后被浏览器取消，不影响流程页面业务状态
+        expires_on: 2026-12-31
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-001
@@ -544,6 +559,11 @@ cases:
     critical_api_patterns:
       - /message/messageReceiver/page[?]
     owner_note: 铃铛仅展示未读消息；无未读样本时在接口和空态验证后记录 NOT_APPLICABLE，不绕过 UI 使用已读历史
+    ignore_rules:
+      - category: requestfailed
+        detail_pattern: '^GET https://irp\.cscec\.com/udpweb/portal/image/skeleton-screen\.png: net::ERR_ABORTED$'
+        reason: 消息面板打开时工作台骨架占位图被浏览器取消，不影响消息接口和空态
+        expires_on: 2026-12-31
 
   - <<: *conditional_data_defaults
     case_id: M4-01
