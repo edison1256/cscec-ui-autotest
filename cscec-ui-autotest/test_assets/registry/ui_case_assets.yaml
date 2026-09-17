@@ -281,6 +281,32 @@ assets:
       prod_run: "2026-09-14 python run_tests.py --env prod --prod-suite mandatory --no-html -v: 7 passed；角色功能权限连续两轮正常渲染"
     notes: "生产发布门禁用例；只打开首个角色详情并切换功能权限 Tab，不点击编辑。入口、角色列表或详情缺失均失败，不允许 skip。"
 
+  - asset_id: UI-PROD-PERM-ROLE-001
+    module: 权限管理
+    title: 角色成员、数据权限与编辑回显深层只读候选
+    lifecycle: candidate
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 生产权限管理交互层级矩阵 Step 6 Batch A
+      manual_case_id: PERM-ROLE-001
+    test_path: tests/console/test_role_management_readonly_regression.py::TestRoleManagementDeepReadonlyCandidate::test_role_members_data_permissions_and_edit_preview
+    page_objects:
+      - pages/console/role_management_page.py
+    markers:
+      - console
+      - readonly
+      - regression
+      - domain_split
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    evidence:
+      prod_run: "2026-09-17 生产定向运行：1 passed；同一动态角色完成成员、数据权限、编辑回显和取消确认，未保存。"
+    notes: "从角色列表接口动态建立角色身份；验证成员表、数据权限两个业务接口、所属租户/后端类目/领域及禁用的全量数据开关；编辑仅检查回显与禁用保存，随后取消并确认，不修改角色。候选阶段不进入默认生产门禁。"
+
   - asset_id: UI-REG-CONSOLE-001
     module: 控制台
     title: 服务供给入口

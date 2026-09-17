@@ -1,34 +1,34 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 09:48。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 10:00。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：385
-- **生产默认收集（smoke + readonly）**：67 / 385
-- **被默认排除（write / destructive）**：318
+- **总用例数**：397
+- **生产默认收集（smoke + readonly）**：67 / 397
+- **被默认排除（write / destructive）**：330
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：128
+- **登记资产总数**：129
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
-| candidate | 19 |
+| candidate | 20 |
 | prod_regression | 13 |
 
 ### 按自动化状态（automation_status）
 
 | automation_status | 数量 |
 | --- | --- |
-| automated | 110 |
+| automated | 111 |
 | needs_stabilization | 18 |
 
 ### 按模块（module）
@@ -48,6 +48,7 @@
 | 门户 | 2 |
 | 运维巡检 | 2 |
 | 控制台工作台 | 2 |
+| 权限管理 | 1 |
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
