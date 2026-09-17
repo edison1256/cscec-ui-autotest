@@ -722,3 +722,15 @@ Step 4 完成必须同时满足：7 条均带 `prod_mandatory`、无跳过和直
 - `C-P0-CONSOLE-WB-008` 继续稳定返回 `code=1401`、`当前用户已经退出登录,请重新登录`，与上一轮结论一致，不豁免。
 - 定向复跑 `M3-02/M3-04`：`M3-02` 正常通过；`M3-04` 完成未读接口和页面空态验证后，因 `records=0, navigable=0` 按契约记为 `NOT_APPLICABLE`。
 - 结合定向复跑，当前稳定阻断项仍只有 `C-P0-CONSOLE-WB-008`；完整套件首轮的另外两项归类为瞬时详情渲染失败及其后续页面状态影响，不放宽原断言。
+
+### 22.10 WB-008 跨域认证根因
+
+2026-09-17 对“工作台 -> 数据源配置”进行请求级复核：
+
+- 父页面首先请求 `https://irp.cscec.com/auth/resolve/getNoGrantButtons`，请求携带 `User-Token`，响应 `code=0`。
+- 页面随后加载 iframe `https://data.cscec.com/udpweb/portaltwoWeb/index.html#/dsjsjygl/list?tenantNo=ZH_01_0000`。
+- iframe 请求 `https://data.cscec.com/auth/resolve/getNoGrantButtons` 时，请求头没有 `User-Token`，浏览器也没有可供该接口认证的会话 Cookie，响应 `code=1401`、`当前用户已经退出登录,请重新登录`。
+- 定向自动化复跑继续稳定失败，证明问题不是定位器、等待时间或生产 auth state 失效；父页面会话有效，但认证信息没有传递到跨域 iframe。
+- 契约已增强为同时要求 `irp` 父页面与 `data` iframe 两次权限请求业务成功。修复验收必须在干净浏览器上下文通过，不能依赖用户曾单独登录 `data.cscec.com` 的历史状态。
+
+缺陷建议归属：数据源配置微前端或门户 iframe 集成的跨域 SSO 初始化。建议开发检查 iframe 初始化时的 Token 传递机制、`postMessage` 握手或 data 域换票流程。

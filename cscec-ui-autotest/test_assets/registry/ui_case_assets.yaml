@@ -3123,8 +3123,8 @@ assets:
       prod_explicit: true
     evidence:
       prod_probe: "2026-09-04 reports/prod-range-probe-20260904-141751.md: 工作台入口探查沉淀；2026-09-09 移除无可复现控制台操作路径的被订阅订单旧入口；2026-09-15 按工作台配置接口、精确卡片、目标路由、业务面板标题和关键业务接口升级为严格条件用例。"
-      prod_execution: "2026-09-15 入口批次 7 条通过；数据源配置因 data.cscec.com/auth/resolve/getNoGrantButtons 返回业务码 1401 严格失败。"
-    notes: "仅保留当前控制台真实工作台可复现的常用模块入口；前置条件不满足记 NOT_APPLICABLE，满足后任何导航、页面或关键接口异常均失败；不提交、保存或修改业务数据。"
+      prod_execution: "2026-09-17 完整 42 条 Conditional 及定向复跑均稳定复现：父页面 irp 权限请求携带 User-Token、code=0；data iframe 同名请求无 User-Token/会话 Cookie、code=1401。"
+    notes: "仅保留当前控制台真实工作台可复现的常用模块入口；WB-008 同时门禁 irp 父页面与 data iframe 权限请求，避免浏览器历史登录态掩盖跨域 SSO 缺陷；不提交、保存或修改业务数据。"
 
   - asset_id: UI-PROD-DOMAIN-CONSOLE-WB-DEEP-001
     module: 控制台工作台

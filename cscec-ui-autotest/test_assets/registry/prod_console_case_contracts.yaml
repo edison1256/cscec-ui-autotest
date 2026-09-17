@@ -257,9 +257,11 @@ cases:
     parameter_id: C-P0-CONSOLE-WB-008-data-source-config
     entry_type: UI
     max_depth: L1
-    expected_state: [数据源配置页面可见]
+    expected_state: [数据源配置页面可见，父页面与 data iframe 权限请求均业务成功]
     critical_api_patterns:
+      - https://irp\.cscec\.com/auth/resolve/getNoGrantButtons$
       - https://data\.cscec\.com/auth/resolve/getNoGrantButtons$
+    owner_note: 父页面与 data iframe 必须分别完成权限校验；iframe 不得依赖浏览器历史登录态
 
   - <<: *conditional_data_defaults
     case_id: C-P0-CONSOLE-WB-DEEP-001
