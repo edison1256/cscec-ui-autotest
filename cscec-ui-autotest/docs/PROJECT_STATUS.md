@@ -1,27 +1,27 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 11:22。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:05。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：420
-- **生产默认收集（smoke + readonly）**：67 / 420
-- **被默认排除（write / destructive）**：353
+- **总用例数**：432
+- **生产默认收集（smoke + readonly）**：67 / 432
+- **被默认排除（write / destructive）**：365
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：133
+- **登记资产总数**：138
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
-| candidate | 24 |
+| candidate | 29 |
 | prod_regression | 13 |
 
 ### 按自动化状态（automation_status）
@@ -29,7 +29,7 @@
 | automation_status | 数量 |
 | --- | --- |
 | automated | 115 |
-| needs_stabilization | 18 |
+| needs_stabilization | 23 |
 
 ### 按模块（module）
 
@@ -49,10 +49,13 @@
 | 门户 | 2 |
 | 运维巡检 | 2 |
 | 控制台工作台 | 2 |
+| 系统配置 | 2 |
+| 计量统计 | 2 |
+| 评价中心 | 1 |
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **18** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **23** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -74,6 +77,11 @@
 | UI-PROD-SUPP-DOCCENTER-001 | 文档中心 | 生产文档中心补充只读探活候选 | `tests/doccenter/test_doc_center_supp.py::TestDocCenterSupp` | 覆盖文档中心搜索和详情渲染；断言失败不再吞掉，入口未暴露按 skip 处理。 |
 | UI-PROD-SUPP-MOBILE-001 | 移动端 | 生产移动端补充只读探活候选 | `tests/mobile/test_mobile_baseline_supp.py::TestMobileBaselineSupp` | 移动端金刚区穿透只允许点击服务、消息、公告、帮助、文档、知识、工作台等只读白名单入口。 |
 | UI-PROD-SUPP-PORTAL-001 | 门户 | 生产门户补充只读探活候选 | `tests/portal/test_portal_p0_readonly_supp.py::TestPortalP0ReadonlySupp` | 覆盖门户链接、用户浮层、未授权拦截、图片渲染，以及组织选择页组织树接口返回可选组织数据；候选阶段不进入生产默认 smoke。 |
+| UI-PROD-BATCH-D-EVAL-001 | 评价中心 | 评价数据管理模板列表只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_evaluation_template_list` | 校验菜单路径、评价模板列表接口与动态模板身份；不点击新建、编辑、停用或删除。 |
+| UI-PROD-BATCH-D-SYSCFG-PORTAL-001 | 系统配置 | 门户首页配置 Banner 列表只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_portal_homepage_configuration` | 校验系统配置/门户管理/首页配置三级路径、Banner 接口与动态身份；不触发添加、编辑、停用或删除。 |
+| UI-PROD-BATCH-D-SYSCFG-AUDIT-001 | 系统配置 | 日志审计列表只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_audit_log_list` | 校验日志审计列表接口、查询重置控件与动态日志身份，不执行写操作。 |
+| UI-PROD-BATCH-D-METER-RESOURCE-001 | 计量统计 | 租户资源概览只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_resource_overview` | 校验计量统计/租户的资源/资源概览路径、接口及动态租户身份，不进入详情或写操作。 |
+| UI-PROD-BATCH-D-METER-SUBSCRIPTION-001 | 计量统计 | 租户订阅概览只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_subscription_overview` | 校验计量统计/租户的订阅/订阅概览路径、接口及动态租户身份，不进入详情或写操作。 |
 
 ## 4. 复用与维护约定
 

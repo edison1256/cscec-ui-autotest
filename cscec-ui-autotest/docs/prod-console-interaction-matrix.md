@@ -734,3 +734,17 @@ Step 4 完成必须同时满足：7 条均带 `prod_mandatory`、无跳过和直
 - 契约已增强为同时要求 `irp` 父页面与 `data` iframe 两次权限请求业务成功。修复验收必须在干净浏览器上下文通过，不能依赖用户曾单独登录 `data.cscec.com` 的历史状态。
 
 缺陷建议归属：数据源配置微前端或门户 iframe 集成的跨域 SSO 初始化。建议开发检查 iframe 初始化时的 Token 传递机制、`postMessage` 握手或 data 域换票流程。
+
+## 23. Batch D：次级菜单列表只读候选
+
+本批次补充此前交互矩阵未深入到的五个列表页面，先以候选用例运行，不计入生产默认 67 条发布走查：
+
+| 用例 | 菜单路径 | 关键接口 | 安全边界 |
+|---|---|---|---|
+| EVAL-001 | 评价中心 → 评价数据管理 | `/assessment-template/page` | 仅列表身份；不点新建、编辑、停用、删除 |
+| SYSCFG-PORTAL-001 | 系统配置 → 门户管理 → 首页配置 | `/banner/queryIrpBannerList` | 仅 Banner 列表；不点添加、编辑、停用、删除 |
+| SYSCFG-AUDIT-001 | 系统配置 → 日志审计查询 | `/log-audit/page` | 仅日志列表、查询/重置控件，不改数据 |
+| METER-RESOURCE-001 | 计量统计 → 租户的资源 → 资源概览 | `/metrology/resource/overview/page` | 仅租户动态身份，不进入潜在操作页 |
+| METER-SUBSCRIPTION-001 | 计量统计 → 租户的订阅 → 订阅概览 | `/metrology/tenant/apply/list` | 仅租户动态身份，不进入潜在操作页 |
+
+五条候选均从菜单接口校验完整层级授权，再捕获对应业务接口并以响应中的首条动态业务身份反证 UI 回显，避免使用固定生产数据。候选稳定后再评估是否加入 Conditional 契约。

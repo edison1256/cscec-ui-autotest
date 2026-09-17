@@ -33,6 +33,10 @@ class ConsoleMenuNode:
         """Return whether the backend exposes the node as usable."""
         return not self.disabled and not self.forbidden
 
+    def child(self, title: str) -> "ConsoleMenuNode | None":
+        """Return one exact direct child."""
+        return next((node for node in self.children if node.title == title), None)
+
 
 @dataclass(frozen=True)
 class ConsoleMenuSnapshot:
@@ -48,6 +52,21 @@ class ConsoleMenuSnapshot:
     def top_level(self, title: str) -> ConsoleMenuNode | None:
         """Return one exact top-level menu node."""
         return next((node for node in self.nodes if node.title == title), None)
+
+    def path(self, *titles: str) -> tuple[ConsoleMenuNode, ...] | None:
+        """Resolve an exact menu path at any supported nesting depth."""
+        if not titles:
+            return None
+        current = self.top_level(titles[0])
+        if current is None:
+            return None
+        resolved = [current]
+        for title in titles[1:]:
+            current = current.child(title)
+            if current is None:
+                return None
+            resolved.append(current)
+        return tuple(resolved)
 
 
 class ConsoleMenuPage(ConsoleGlobalNavigationPage):
@@ -142,6 +161,61 @@ class ConsoleMenuPage(ConsoleGlobalNavigationPage):
             actual=", ".join(available_children) or "<empty>",
         )
 
+    def menu_path_prerequisite(self, *titles: str) -> PrerequisiteResult:
+        """Describe whether every node in an exact nested menu path is usable."""
+        resolved = self._require_snapshot().path(*titles)
+        satisfied = resolved is not None and all(node.available for node in resolved)
+        actual = (
+            " -> ".join(node.title for node in resolved)
+            if resolved is not None
+            else "<missing>"
+        )
+        path_text = " -> ".join(titles)
+        return PrerequisiteResult(
+            satisfied=satisfied,
+            reason=f"菜单接口未下发完整可用路径“{path_text}”",
+            expected=f"菜单路径“{path_text}”全部已授权且可用",
+            actual=actual,
+        )
+
+    def open_menu_path(
+        self,
+        *titles: str,
+        response_pattern: str,
+        route_pattern: str,
+    ) -> Response:
+        """Expand an authorized path and open its leaf while capturing its API."""
+        resolved = self._require_snapshot().path(*titles)
+        assert resolved is not None and all(node.available for node in resolved), (
+            f"菜单路径未通过执行前置条件: {' -> '.join(titles)}"
+        )
+        for node in resolved[:-1]:
+            item = self._menu_item(node.title)
+            require_actionable(item, f"展开控制台菜单组 {node.title}")
+            if item.get_attribute("aria-expanded") != "true":
+                click_and_expect(
+                    item,
+                    lambda item=item: expect(item).to_have_attribute(
+                        "aria-expanded", "true"
+                    ),
+                    action_name=f"展开控制台菜单组 {node.title}",
+                )
+
+        leaf = self._menu_item(resolved[-1].title)
+        with self.page.expect_response(
+            lambda response: response_pattern in response.url,
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as response_info:
+            click_and_expect(
+                leaf,
+                lambda: expect(self.page).to_have_url(
+                    re.compile(route_pattern), timeout=settings.NAVIGATION_TIMEOUT
+                ),
+                action_name=f"打开控制台菜单 {' -> '.join(titles)}",
+            )
+        self.assertions.page_not_blank_or_error()
+        return response_info.value
+
     def verify_menu_tree_rendered(self) -> "ConsoleMenuPage":
         """Require every available API top-level node to render in the sidebar."""
         snapshot = self._require_snapshot()
@@ -199,6 +273,11 @@ class ConsoleMenuPage(ConsoleGlobalNavigationPage):
     def _require_snapshot(self) -> ConsoleMenuSnapshot:
         assert self._menu_snapshot is not None, "尚未捕获控制台菜单接口响应"
         return self._menu_snapshot
+
+    def _menu_item(self, title: str):
+        """Locate the visible menu item that owns an exact title."""
+        title_text = self.page.get_by_text(title, exact=True).first
+        return title_text.locator("xpath=ancestor::*[@role='menuitem'][1]")
 
     @classmethod
     def _parse_menu_response(cls, response: Response) -> ConsoleMenuSnapshot:

@@ -3400,3 +3400,88 @@ assets:
       prod_default: false
       prod_explicit: true
     notes: "覆盖门户链接、用户浮层、未授权拦截、图片渲染，以及组织选择页组织树接口返回可选组织数据；候选阶段不进入生产默认 smoke。"
+
+  - asset_id: UI-PROD-BATCH-D-EVAL-001
+    module: 评价中心
+    title: 评价数据管理模板列表只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产交互层级矩阵 Batch D
+      manual_case_id: EVAL-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_evaluation_template_list
+    page_objects:
+      - pages/console/evaluation_management_page.py
+      - pages/console/console_menu_page.py
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验菜单路径、评价模板列表接口与动态模板身份；不点击新建、编辑、停用或删除。"
+
+  - asset_id: UI-PROD-BATCH-D-SYSCFG-PORTAL-001
+    module: 系统配置
+    title: 门户首页配置 Banner 列表只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产交互层级矩阵 Batch D
+      manual_case_id: SYSCFG-PORTAL-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_portal_homepage_configuration
+    page_objects:
+      - pages/console/system_configuration_page.py
+      - pages/console/console_menu_page.py
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验系统配置/门户管理/首页配置三级路径、Banner 接口与动态身份；不触发添加、编辑、停用或删除。"
+
+  - asset_id: UI-PROD-BATCH-D-SYSCFG-AUDIT-001
+    module: 系统配置
+    title: 日志审计列表只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产交互层级矩阵 Batch D
+      manual_case_id: SYSCFG-AUDIT-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_audit_log_list
+    page_objects:
+      - pages/console/system_configuration_page.py
+      - pages/console/console_menu_page.py
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验日志审计列表接口、查询重置控件与动态日志身份，不执行写操作。"
+
+  - asset_id: UI-PROD-BATCH-D-METER-RESOURCE-001
+    module: 计量统计
+    title: 租户资源概览只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产交互层级矩阵 Batch D
+      manual_case_id: METER-RESOURCE-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_resource_overview
+    page_objects:
+      - pages/console/metering_statistics_page.py
+      - pages/console/console_menu_page.py
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验计量统计/租户的资源/资源概览路径、接口及动态租户身份，不进入详情或写操作。"
+
+  - asset_id: UI-PROD-BATCH-D-METER-SUBSCRIPTION-001
+    module: 计量统计
+    title: 租户订阅概览只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source:
+      source_type: production_probe
+      requirement: 生产交互层级矩阵 Batch D
+      manual_case_id: METER-SUBSCRIPTION-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_subscription_overview
+    page_objects:
+      - pages/console/metering_statistics_page.py
+      - pages/console/console_menu_page.py
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验计量统计/租户的订阅/订阅概览路径、接口及动态租户身份，不进入详情或写操作。"
