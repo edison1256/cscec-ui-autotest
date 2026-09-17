@@ -93,7 +93,7 @@
 
 “流程”已有页面级用例。资源管理已有“数据资源管理”真实菜单路径，其他 7 个子菜单尚未逐页覆盖；该组不计入上述参数表的 10 组统计。
 
-## 4. 生产控制台 49 条契约现状矩阵
+## 4. 生产控制台契约现状矩阵
 
 测试引用缩写：`NAV`=`test_console_navigation.py`，`P0`=`test_console_p0_readonly_regression.py`，
 `WB`=`test_console_workbench_module_entries.py`，`M1`/`M2`/`M3`/`M4` 为对应业务基线文件，
@@ -772,3 +772,14 @@ Step 4 完成必须同时满足：7 条均带 `prod_mandatory`、无跳过和直
 | SYSCFG-WORKORDER-001 | 系统配置 → 工单配置 | `/work-order-config/getCategory` 首个根分类 | 修改分类、全局处理人仅验证可见 |
 
 三页生产探查均未出现 HTTP 404/5xx、业务失败、`console.error` 或 `pageerror`。候选用例必须从真实菜单进入并以本次接口返回的动态身份反证 UI；不固定依赖 CKafka、金仓数据库或生产工单分类数据。
+
+## 26. Batch D/E/F 晋级评审
+
+2026-09-17 完成 13 条候选合并回归和 Conditional 晋级：
+
+- 晋级前合并生产回归 `13 passed, 0 failed`，耗时约 68 秒；未发现共享登录态、菜单展开状态或页面对象相互干扰。
+- 13 条均具备真实菜单入口、关键接口或明确接口缺失说明、动态业务身份和页面回显证据；没有固定等待、异常吞噬、`skip` 或 `xfail`。
+- 用例统一增加稳定 Case ID、`prod_conditional` 标记和机器可读契约，健康监控改由 `BrowserHealthMonitor.for_case()` 加载菜单及业务接口规则。
+- 契约驱动后的首次合并回归为 `12 passed, 1 failed`；`EVAL-001` 在进入评价页面前遇到控制台首页首次加载超时，后续 12 条正常。该项单独重试 `1 passed`，严格断言未放宽。
+- 生产控制台契约由 49 条扩展为 62 条：7 Mandatory + 55 Conditional。默认 PC + Mobile 67 条发布走查保持不变。
+- 13 条仍为只读：不新增、编辑、删除、启停、排序、导入、修改模板、配置处理人或进入详情写操作。

@@ -1,6 +1,6 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:27。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:41。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
@@ -21,15 +21,15 @@
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
-| candidate | 37 |
-| prod_regression | 13 |
+| prod_regression | 26 |
+| candidate | 24 |
 
 ### 按自动化状态（automation_status）
 
 | automation_status | 数量 |
 | --- | --- |
-| automated | 115 |
-| needs_stabilization | 31 |
+| automated | 128 |
+| needs_stabilization | 18 |
 
 ### 按模块（module）
 
@@ -55,7 +55,7 @@
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **31** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **18** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -77,19 +77,6 @@
 | UI-PROD-SUPP-DOCCENTER-001 | 文档中心 | 生产文档中心补充只读探活候选 | `tests/doccenter/test_doc_center_supp.py::TestDocCenterSupp` | 覆盖文档中心搜索和详情渲染；断言失败不再吞掉，入口未暴露按 skip 处理。 |
 | UI-PROD-SUPP-MOBILE-001 | 移动端 | 生产移动端补充只读探活候选 | `tests/mobile/test_mobile_baseline_supp.py::TestMobileBaselineSupp` | 移动端金刚区穿透只允许点击服务、消息、公告、帮助、文档、知识、工作台等只读白名单入口。 |
 | UI-PROD-SUPP-PORTAL-001 | 门户 | 生产门户补充只读探活候选 | `tests/portal/test_portal_p0_readonly_supp.py::TestPortalP0ReadonlySupp` | 覆盖门户链接、用户浮层、未授权拦截、图片渲染，以及组织选择页组织树接口返回可选组织数据；候选阶段不进入生产默认 smoke。 |
-| UI-PROD-BATCH-D-EVAL-001 | 评价中心 | 评价数据管理模板列表只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_evaluation_template_list` | 校验菜单路径、评价模板列表接口与动态模板身份；不点击新建、编辑、停用或删除。 |
-| UI-PROD-BATCH-D-SYSCFG-PORTAL-001 | 系统配置 | 门户首页配置 Banner 列表只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_portal_homepage_configuration` | 校验系统配置/门户管理/首页配置三级路径、Banner 接口与动态身份；不触发添加、编辑、停用或删除。 |
-| UI-PROD-BATCH-D-SYSCFG-AUDIT-001 | 系统配置 | 日志审计列表只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_audit_log_list` | 校验日志审计列表接口、查询重置控件与动态日志身份，不执行写操作。 |
-| UI-PROD-BATCH-D-METER-RESOURCE-001 | 计量统计 | 租户资源概览只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_resource_overview` | 校验计量统计/租户的资源/资源概览路径、接口及动态租户身份，不进入详情或写操作。 |
-| UI-PROD-BATCH-D-METER-SUBSCRIPTION-001 | 计量统计 | 租户订阅概览只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_subscription_overview` | 校验计量统计/租户的订阅/订阅概览路径、接口及动态租户身份，不进入详情或写操作。 |
-| UI-PROD-BATCH-E-SYSCFG-CATEGORY-001 | 系统配置 | 资源配置类目管理只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖类目管理；校验真实三级菜单、类目接口与动态类目身份，不触发添加、编辑、停用或删除。 |
-| UI-PROD-BATCH-E-SYSCFG-SPEC-001 | 系统配置 | 资源配置规格管理只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖规格管理；校验真实三级菜单、后端类目树接口与动态类目身份，不修改规格。 |
-| UI-PROD-BATCH-E-SYSCFG-LAYER-001 | 系统配置 | 数据分层设置只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖数据分层设置；校验数据类目接口与动态应用域身份，不导入、不新增或修改层级。 |
-| UI-PROD-BATCH-E-SYSCFG-DATASYSTEM-001 | 系统配置 | 数据系统维护真实菜单路由探活候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_data_system_maintenance_real_menu_route` | 严格验证逐级菜单点击后进入 systemMaintain 且页面标题可见；不用直链绕过，不执行维护写操作。 |
-| UI-PROD-BATCH-E-SYSCFG-MANUFACTURER-001 | 系统配置 | 厂商管理列表只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖厂商管理；校验列表接口与动态厂商身份，不触发新增、编辑或删除。 |
-| UI-PROD-BATCH-F-SYSCFG-DEVELOPER-001 | 系统配置 | 开发者平台配置资源列表只读探查候选 | `tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page` | 参数化覆盖开发者平台配置；校验真实三级菜单、分页接口和动态资源身份，仅验证新增、上下移和删除入口可见。 |
-| UI-PROD-BATCH-F-SYSCFG-INSPECTION-001 | 系统配置 | 巡检配置模板列表只读探查候选 | `tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page` | 参数化覆盖巡检配置；校验人工/自动巡检 Tab、模板接口和动态模板身份，不新增、编辑、删除或编辑模板。 |
-| UI-PROD-BATCH-F-SYSCFG-WORKORDER-001 | 系统配置 | 工单配置分类树只读探查候选 | `tests/console/test_console_system_configuration_remaining_readonly.py::test_remaining_system_configuration_page` | 参数化覆盖工单配置；校验分类接口与动态根分类身份，仅验证修改分类和全局处理人入口可见。 |
 
 ## 4. 复用与维护约定
 

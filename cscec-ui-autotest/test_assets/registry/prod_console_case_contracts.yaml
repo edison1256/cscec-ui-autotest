@@ -674,3 +674,134 @@ cases:
       - /irp-api/irp-portal-console/tenant/view[?]
       - /irp-api/irp-portal-console/tenant-member/page$
     owner_note: 不新建租户，不点击待加入、添加或批量移出成员
+
+  - <<: *conditional_role_defaults
+    case_id: EVAL-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_evaluation_template_list
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    expected_state: [评价数据管理真实菜单、模板接口和动态模板名称一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/assessment-template/page$"]
+    owner_note: 不点击新建、编辑、停用或删除
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-PORTAL-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_portal_homepage_configuration
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    expected_state: [首页配置真实三级菜单、Banner接口和动态名称一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/banner/queryIrpBannerList$"]
+    owner_note: 不添加、编辑、停用或删除 Banner
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-AUDIT-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_audit_log_list
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    expected_state: [日志审计真实菜单、列表接口、动态主键及查询重置控件一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/log-audit/page$"]
+    owner_note: 仅查看日志列表，不修改数据
+
+  - <<: *conditional_role_defaults
+    case_id: METER-RESOURCE-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_resource_overview
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    expected_state: [资源概览真实三级菜单、接口和动态租户身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/resource/overview/page$"]
+    owner_note: 不进入详情或执行资源操作
+
+  - <<: *conditional_role_defaults
+    case_id: METER-SUBSCRIPTION-001
+    test_path: tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_subscription_overview
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    expected_state: [订阅概览真实三级菜单、接口和动态租户身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/tenant/apply/list$"]
+    owner_note: 不进入详情或修改订阅
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-CATEGORY-001
+    test_path: tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity
+    parameter_id: SYSCFG-CATEGORY-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [类目管理真实三级菜单、接口和动态类目身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/category/queryAllResourceLabel$"]
+    owner_note: 不添加、编辑、停用或删除类目
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-SPEC-001
+    test_path: tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity
+    parameter_id: SYSCFG-SPEC-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [规格管理真实三级菜单、后端类目树接口和动态身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/category-backend/queryCategoryTreeList$"]
+    owner_note: 不修改规格或类目
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-LAYER-001
+    test_path: tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity
+    parameter_id: SYSCFG-LAYER-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [数据分层设置真实三级菜单、数据类目接口和动态应用域一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/data-system/dataCategoryList$"]
+    owner_note: 不导入、不新增或修改数据层级
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-DATASYSTEM-001
+    test_path: tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_data_system_maintenance_real_menu_route
+    parameter_id: null
+    entry_type: UI
+    max_depth: L1
+    expected_state: [数据系统维护真实三级菜单进入systemMaintain路由且标题可见]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    critical_api_rationale: 当前页面没有稳定专属JSON请求，使用菜单接口、目标路由和页面标题作为证据
+    owner_note: 不使用直链兜底，不执行维护写操作
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-MANUFACTURER-001
+    test_path: tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity
+    parameter_id: SYSCFG-MANUFACTURER-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [厂商管理真实菜单、分页接口和动态厂商身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/manufacturer/page$"]
+    owner_note: 不新增、编辑或删除厂商
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-DEVELOPER-001
+    test_path: tests/console/test_console_system_configuration_remaining_readonly.py::TestConsoleSystemConfigurationRemainingReadonly::test_remaining_system_configuration_page
+    parameter_id: SYSCFG-DEVELOPER-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [开发者平台配置真实三级菜单、分页接口和动态资源身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/developer-platform-resource-portal/page$"]
+    owner_note: 新增、上移、下移和删除只验证入口可见
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-INSPECTION-001
+    test_path: tests/console/test_console_system_configuration_remaining_readonly.py::TestConsoleSystemConfigurationRemainingReadonly::test_remaining_system_configuration_page
+    parameter_id: SYSCFG-INSPECTION-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [巡检配置真实菜单、人工巡检模板接口和动态模板身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/irpTaskTpl/getIrpTaskTplList$"]
+    owner_note: 不新增、编辑、删除或编辑巡检模板
+
+  - <<: *conditional_role_defaults
+    case_id: SYSCFG-WORKORDER-001
+    test_path: tests/console/test_console_system_configuration_remaining_readonly.py::TestConsoleSystemConfigurationRemainingReadonly::test_remaining_system_configuration_page
+    parameter_id: SYSCFG-WORKORDER-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [工单配置真实菜单、分类树接口和动态根分类身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/work-order-config/getCategory$"]
+    owner_note: 修改分类和全局处理人仅验证入口可见
