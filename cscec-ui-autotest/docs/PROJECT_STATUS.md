@@ -1,35 +1,35 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:41。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:54。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：447
-- **生产默认收集（smoke + readonly）**：67 / 447
-- **被默认排除（write / destructive）**：380
+- **总用例数**：454
+- **生产默认收集（smoke + readonly）**：67 / 454
+- **被默认排除（write / destructive）**：387
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：146
+- **登记资产总数**：153
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
+| candidate | 31 |
 | prod_regression | 26 |
-| candidate | 24 |
 
 ### 按自动化状态（automation_status）
 
 | automation_status | 数量 |
 | --- | --- |
 | automated | 128 |
-| needs_stabilization | 18 |
+| needs_stabilization | 25 |
 
 ### 按模块（module）
 
@@ -46,6 +46,8 @@
 | 审批待办 | 5 |
 | 文档中心 | 4 |
 | 工单中心 | 4 |
+| 运营管理 | 4 |
+| 运维监控 | 3 |
 | 登录 | 2 |
 | 门户 | 2 |
 | 运维巡检 | 2 |
@@ -55,7 +57,7 @@
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **18** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **25** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -77,6 +79,13 @@
 | UI-PROD-SUPP-DOCCENTER-001 | 文档中心 | 生产文档中心补充只读探活候选 | `tests/doccenter/test_doc_center_supp.py::TestDocCenterSupp` | 覆盖文档中心搜索和详情渲染；断言失败不再吞掉，入口未暴露按 skip 处理。 |
 | UI-PROD-SUPP-MOBILE-001 | 移动端 | 生产移动端补充只读探活候选 | `tests/mobile/test_mobile_baseline_supp.py::TestMobileBaselineSupp` | 移动端金刚区穿透只允许点击服务、消息、公告、帮助、文档、知识、工作台等只读白名单入口。 |
 | UI-PROD-SUPP-PORTAL-001 | 门户 | 生产门户补充只读探活候选 | `tests/portal/test_portal_p0_readonly_supp.py::TestPortalP0ReadonlySupp` | 覆盖门户链接、用户浮层、未授权拦截、图片渲染，以及组织选择页组织树接口返回可选组织数据；候选阶段不进入生产默认 smoke。 |
+| UI-PROD-BATCH-G-OPS-CAPACITY-001 | 运维监控 | 容量指标页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 仅校验真实三级菜单、容量指标路由、标题及浏览器健康；暂无稳定业务接口证据，不触发配置或写操作。 |
+| UI-PROD-BATCH-G-OPS-PERFORMANCE-001 | 运维监控 | 性能指标查询页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 校验真实三级菜单、性能指标路由、标题、分类/系统查询区与空态；不触发写操作。 |
+| UI-PROD-BATCH-G-OPS-POLLING-001 | 运维监控 | 运维巡检页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 校验真实菜单、巡检路由、概览/人工/自动页签、任务指标和可见图表画布；不启动巡检。 |
+| UI-PROD-BATCH-G-OPERATION-KANBAN-001 | 运营管理 | 运营看板页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 仅校验真实三级菜单、运营看板路由、标题及浏览器健康；不修改看板配置。 |
+| UI-PROD-BATCH-G-OPERATION-INSIGHT-001 | 运营管理 | 效能洞察页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 仅校验真实三级菜单、效能洞察路由、标题及浏览器健康；暂无稳定业务接口证据。 |
+| UI-PROD-BATCH-G-OPERATION-DASHBOARD-001 | 运营管理 | 应用看板页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 仅校验真实三级菜单、应用看板路由、标题及浏览器健康；不修改看板配置。 |
+| UI-PROD-BATCH-G-OPERATION-MESSAGE-001 | 运营管理 | 消息推送页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 仅校验真实菜单、消息推送路由、标题及浏览器健康；不新建、保存或发送消息。 |
 
 ## 4. 复用与维护约定
 

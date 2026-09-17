@@ -3581,3 +3581,87 @@ assets:
     markers: [console, readonly, regression, domain_split, prod_conditional]
     env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
     notes: "参数化覆盖工单配置；校验分类接口与动态根分类身份，仅验证修改分类和全局处理人入口可见。"
+
+  - asset_id: UI-PROD-BATCH-G-OPS-CAPACITY-001
+    module: 运维监控
+    title: 容量指标页面只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-CAPACITY-001}
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "仅校验真实三级菜单、容量指标路由、标题及浏览器健康；暂无稳定业务接口证据，不触发配置或写操作。"
+
+  - asset_id: UI-PROD-BATCH-G-OPS-PERFORMANCE-001
+    module: 运维监控
+    title: 性能指标查询页面只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-PERFORMANCE-001}
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验真实三级菜单、性能指标路由、标题、分类/系统查询区与空态；不触发写操作。"
+
+  - asset_id: UI-PROD-BATCH-G-OPS-POLLING-001
+    module: 运维监控
+    title: 运维巡检页面只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-POLLING-001}
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验真实菜单、巡检路由、概览/人工/自动页签、任务指标和可见图表画布；不启动巡检。"
+
+  - asset_id: UI-PROD-BATCH-G-OPERATION-KANBAN-001
+    module: 运营管理
+    title: 运营看板页面只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-KANBAN-001}
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "仅校验真实三级菜单、运营看板路由、标题及浏览器健康；不修改看板配置。"
+
+  - asset_id: UI-PROD-BATCH-G-OPERATION-INSIGHT-001
+    module: 运营管理
+    title: 效能洞察页面只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-INSIGHT-001}
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "仅校验真实三级菜单、效能洞察路由、标题及浏览器健康；暂无稳定业务接口证据。"
+
+  - asset_id: UI-PROD-BATCH-G-OPERATION-DASHBOARD-001
+    module: 运营管理
+    title: 应用看板页面只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-DASHBOARD-001}
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "仅校验真实三级菜单、应用看板路由、标题及浏览器健康；不修改看板配置。"
+
+  - asset_id: UI-PROD-BATCH-G-OPERATION-MESSAGE-001
+    module: 运营管理
+    title: 消息推送页面只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-MESSAGE-001}
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "仅校验真实菜单、消息推送路由、标题及浏览器健康；不新建、保存或发送消息。"

@@ -216,6 +216,41 @@ class ConsoleMenuPage(ConsoleGlobalNavigationPage):
         self.assertions.page_not_blank_or_error()
         return response_info.value
 
+    def open_menu_route(
+        self,
+        *titles: str,
+        route_pattern: str,
+    ) -> "ConsoleMenuPage":
+        """Open an authorized leaf when the page exposes no stable business API."""
+        resolved = self._require_snapshot().path(*titles)
+        assert resolved is not None and all(node.available for node in resolved), (
+            f"菜单路径未通过执行前置条件: {' -> '.join(titles)}"
+        )
+        for node in resolved[:-1]:
+            item = self._menu_item(node.title)
+            require_actionable(item, f"展开控制台菜单组 {node.title}")
+            if item.get_attribute("aria-expanded") != "true":
+                click_and_expect(
+                    item,
+                    lambda item=item: expect(item).to_have_attribute(
+                        "aria-expanded", "true"
+                    ),
+                    action_name=f"展开控制台菜单组 {node.title}",
+                )
+
+        leaf = self._menu_item(resolved[-1].title)
+        require_actionable(leaf, f"打开控制台菜单 {' -> '.join(titles)}")
+        click_and_expect(
+            leaf,
+            lambda: expect(self.page).to_have_url(
+                re.compile(route_pattern), timeout=settings.NAVIGATION_TIMEOUT
+            ),
+            action_name=f"打开控制台菜单 {' -> '.join(titles)}",
+        )
+        self.assertions.page_not_blank_or_error()
+        logger.info("[导航] 控制台左侧菜单 -> %s", " -> ".join(titles))
+        return self
+
     def verify_menu_tree_rendered(self) -> "ConsoleMenuPage":
         """Require every available API top-level node to render in the sidebar."""
         snapshot = self._require_snapshot()
