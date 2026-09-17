@@ -72,6 +72,51 @@ def test_system_records_support_banner_and_audit_shapes() -> None:
     ) == SystemListRecord("9", "测试用户")
 
 
+@pytest.mark.parametrize(
+    "payload,id_fields,name_fields,expected",
+    [
+        (
+            {"code": 0, "data": [{"id": "C-1", "name": "云资源"}]},
+            ("id",),
+            ("name",),
+            SystemListRecord("C-1", "云资源"),
+        ),
+        (
+            {"code": 0, "data": [{"id": "S-1", "categoryName": "硬件"}]},
+            ("id",),
+            ("categoryName",),
+            SystemListRecord("S-1", "硬件"),
+        ),
+        (
+            {"code": 0, "data": [{"id": "L-1", "name": "辅助决策"}]},
+            ("id",),
+            ("name",),
+            SystemListRecord("L-1", "辅助决策"),
+        ),
+        (
+            {
+                "code": 0,
+                "data": {
+                    "list": [{"id": "M-1", "manufacturerName": "测试厂商"}]
+                },
+            },
+            ("id",),
+            ("manufacturerName",),
+            SystemListRecord("M-1", "测试厂商"),
+        ),
+    ],
+)
+def test_system_resource_records_preserve_visible_identity(
+    payload, id_fields, name_fields, expected
+) -> None:
+    assert SystemConfigurationPage._record_from_response(  # noqa: SLF001
+        FakeResponse(payload),
+        "系统配置",
+        id_fields=id_fields,
+        name_fields=name_fields,
+    ) == expected
+
+
 def test_metering_record_preserves_tenant_identity() -> None:
     response = FakeResponse(
         {

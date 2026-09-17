@@ -1,27 +1,27 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:05。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:17。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：432
-- **生产默认收集（smoke + readonly）**：67 / 432
-- **被默认排除（write / destructive）**：365
+- **总用例数**：441
+- **生产默认收集（smoke + readonly）**：67 / 441
+- **被默认排除（write / destructive）**：374
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：138
+- **登记资产总数**：143
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
-| candidate | 29 |
+| candidate | 34 |
 | prod_regression | 13 |
 
 ### 按自动化状态（automation_status）
@@ -29,7 +29,7 @@
 | automation_status | 数量 |
 | --- | --- |
 | automated | 115 |
-| needs_stabilization | 23 |
+| needs_stabilization | 28 |
 
 ### 按模块（module）
 
@@ -39,6 +39,7 @@
 | 数据资源导入功能优化 | 24 |
 | 移动端 | 12 |
 | 控制台 | 8 |
+| 系统配置 | 7 |
 | 权限管理 | 5 |
 | 资源管理 | 5 |
 | 订单管理 | 5 |
@@ -49,13 +50,12 @@
 | 门户 | 2 |
 | 运维巡检 | 2 |
 | 控制台工作台 | 2 |
-| 系统配置 | 2 |
 | 计量统计 | 2 |
 | 评价中心 | 1 |
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **23** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **28** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -82,6 +82,11 @@
 | UI-PROD-BATCH-D-SYSCFG-AUDIT-001 | 系统配置 | 日志审计列表只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_audit_log_list` | 校验日志审计列表接口、查询重置控件与动态日志身份，不执行写操作。 |
 | UI-PROD-BATCH-D-METER-RESOURCE-001 | 计量统计 | 租户资源概览只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_resource_overview` | 校验计量统计/租户的资源/资源概览路径、接口及动态租户身份，不进入详情或写操作。 |
 | UI-PROD-BATCH-D-METER-SUBSCRIPTION-001 | 计量统计 | 租户订阅概览只读探查候选 | `tests/console/test_console_secondary_pages_deep_readonly.py::TestConsoleSecondaryPagesDeepReadonly::test_tenant_subscription_overview` | 校验计量统计/租户的订阅/订阅概览路径、接口及动态租户身份，不进入详情或写操作。 |
+| UI-PROD-BATCH-E-SYSCFG-CATEGORY-001 | 系统配置 | 资源配置类目管理只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖类目管理；校验真实三级菜单、类目接口与动态类目身份，不触发添加、编辑、停用或删除。 |
+| UI-PROD-BATCH-E-SYSCFG-SPEC-001 | 系统配置 | 资源配置规格管理只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖规格管理；校验真实三级菜单、后端类目树接口与动态类目身份，不修改规格。 |
+| UI-PROD-BATCH-E-SYSCFG-LAYER-001 | 系统配置 | 数据分层设置只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖数据分层设置；校验数据类目接口与动态应用域身份，不导入、不新增或修改层级。 |
+| UI-PROD-BATCH-E-SYSCFG-DATASYSTEM-001 | 系统配置 | 数据系统维护真实菜单路由探活候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_data_system_maintenance_real_menu_route` | 严格验证逐级菜单点击后进入 systemMaintain 且页面标题可见；不用直链绕过，不执行维护写操作。 |
+| UI-PROD-BATCH-E-SYSCFG-MANUFACTURER-001 | 系统配置 | 厂商管理列表只读探查候选 | `tests/console/test_console_system_configuration_deep_readonly.py::TestConsoleSystemConfigurationDeepReadonly::test_system_configuration_list_identity` | 参数化覆盖厂商管理；校验列表接口与动态厂商身份，不触发新增、编辑或删除。 |
 
 ## 4. 复用与维护约定
 

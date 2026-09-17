@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any
 
 from playwright.sync_api import Page, Response, expect
@@ -27,6 +28,10 @@ class SystemConfigurationPage(ConsoleMenuPage):
 
     BANNER_API = "/banner/queryIrpBannerList"
     AUDIT_API = "/log-audit/page"
+    CATEGORY_API = "/category/queryAllResourceLabel"
+    SPECIFICATION_API = "/category-backend/queryCategoryTreeList"
+    LAYER_API = "/data-system/dataCategoryList"
+    MANUFACTURER_API = "/manufacturer/page"
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -71,6 +76,98 @@ class SystemConfigurationPage(ConsoleMenuPage):
         expect(self.page.get_by_role("button", name="重 置", exact=True)).to_be_visible()
         expect(self.page.get_by_text(self._record.record_id, exact=True).first).to_be_visible()
         logger.info("[只读交互] 日志审计列表身份正常: %s", self._record.record_id)
+        return self
+
+    def open_category_management(self) -> "SystemConfigurationPage":
+        """Open 类目管理 and bind a resource-label identity."""
+        return self._open_identity_page(
+            ("系统配置", "资源配置", "类目管理"),
+            self.CATEGORY_API,
+            r"[#/]sub/resource/systemManage/label(?:[/?]|$)",
+            "类目管理",
+            id_fields=("id",),
+            name_fields=("name",),
+        )
+
+    def open_specification_management(self) -> "SystemConfigurationPage":
+        """Open 规格管理 and bind a backend-category identity."""
+        return self._open_identity_page(
+            ("系统配置", "资源配置", "规格管理"),
+            self.SPECIFICATION_API,
+            r"[#/]sub/resource/systemManage/specificationManage(?:[/?]|$)",
+            "规格管理",
+            id_fields=("id",),
+            name_fields=("categoryName",),
+        )
+
+    def open_data_layer_settings(self) -> "SystemConfigurationPage":
+        """Open 数据分层设置 and bind an application-domain identity."""
+        return self._open_identity_page(
+            ("系统配置", "资源配置", "数据分层设置"),
+            self.LAYER_API,
+            r"[#/]sub/resource/systemManage/layerSet(?:[/?]|$)",
+            "数据分层设置",
+            id_fields=("id",),
+            name_fields=("name",),
+        )
+
+    def open_data_system_maintenance(self) -> "SystemConfigurationPage":
+        """Require 数据系统维护 to remain on its declared route."""
+        self.open_console_home()
+        titles = ("系统配置", "资源配置", "数据系统维护")
+        prerequisite = self.menu_path_prerequisite(*titles)
+        assert prerequisite.satisfied, prerequisite.reason
+        resolved = self._require_snapshot().path(*titles)
+        assert resolved is not None
+        for node in resolved[:-1]:
+            item = self._menu_item(node.title)
+            if item.get_attribute("aria-expanded") != "true":
+                item.click()
+                expect(item).to_have_attribute("aria-expanded", "true")
+        self._menu_item(titles[-1]).click()
+        expect(self.page).to_have_url(
+            re.compile(r"[#/]sub/resource/systemManage/systemMaintain(?:[/?]|$)")
+        )
+        expect(
+            self.page.get_by_text("数据系统维护", exact=True).last
+        ).to_be_visible()
+        self.assertions.page_not_blank_or_error()
+        return self
+
+    def open_manufacturer_management(self) -> "SystemConfigurationPage":
+        """Open 厂商管理 and bind a manufacturer identity."""
+        return self._open_identity_page(
+            ("系统配置", "厂商管理"),
+            self.MANUFACTURER_API,
+            r"[#/]sub/resource/systemManage/manufacturerManage(?:[/?]|$)",
+            "厂商管理",
+            id_fields=("id",),
+            name_fields=("manufacturerName",),
+        )
+
+    def _open_identity_page(
+        self,
+        titles: tuple[str, ...],
+        api_pattern: str,
+        route_pattern: str,
+        label: str,
+        *,
+        id_fields: tuple[str, ...],
+        name_fields: tuple[str, ...],
+    ) -> "SystemConfigurationPage":
+        self.open_console_home()
+        response = self._open_authorized(titles, api_pattern, route_pattern)
+        self._record = self._record_from_response(
+            response,
+            label,
+            id_fields=id_fields,
+            name_fields=name_fields,
+        )
+        expect(self.page.get_by_text(label, exact=True).first).to_be_visible()
+        expect(
+            self.page.get_by_text(self._record.display_name, exact=True).first
+        ).to_be_visible()
+        logger.info("[只读交互] %s列表身份正常: %s", label, self._record.record_id)
         return self
 
     def _open_authorized(
