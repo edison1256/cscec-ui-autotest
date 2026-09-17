@@ -436,13 +436,35 @@ cases:
         reason: 已知生产埋点服务及其脚本受浏览器 Private Network Access/CORS 限制
         expires_on: 2026-12-31
 
-  - <<: *probe_defaults
+  - <<: *conditional_data_defaults
     case_id: M2-01
     test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_01_navigate_to_apply_page
     parameter_id: null
-    entry_type: DIRECT
-    max_depth: L1
-    expected_state: [真实 UI 申请路径和目标资源表单可见]
+    entry_type: UI
+    max_depth: L4
+    prerequisites:
+      - type: stable_portal_resource
+        expected: cloud 云产品存在唯一 CKafka消息队列样本且开放立即申请入口
+    expected_state: [服务中心搜索、云产品详情、立即申请及补充信息表单对象身份一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-public/search/page$
+      - /irp-api/irp-portal-public/cloud/detail[?]
+      - /irp-api/irp-portal-public/flow-template/getApplyFlowChainNoAuth[?]
+      - /irp-api/irp-portal-public/order/getOrderDraft[?]
+    owner_note: 只进入补充信息页并验证空表单及动作按钮，不填写、不保存草稿、不点击下一步
+    ignore_rules:
+      - category: console.error
+        detail_pattern: data-track-api[.]cscec[.]com/(apipool|zhuge[.]js)
+        reason: 已知生产埋点服务受浏览器 Private Network Access/CORS 限制，不属于申请业务接口
+        expires_on: 2026-12-31
+      - category: pageerror
+        detail_pattern: api_host_bac.*data-track-api[.]cscec[.]com/zhuge[.]js
+        reason: 已知埋点脚本在 apipool 被拦截后的派生异常，仅豁免该脚本堆栈
+        expires_on: 2026-12-31
+      - category: requestfailed
+        detail_pattern: data-track-api[.]cscec[.]com/(apipool|zhuge[.]js)
+        reason: 已知生产埋点服务及其脚本受浏览器 Private Network Access/CORS 限制
+        expires_on: 2026-12-31
 
   - <<: *conditional_data_defaults
     case_id: M2-03

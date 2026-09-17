@@ -20,6 +20,7 @@ from pages.console.console_workbench_page import (
     ConsoleWorkbenchPage,
     WorkbenchListSnapshot,
 )
+from pages.console.resource_mgmt_page import PortalResourceRecord
 
 logger = get_logger("order_mgmt_page")
 
@@ -31,6 +32,12 @@ class OrderMgmtPage(BasePage):
     PAGE_URL_PATTERN = "order"
 
     LIST_API = re.compile(r"/irp-api/irp-portal-console/order/page$")
+    APPLY_FLOW_API = re.compile(
+        r"/irp-api/irp-portal-public/flow-template/getApplyFlowChainNoAuth[?]"
+    )
+    ORDER_DRAFT_API = re.compile(
+        r"/irp-api/irp-portal-public/order/getOrderDraft[?]"
+    )
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -165,6 +172,110 @@ class OrderMgmtPage(BasePage):
         """Return the prepared menu or fail with an actionable message."""
         assert self._menu is not None, "尚未加载控制台菜单树"
         return self._menu
+
+    def open_cloud_product_apply_readonly(
+        self,
+        record: PortalResourceRecord,
+    ) -> "OrderMgmtPage":
+        """Enter the cloud-product application form without filling or saving it."""
+        apply_entry = self.page.get_by_text("立即申请", exact=True)
+        expect(apply_entry).to_have_count(1)
+        expect(apply_entry).to_be_visible()
+        with self.page.expect_response(
+            lambda response: bool(self.APPLY_FLOW_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as flow_capture:
+            with self.page.expect_response(
+                lambda response: bool(self.ORDER_DRAFT_API.search(response.url)),
+                timeout=settings.NAVIGATION_TIMEOUT,
+            ) as draft_capture:
+                apply_entry.click()
+
+        route = self._subscription_route_query(self.page.url)
+        assert route.get("resourceType") == [str(record.resource_type)], (
+            "申请路由资源类型不一致"
+        )
+        assert route.get("id") == [record.resource_id], "申请路由资源 ID 不一致"
+        for key in ("specId", "packageId", "buyMode", "buyTime"):
+            assert route.get(key) and route[key][0], f"申请路由缺少 {key}"
+        self._validate_apply_flow_response(
+            flow_capture.value,
+            record,
+            route["specId"][0],
+        )
+        self._validate_order_draft_response(draft_capture.value, record)
+
+        expect(self.page.get_by_text(record.name, exact=True)).to_be_visible()
+        expect(self.page.get_by_text(record.description, exact=True)).to_be_visible()
+        expect(self.page.get_by_text("订阅步骤", exact=True)).to_be_visible()
+        expect(self.page.get_by_text("1.补充信息", exact=True)).to_be_visible()
+        expect(self.page.get_by_text("2.信息确认", exact=True)).to_be_visible()
+        expect(self.page.get_by_role("checkbox", name="生产", exact=True)).to_be_checked()
+        expect(self.page.get_by_role("spinbutton", name=re.compile("消息保留时间"))).to_be_visible()
+        expect(self.page.get_by_role("textbox", name=re.compile("项目名称"))).to_be_empty()
+        expect(
+            self.page.get_by_role("textbox", name=re.compile("项目管理员员工编码"))
+        ).to_be_empty()
+        expect(self.page.get_by_role("textbox", name="备注", exact=True)).to_be_empty()
+        for action in ("取消", "保存草稿", "下一步"):
+            expect(self.page.get_by_text(action, exact=True)).to_be_visible()
+        logger.info(
+            "[申请表单只读] %s/%s，未填写、未保存、未进入下一步",
+            record.name,
+            record.resource_id,
+        )
+        return self
+
+    @staticmethod
+    def _subscription_route_query(url: str) -> dict[str, list[str]]:
+        """Parse query parameters located after the SPA hash route."""
+        fragment = urlparse(url).fragment
+        path, separator, query = fragment.partition("?")
+        assert path == "/subscription-process", f"未进入订阅申请页: {url}"
+        assert separator, "订阅申请路由缺少查询参数"
+        return parse_qs(query, keep_blank_values=True)
+
+    @staticmethod
+    def _validate_apply_flow_response(
+        response: Response,
+        record: PortalResourceRecord,
+        spec_id: str,
+    ) -> list[dict]:
+        """Require the apply flow to belong to the selected resource and spec."""
+        assert response.status == 200, "申请流程接口 HTTP 失败"
+        query = parse_qs(urlparse(response.url).query)
+        assert query.get("resourceId") == [record.resource_id], "流程接口资源 ID 不一致"
+        assert query.get("businessType") == ["10"], "流程接口业务类型不一致"
+        assert query.get("specId") == [spec_id], "流程接口规格 ID 不一致"
+        payload = response.json()
+        assert isinstance(payload, dict), "申请流程接口不是对象"
+        assert type(payload.get("code")) is int and payload["code"] == 0, (
+            "申请流程接口业务失败"
+        )
+        data = payload.get("data")
+        assert isinstance(data, list) and data, "申请流程接口未返回流程节点"
+        assert all(isinstance(node, dict) for node in data), "申请流程包含非对象节点"
+        return data
+
+    @staticmethod
+    def _validate_order_draft_response(
+        response: Response,
+        record: PortalResourceRecord,
+    ) -> Any:
+        """Require the draft lookup to target the selected resource without writing."""
+        assert response.status == 200, "订单草稿接口 HTTP 失败"
+        query = parse_qs(urlparse(response.url).query, keep_blank_values=True)
+        assert query.get("resourceType") == [str(record.resource_type)], (
+            "草稿接口资源类型不一致"
+        )
+        assert query.get("resourceId") == [record.resource_id], "草稿接口资源 ID 不一致"
+        assert query.get("id") == [""], "草稿接口不应指定已有草稿 ID"
+        payload = response.json()
+        assert isinstance(payload, dict), "订单草稿接口不是对象"
+        assert type(payload.get("code")) is int and payload["code"] == 0, (
+            "订单草稿接口业务失败"
+        )
+        return payload.get("data")
 
     def open_apply_form(self) -> "OrderMgmtPage":
         """进入资源申请/订阅表单页（M2-01）。"""

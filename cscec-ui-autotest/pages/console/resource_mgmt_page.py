@@ -511,6 +511,21 @@ class ResourceMgmtPage(BasePage):
 
     def search_and_open_portal_service_center(self, resource_name: str) -> "ResourceMgmtPage":
         """Search and open one exact cloud product through the visible portal UI."""
+        detail_page, record = self.open_portal_cloud_product_detail(resource_name)
+        self.verify_portal_cloud_product_detail(detail_page, record)
+        detail_page.close()
+        logger.info(
+            "[服务中心只读详情] %s/%s",
+            record.name,
+            record.resource_id,
+        )
+        return self
+
+    def open_portal_cloud_product_detail(
+        self,
+        resource_name: str,
+    ) -> tuple[Page, PortalResourceRecord]:
+        """Search one cloud product and open its exact detail in a new page."""
         search_input = self.page.get_by_placeholder("请输入搜索内容").first
         expect(search_input).to_be_visible()
         search_input.fill(resource_name)
@@ -544,22 +559,22 @@ class ResourceMgmtPage(BasePage):
         detail_page = page_capture.value
         detail_page.set_default_timeout(settings.DEFAULT_TIMEOUT)
         detail_page.set_default_navigation_timeout(settings.NAVIGATION_TIMEOUT)
-        detail = self._validate_portal_detail_response(detail_capture.value, record)
+        self._validate_portal_detail_response(detail_capture.value, record)
         expect(detail_page).to_have_url(
             re.compile(rf"/service-center/2/{re.escape(record.resource_id)}$")
         )
+        return detail_page, record
+
+    @staticmethod
+    def verify_portal_cloud_product_detail(
+        detail_page: Page,
+        record: PortalResourceRecord,
+    ) -> None:
+        """Require the searched product identity and read-only detail controls."""
         expect(detail_page.get_by_text(record.name, exact=True).first).to_be_visible()
         expect(detail_page.get_by_text(record.description, exact=True)).to_be_visible()
         for label in ("应用文档", "服务模式：", "规格：", "立即申请"):
             expect(detail_page.get_by_text(label, exact=True).first).to_be_visible()
-        assert str(detail.get("appName")) == record.app_name
-        detail_page.close()
-        logger.info(
-            "[服务中心只读详情] %s/%s",
-            record.name,
-            record.resource_id,
-        )
-        return self
 
     def open_authenticated_portal_service_center(self) -> "ResourceMgmtPage":
         """Open cloud service center and establish the existing IAM session."""

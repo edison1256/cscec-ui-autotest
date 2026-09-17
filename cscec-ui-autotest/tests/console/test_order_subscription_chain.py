@@ -14,6 +14,7 @@ import pytest
 from core.browser_health import BrowserHealthMonitor
 from pages.console.console_workbench_page import ConsoleWorkbenchPage
 from pages.console.order_mgmt_page import OrderMgmtPage
+from pages.console.resource_mgmt_page import ResourceMgmtPage
 
 
 @pytest.mark.order
@@ -23,11 +24,27 @@ class TestOrderSubscriptionChain:
 
     @pytest.mark.smoke
     @pytest.mark.readonly
-    def test_m2_01_navigate_to_apply_page(self, logged_in_page):
+    @pytest.mark.prod_conditional
+    def test_m2_01_navigate_to_apply_page(self, logged_in_page) -> None:
         """M2-01 从固定冒烟资源进入申请/订阅页。"""
-        order_page = OrderMgmtPage(logged_in_page)
-        order_page.open_apply_form()
-        order_page.verify_apply_form_structure()
+        resource_page = ResourceMgmtPage(
+            logged_in_page
+        ).open_authenticated_portal_service_center()
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M2-01",
+            "cloud 云产品申请表单只读验证",
+        ).start()
+        try:
+            detail_page, record = resource_page.open_portal_cloud_product_detail(
+                "CKafka消息队列"
+            )
+            ResourceMgmtPage.verify_portal_cloud_product_detail(detail_page, record)
+            OrderMgmtPage(detail_page).open_cloud_product_apply_readonly(record)
+            detail_page.close()
+        finally:
+            health.stop()
+        health.assert_healthy()
 
     @pytest.mark.write
     def test_m2_02_submit_low_impact_test_order(self, logged_in_page):

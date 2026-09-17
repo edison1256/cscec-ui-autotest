@@ -1167,6 +1167,7 @@ assets:
       - smoke
       - readonly
       - regression
+      - prod_conditional
     env_policy:
       uat: true
       pre: true
