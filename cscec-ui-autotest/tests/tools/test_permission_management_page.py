@@ -7,9 +7,11 @@ from dataclasses import dataclass
 import pytest
 
 from pages.console.permission_management_page import (
+    ManagedUserRecord,
     OrganizationRecord,
     PermissionManagementPage,
     ResourceRecord,
+    TenantRecord,
     UserRecord,
 )
 
@@ -144,3 +146,121 @@ def test_query_value_requires_the_requested_parameter() -> None:
         PermissionManagementPage._query_value(  # noqa: SLF001
             "https://irp.example/permission/orgPage", "resourceId"
         )
+
+
+def _managed_user_payload(*, total: str = "1", user_code: str = "20431644") -> dict:
+    return {
+        "code": 0,
+        "data": {
+            "list": [
+                {
+                    "id": "USER-1",
+                    "userCode": user_code,
+                    "userName": "测试用户",
+                    "belongOrgName": "中建数字科技有限公司",
+                    "email": "t***@example.com",
+                }
+            ],
+            "total": total,
+        },
+    }
+
+
+def test_managed_user_query_preserves_exact_business_identity() -> None:
+    expected = ManagedUserRecord(
+        "USER-1",
+        "20431644",
+        "测试用户",
+        "中建数字科技有限公司",
+        "t***@example.com",
+    )
+    response = FakeResponse(
+        _managed_user_payload(),
+        request_body={"queryfilter": {"userCode": "20431644", "resourceId": 3}},
+    )
+    assert PermissionManagementPage._managed_user_from_list(response) == expected  # noqa: SLF001
+    assert PermissionManagementPage._validate_user_query(  # noqa: SLF001
+        response, "20431644"
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    "payload,request_body",
+    [
+        (
+            _managed_user_payload(user_code="OTHER"),
+            {"queryfilter": {"userCode": "20431644"}},
+        ),
+        (
+            _managed_user_payload(total="2"),
+            {"queryfilter": {"userCode": "20431644"}},
+        ),
+        (_managed_user_payload(), {"queryfilter": {}}),
+    ],
+)
+def test_managed_user_query_rejects_wrong_or_non_unique_result(
+    payload: dict, request_body: dict
+) -> None:
+    with pytest.raises(AssertionError):
+        PermissionManagementPage._validate_user_query(  # noqa: SLF001
+            FakeResponse(payload, request_body=request_body), "20431644"
+        )
+
+
+def test_user_detail_and_reset_require_the_selected_identity() -> None:
+    PermissionManagementPage._validate_user_detail_request(  # noqa: SLF001
+        FakeResponse(
+            {"code": 0, "data": {"email": "masked"}},
+            request_body={"rscId": "20431644"},
+        ),
+        "20431644",
+    )
+    PermissionManagementPage._validate_user_reset(  # noqa: SLF001
+        FakeResponse(
+            {"code": 0, "data": {"list": []}},
+            request_body={"queryfilter": {"resourceId": 3}},
+        )
+    )
+    with pytest.raises(AssertionError):
+        PermissionManagementPage._validate_user_detail_request(  # noqa: SLF001
+            FakeResponse(
+                {"code": 0, "data": {}}, request_body={"rscId": "OTHER"}
+            ),
+            "20431644",
+        )
+
+
+def test_tenant_view_preserves_current_tenant_identity() -> None:
+    response = FakeResponse(
+        {
+            "code": 0,
+            "data": {"id": "100000", "tenantNo": "ZH_01_0000", "orgName": "中建云"},
+        }
+    )
+    assert PermissionManagementPage._tenant_from_view(response) == TenantRecord(  # noqa: SLF001
+        "100000", "ZH_01_0000", "中建云"
+    )
+
+
+def test_tenant_member_empty_query_requires_keyword_and_empty_contract() -> None:
+    response = FakeResponse(
+        {"code": 0, "data": {"records": [], "total": "0"}},
+        request_body={"keyWord": "__ABSENT__", "tenantNo": ""},
+    )
+    PermissionManagementPage._validate_empty_member_query(  # noqa: SLF001
+        response, "__ABSENT__"
+    )
+    for invalid in (
+        FakeResponse(
+            {"code": 0, "data": {"records": [], "total": "0"}},
+            request_body={"keyWord": "OTHER"},
+        ),
+        FakeResponse(
+            {"code": 0, "data": {"records": [{"userCode": "1"}], "total": "1"}},
+            request_body={"keyWord": "__ABSENT__"},
+        ),
+    ):
+        with pytest.raises(AssertionError):
+            PermissionManagementPage._validate_empty_member_query(  # noqa: SLF001
+                invalid, "__ABSENT__"
+            )

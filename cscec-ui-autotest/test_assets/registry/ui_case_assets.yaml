@@ -359,6 +359,58 @@ assets:
       prod_run: "2026-09-17 生产定向运行：1 passed；当前资源与 orgPage 组织树、认证级别一致，未执行授权或取消授权。"
     notes: "资源身份由 cloud/page 与页面选中项共同证明，组织树由当前资源 ID 查询并严格校验业务码和根组织回显；授权按钮只检查展示。候选阶段不进入默认生产门禁。"
 
+  - asset_id: UI-PROD-PERM-USER-001
+    module: 权限管理
+    title: 当前用户精确查询、详情与重置深层只读候选
+    lifecycle: candidate
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 生产权限管理交互层级矩阵 Step 6 Batch C
+      manual_case_id: PERM-USER-001
+    test_path: tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_user_list_exact_query_detail_and_reset
+    page_objects:
+      - pages/console/permission_management_page.py
+    markers:
+      - console
+      - readonly
+      - regression
+      - domain_split
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    evidence:
+      prod_run: "2026-09-17 生产定向运行：1 passed；当前登录用户精确查询、详情回显和查询重置均正常，未修改用户。"
+    notes: "以当前登录账号建立可解密的用户身份；生产后端会拒绝查看其他用户详情并返回 10006，因此不再随机选择首行用户。详情仅检查禁用字段并返回，重置仅清空查询条件。候选阶段不进入默认生产门禁。"
+
+  - asset_id: UI-PROD-PERM-TENANT-001
+    module: 权限管理
+    title: 中建云租户身份与成员空查询深层只读候选
+    lifecycle: candidate
+    automation_status: automated
+    source:
+      source_type: production_probe
+      requirement: 生产权限管理交互层级矩阵 Step 6 Batch C
+      manual_case_id: PERM-TENANT-001
+    test_path: tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_current_tenant_identity_and_empty_member_query
+    page_objects:
+      - pages/console/permission_management_page.py
+    markers:
+      - console
+      - readonly
+      - regression
+      - domain_split
+    env_policy:
+      uat: true
+      pre: true
+      prod_default: false
+      prod_explicit: true
+    evidence:
+      prod_run: "2026-09-17 生产定向运行：1 passed；中建云租户身份、唯一不存在成员查询的接口空结果和页面空态一致。"
+    notes: "固定核对当前中建云租户 100000 / ZH_01_0000；成员表本身有数据，测试使用每次唯一的不存在关键字验证严格空结果。添加、待加入和批量移出入口仅检查可见，不点击。候选阶段不进入默认生产门禁。"
+
   - asset_id: UI-REG-CONSOLE-001
     module: 控制台
     title: 服务供给入口

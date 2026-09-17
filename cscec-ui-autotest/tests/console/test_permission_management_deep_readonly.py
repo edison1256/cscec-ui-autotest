@@ -50,3 +50,39 @@ class TestPermissionManagementDeepReadonly:
         finally:
             health.stop()
         health.assert_healthy()
+
+    def test_user_list_exact_query_detail_and_reset(self, logged_in_page) -> None:
+        """PERM-USER-001: verify the current user's query, detail, and reset flow."""
+        permission_page = PermissionManagementPage(logged_in_page).open_console_home()
+        health = BrowserHealthMonitor(
+            logged_in_page,
+            "用户列表、精确查询、详情和重置只读探查",
+            business_rules=(
+                BusinessResponseRule(r"/permission/page$"),
+                BusinessResponseRule(r"/resource-encrypt/getDecryptInfo$"),
+            ),
+        ).start()
+        try:
+            permission_page.open_user_management()
+            permission_page.query_open_and_reset_selected_user()
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    def test_current_tenant_identity_and_empty_member_query(self, logged_in_page) -> None:
+        """PERM-TENANT-001: verify 中建云 and a strict empty member query."""
+        permission_page = PermissionManagementPage(logged_in_page).open_console_home()
+        health = BrowserHealthMonitor(
+            logged_in_page,
+            "中建云租户身份和成员空结果只读探查",
+            business_rules=(
+                BusinessResponseRule(r"/tenant/view[?]"),
+                BusinessResponseRule(r"/tenant-member/page$"),
+            ),
+        ).start()
+        try:
+            permission_page.open_tenant_management()
+            permission_page.verify_tenant_member_empty_query()
+        finally:
+            health.stop()
+        health.assert_healthy()

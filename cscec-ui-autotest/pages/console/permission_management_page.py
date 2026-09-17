@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -42,14 +43,36 @@ class UserRecord:
     name: str
 
 
+@dataclass(frozen=True)
+class ManagedUserRecord:
+    """Identity and display fields for one console-managed user."""
+
+    record_id: str
+    code: str
+    name: str
+    organization: str
+    email: str
+
+
+@dataclass(frozen=True)
+class TenantRecord:
+    """Identity for one tenant selected in tenant management."""
+
+    tenant_id: str
+    number: str
+    name: str
+
+
 class PermissionManagementPage(BasePage):
-    """Navigate and inspect 4A/organization login settings without authorizing."""
+    """Inspect permission-management pages without changing authorization data."""
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
         self._resources: tuple[ResourceRecord, ...] = ()
         self._organizations: tuple[OrganizationRecord, ...] = ()
         self._selected_resource: ResourceRecord | None = None
+        self._selected_user: ManagedUserRecord | None = None
+        self._selected_tenant: TenantRecord | None = None
 
     def open_console_home(self) -> "PermissionManagementPage":
         """Open the split-domain console home."""
@@ -162,15 +185,144 @@ class PermissionManagementPage(BasePage):
         )
         return self
 
+    def open_user_management(self) -> "PermissionManagementPage":
+        """Open user management and validate its initial list response."""
+        self._open_permission_management()
+        with self.page.expect_response(
+            lambda response: "/permission/page" in response.url,
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as list_capture:
+            self._click_permission_leaf("用户管理", "用户列表")
+        self._success_payload(list_capture.value, "用户列表")
+        self.assertions.url_contains("userManage/user")
+        logger.info("[导航] 权限管理 -> 用户管理")
+        return self
+
+    def query_open_and_reset_selected_user(self) -> "PermissionManagementPage":
+        """Query the authenticated user, inspect its detail, return, and reset."""
+        assert settings.USERNAME, "当前环境未配置登录用户 ID"
+        user_id = self.page.get_by_placeholder("请输入用户ID")
+        user_id.fill(settings.USERNAME)
+        with self.page.expect_response(
+            lambda response: "/permission/page" in response.url,
+            timeout=settings.ACTION_TIMEOUT,
+        ) as query_capture:
+            self.page.get_by_role("button", name="查 询", exact=True).click()
+        user = self._validate_user_query(query_capture.value, settings.USERNAME)
+        self._selected_user = user
+        row = self.page.locator(".table-row").filter(
+            has=self.page.get_by_text(user.code, exact=True)
+        )
+        expect(row).to_have_count(1)
+        expect(row).to_contain_text(user.name)
+        expect(row).to_contain_text(user.organization)
+
+        with self.page.expect_response(
+            lambda response: "/resource-encrypt/getDecryptInfo" in response.url,
+            timeout=settings.ACTION_TIMEOUT,
+        ) as detail_capture:
+            row.get_by_text("详情", exact=True).click()
+        self._validate_user_detail_request(detail_capture.value, user.code)
+        dialog = self.page.get_by_role("dialog").filter(
+            has=self.page.get_by_text("用户详情", exact=True)
+        )
+        expect(dialog.locator('input:disabled[value="' + user.name + '"]')).to_be_visible()
+        expect(dialog.locator('input:disabled[value="' + user.code + '"]')).to_be_visible()
+        expect(
+            dialog.locator('input:disabled[value="' + user.organization + '"]')
+        ).to_be_visible()
+        if user.email:
+            expect(dialog.locator('input:disabled[value="' + user.email + '"]')).to_be_visible()
+        click_and_expect(
+            dialog.get_by_role("button", name="返 回", exact=True),
+            lambda: expect(dialog).to_be_hidden(),
+            action_name="关闭用户详情",
+        )
+
+        with self.page.expect_response(
+            lambda response: "/permission/page" in response.url,
+            timeout=settings.ACTION_TIMEOUT,
+        ) as reset_capture:
+            self.page.get_by_role("button", name="重 置", exact=True).click()
+        self._validate_user_reset(reset_capture.value)
+        expect(user_id).to_have_value("")
+        logger.info("[只读交互] 用户精确查询、详情回显和重置完成: %s", user.code)
+        return self
+
+    def open_tenant_management(self) -> "PermissionManagementPage":
+        """Open tenant management and validate the fixed current tenant identity."""
+        self._open_permission_management()
+        with self.page.expect_response(
+            lambda response: "/tenant/findAll" in response.url,
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as tree_capture:
+            self._click_permission_leaf("租户管理", "成员")
+        assert tree_capture.value.status == 200, (
+            f"租户树接口 HTTP 失败: {tree_capture.value.status}"
+        )
+        tenant_title = self.page.get_by_text("中建云（ZH_01_0000）", exact=True)
+        expect(tenant_title).to_be_visible()
+        with self.page.expect_response(
+            lambda response: "/tenant/view?" in response.url,
+            timeout=settings.ACTION_TIMEOUT,
+        ) as tenant_capture:
+            tenant_title.click()
+        self._selected_tenant = self._tenant_from_view(tenant_capture.value)
+        assert self._selected_tenant == TenantRecord("100000", "ZH_01_0000", "中建云")
+        self.assertions.url_contains("tenant/tenantManage")
+        logger.info("[导航] 权限管理 -> 租户管理 -> 中建云")
+        return self
+
+    def verify_tenant_member_empty_query(self) -> "PermissionManagementPage":
+        """Search a unique absent member and require API/UI empty-state agreement."""
+        for pattern in (
+            r"^待加入成员\s*$",
+            r"^批量移出\s*$",
+            r"^添加租户成员\s*$",
+        ):
+            expect(self.page.get_by_text(re.compile(pattern))).to_be_visible()
+
+        keyword = f"__NO_SUCH_MEMBER_{datetime.now():%Y%m%d%H%M%S%f}__"
+        search = self.page.get_by_placeholder("请输入租户名称、用户名称或者用户ID")
+        search.fill(keyword)
+        with self.page.expect_response(
+            lambda response: "/tenant-member/page" in response.url,
+            timeout=settings.ACTION_TIMEOUT,
+        ) as member_capture:
+            search.press("Enter")
+        self._validate_empty_member_query(member_capture.value, keyword)
+        expect(self.page.locator("#userTable").get_by_text("暂无数据", exact=True)).to_be_visible()
+        logger.info("[只读交互] 中建云租户成员空结果与页面一致")
+        return self
+
     @property
     def selected_resource(self) -> ResourceRecord:
         """Return the resource selected by the page."""
         assert self._selected_resource is not None, "尚未建立当前资源身份"
         return self._selected_resource
 
-    def _open_login_management(self) -> None:
+    @property
+    def selected_user(self) -> ManagedUserRecord:
+        """Return the authenticated user selected by the exact query."""
+        assert self._selected_user is not None, "尚未建立用户身份"
+        return self._selected_user
+
+    def _open_permission_management(self) -> None:
         permission_menu = self.page.get_by_text("权限管理", exact=True).first
         require_actionable(permission_menu, "打开权限管理菜单").click()
+
+    def _click_permission_leaf(self, leaf_name: str, heading: str) -> None:
+        leaf = self.page.get_by_text(leaf_name, exact=True).first
+        click_and_expect(
+            leaf,
+            lambda: expect(self.page.get_by_text(heading, exact=True)).to_be_visible(
+                timeout=settings.NAVIGATION_TIMEOUT
+            ),
+            action_name=f"进入{leaf_name}",
+        )
+
+    def _open_login_management(self) -> None:
+        self._open_permission_management()
         login_menu = self.page.get_by_text("登录管理", exact=True).first
         click_and_expect(
             login_menu,
@@ -340,6 +492,83 @@ class PermissionManagementPage(BasePage):
             for row in rows
             if isinstance(row, dict)
         )
+
+    @classmethod
+    def _managed_user_from_list(cls, response: Response) -> ManagedUserRecord:
+        payload = cls._success_payload(response, "用户列表")
+        data = payload.get("data")
+        assert isinstance(data, dict), "用户列表接口 data 不是对象"
+        rows = data.get("list")
+        assert isinstance(rows, list) and rows, "用户列表接口未返回用户"
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            required = ("id", "userCode", "userName", "belongOrgName")
+            if all(row.get(name) is not None and str(row[name]).strip() for name in required):
+                return ManagedUserRecord(
+                    record_id=str(row["id"]).strip(),
+                    code=str(row["userCode"]).strip(),
+                    name=str(row["userName"]).strip(),
+                    organization=str(row["belongOrgName"]).strip(),
+                    email=str(row.get("email") or "").strip(),
+                )
+        raise AssertionError("用户列表没有字段完整的可验证用户")
+
+    @classmethod
+    def _validate_user_query(
+        cls, response: Response, expected_code: str
+    ) -> ManagedUserRecord:
+        body = response.request.post_data_json
+        assert isinstance(body, dict), "用户查询请求体不是对象"
+        query = body.get("queryfilter")
+        assert isinstance(query, dict), "用户查询缺少 queryfilter"
+        assert str(query.get("userCode")) == expected_code, "用户查询未携带精确用户 ID"
+        actual = cls._managed_user_from_list(response)
+        assert actual.code == expected_code, "用户查询返回了不同业务对象"
+        data = cls._success_payload(response, "用户查询").get("data")
+        assert isinstance(data, dict) and str(data.get("total")) == "1", (
+            "用户精确查询未返回唯一结果"
+        )
+        return actual
+
+    @classmethod
+    def _validate_user_detail_request(cls, response: Response, user_code: str) -> None:
+        payload = cls._success_payload(response, "用户详情")
+        body = response.request.post_data_json
+        assert isinstance(body, dict), "用户详情请求体不是对象"
+        assert str(body.get("rscId")) == user_code, "用户详情请求了不同用户"
+        assert payload.get("data") is not None, "用户详情接口缺少 data"
+
+    @classmethod
+    def _validate_user_reset(cls, response: Response) -> None:
+        body = response.request.post_data_json
+        assert isinstance(body, dict), "用户重置请求体不是对象"
+        query = body.get("queryfilter")
+        assert isinstance(query, dict), "用户重置请求缺少 queryfilter"
+        assert not query.get("userCode"), "重置后仍携带用户 ID"
+        cls._success_payload(response, "用户重置")
+
+    @classmethod
+    def _tenant_from_view(cls, response: Response) -> TenantRecord:
+        payload = cls._success_payload(response, "租户详情")
+        data = payload.get("data")
+        assert isinstance(data, dict), "租户详情接口 data 不是对象"
+        return TenantRecord(
+            tenant_id=cls._required_field(data, "id"),
+            number=cls._required_field(data, "tenantNo"),
+            name=cls._required_field(data, "orgName"),
+        )
+
+    @classmethod
+    def _validate_empty_member_query(cls, response: Response, keyword: str) -> None:
+        body = response.request.post_data_json
+        assert isinstance(body, dict), "租户成员查询请求体不是对象"
+        assert body.get("keyWord") == keyword, "租户成员查询未携带本次关键字"
+        payload = cls._success_payload(response, "租户成员")
+        data = payload.get("data")
+        assert isinstance(data, dict), "租户成员接口 data 不是对象"
+        assert data.get("records") == [], "不存在成员查询返回了记录"
+        assert str(data.get("total")) == "0", "不存在成员查询 total 非零"
 
     @staticmethod
     def _success_payload(response: Response, label: str) -> dict[str, Any]:
