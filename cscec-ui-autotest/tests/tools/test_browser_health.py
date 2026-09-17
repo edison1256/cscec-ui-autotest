@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
-from core.browser_health import BrowserHealthMonitor, BusinessResponseRule
+from core.browser_health import (
+    BrowserHealthMonitor,
+    BusinessResponseRule,
+    HealthIgnoreRule,
+)
 
 
 class _FakeContext:
@@ -32,6 +38,14 @@ class _FakeResponse:
 
     def json(self) -> dict:
         return self._payload
+
+
+class _FakeConsoleMessage:
+    type = "error"
+    text = "Failed to load resource: net::ERR_FAILED"
+
+    def __init__(self, source_url: str) -> None:
+        self.location = {"url": source_url}
 
 
 def test_http_200_business_failure_is_rejected() -> None:
@@ -77,4 +91,30 @@ def test_missing_declared_business_response_is_rejected() -> None:
     )
 
     with pytest.raises(AssertionError, match="business_response_missing"):
+        monitor.assert_healthy()
+
+
+def test_console_ignore_can_be_scoped_to_the_source_url() -> None:
+    monitor = BrowserHealthMonitor(
+        _FakePage(),
+        "cloud 埋点",
+        ignore_rules=(
+            HealthIgnoreRule(
+                category="console.error",
+                detail_pattern=r"data-track-api[.]cscec[.]com/zhuge[.]js",
+                reason="known telemetry failure",
+                expires_on=date(2099, 12, 31),
+            ),
+        ),
+    )
+
+    monitor._on_console(  # noqa: SLF001
+        _FakeConsoleMessage("https://data-track-api.cscec.com/zhuge.js")
+    )
+    monitor.assert_healthy()
+
+    monitor._on_console(  # noqa: SLF001
+        _FakeConsoleMessage("https://cloud.cscec.com/app.js")
+    )
+    with pytest.raises(AssertionError, match="cloud[.]cscec[.]com/app[.]js"):
         monitor.assert_healthy()

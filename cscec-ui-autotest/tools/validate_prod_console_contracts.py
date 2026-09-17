@@ -26,8 +26,8 @@ from core.execution_contract import (  # noqa: E402
 EXPECTED_TOTAL = 44
 EXPECTED_COUNTS = {
     CaseClassification.MANDATORY: 7,
-    CaseClassification.CONDITIONAL: 35,
-    CaseClassification.PROBE: 2,
+    CaseClassification.CONDITIONAL: 36,
+    CaseClassification.PROBE: 1,
     CaseClassification.CONTROLLED_WRITE: 0,
 }
 MIGRATED_CONDITIONAL_IDS = {
@@ -59,6 +59,7 @@ MIGRATED_CONDITIONAL_IDS = {
     "M1-01",
     "M1-02",
     "M1-03",
+    "M1-04",
     "M2-03",
     "M2-04",
     "M3-01",

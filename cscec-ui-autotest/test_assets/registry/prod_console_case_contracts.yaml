@@ -408,13 +408,33 @@ cases:
       - /irp-api/irp-portal-console/data-resource/tableList$
     owner_note: 仅打开编辑、切换业务/技术/管理元数据Tab并点击返回，绝不点击提交
 
-  - <<: *probe_defaults
+  - <<: *conditional_data_defaults
     case_id: M1-04
     test_path: tests/console/test_resource_baseline.py::TestResourceBaseline::test_m1_04_portal_search_and_open_resource
     parameter_id: null
-    entry_type: DIRECT
-    max_depth: L2
-    expected_state: [cloud 服务中心目标资源详情可见]
+    entry_type: UI
+    max_depth: L3
+    prerequisites:
+      - type: stable_portal_resource
+        expected: cloud 云产品存在唯一 CKafka消息队列样本并允许只读查看
+    expected_state: [cloud 服务中心按资源名唯一搜索并从结果卡片打开同一资源详情]
+    critical_api_patterns:
+      - /irp-api/irp-portal-public/search/page$
+      - /irp-api/irp-portal-public/cloud/detail[?]
+    owner_note: 登录建立在监控前；只读打开云产品详情，不点击立即申请、进入系统、收藏或分享
+    ignore_rules:
+      - category: console.error
+        detail_pattern: data-track-api[.]cscec[.]com/(apipool|zhuge[.]js)
+        reason: 已知生产埋点服务受浏览器 Private Network Access/CORS 限制，不属于服务中心业务接口
+        expires_on: 2026-12-31
+      - category: pageerror
+        detail_pattern: api_host_bac.*data-track-api[.]cscec[.]com/zhuge[.]js
+        reason: 已知埋点脚本在 apipool 被拦截后的派生异常，仅豁免该脚本堆栈
+        expires_on: 2026-12-31
+      - category: requestfailed
+        detail_pattern: data-track-api[.]cscec[.]com/(apipool|zhuge[.]js)
+        reason: 已知生产埋点服务及其脚本受浏览器 Private Network Access/CORS 限制
+        expires_on: 2026-12-31
 
   - <<: *probe_defaults
     case_id: M2-01

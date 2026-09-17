@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import os
 import re
 from typing import Any
+from urllib.parse import urlparse
 
 from playwright.sync_api import (
     Locator,
@@ -27,6 +28,8 @@ from core.interaction_evidence import (
 )
 from core.logger import get_logger
 from pages.console.console_menu_page import ConsoleMenuPage
+from pages.portal.login_page import LoginPage
+from pages.portal.portal_home_page import PortalHomePage
 
 logger = get_logger("resource_mgmt_page")
 
@@ -62,6 +65,31 @@ class DataResourceListSnapshot:
         return self.records[0]
 
 
+@dataclass(frozen=True)
+class PortalResourceRecord:
+    """Stable identity for one service-center cloud product."""
+
+    resource_id: str
+    resource_type: int
+    name: str
+    description: str
+    app_name: str
+
+
+@dataclass(frozen=True)
+class PortalResourceSearchSnapshot:
+    """Validated service-center search result."""
+
+    records: tuple[PortalResourceRecord, ...]
+    total: int
+
+    @property
+    def first_record(self) -> PortalResourceRecord:
+        """Return the unique searched resource."""
+        assert self.records, "服务中心搜索没有返回资源"
+        return self.records[0]
+
+
 class ResourceMgmtPage(BasePage):
     """控制台与服务中心资源管理页。"""
 
@@ -71,6 +99,12 @@ class ResourceMgmtPage(BasePage):
     CHILD_MENU = "数据资源管理"
     LIST_API_PATTERN = re.compile(
         r"/irp-api/irp-portal-console/data-resource/tableList$"
+    )
+    PORTAL_SEARCH_API_PATTERN = re.compile(
+        r"/irp-api/irp-portal-public/search/page$"
+    )
+    PORTAL_DETAIL_API_PATTERN = re.compile(
+        r"/irp-api/irp-portal-public/cloud/detail[?]"
     )
 
     def __init__(self, page: Page) -> None:
@@ -476,17 +510,154 @@ class ResourceMgmtPage(BasePage):
         return str(value).strip() if value is not None else ""
 
     def search_and_open_portal_service_center(self, resource_name: str) -> "ResourceMgmtPage":
-        """门户/服务中心搜索并打开代表资源（M1-04）。"""
-        self.nav.goto_url(settings.portal_url("/#/service-center/2"))
-        self.nav.wait_ready()
+        """Search and open one exact cloud product through the visible portal UI."""
         search_input = self.page.get_by_placeholder("请输入搜索内容").first
-        if search_input.is_visible():
-            search_input.fill(resource_name)
-            self.page.keyboard.press("Enter")
-            self.nav.wait_ready()
-        self.assertions.any_text_visible([resource_name, "服务中心", "产品市场"])
-        logger.info(f"[服务中心搜索] 资源: {resource_name}")
+        expect(search_input).to_be_visible()
+        search_input.fill(resource_name)
+        with self.page.expect_response(
+            lambda response: bool(self.PORTAL_SEARCH_API_PATTERN.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as search_capture:
+            search_input.press("Enter")
+        snapshot = self._parse_portal_search_response(search_capture.value)
+        self._validate_portal_search_request(
+            search_capture.value.request.post_data_json,
+            snapshot,
+            resource_name,
+        )
+        record = snapshot.first_record
+        title = self.page.get_by_text(record.name, exact=True)
+        expect(title).to_have_count(1)
+        expect(title).to_be_visible()
+        expect(self.page.get_by_text("共有 1 条", exact=True)).to_be_visible()
+
+        context = self.page.context
+        with context.expect_event(
+            "response",
+            predicate=lambda response: bool(
+                self.PORTAL_DETAIL_API_PATTERN.search(response.url)
+            ),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as detail_capture:
+            with context.expect_page(timeout=settings.NAVIGATION_TIMEOUT) as page_capture:
+                title.click()
+        detail_page = page_capture.value
+        detail_page.set_default_timeout(settings.DEFAULT_TIMEOUT)
+        detail_page.set_default_navigation_timeout(settings.NAVIGATION_TIMEOUT)
+        detail = self._validate_portal_detail_response(detail_capture.value, record)
+        expect(detail_page).to_have_url(
+            re.compile(rf"/service-center/2/{re.escape(record.resource_id)}$")
+        )
+        expect(detail_page.get_by_text(record.name, exact=True).first).to_be_visible()
+        expect(detail_page.get_by_text(record.description, exact=True)).to_be_visible()
+        for label in ("应用文档", "服务模式：", "规格：", "立即申请"):
+            expect(detail_page.get_by_text(label, exact=True).first).to_be_visible()
+        assert str(detail.get("appName")) == record.app_name
+        detail_page.close()
+        logger.info(
+            "[服务中心只读详情] %s/%s",
+            record.name,
+            record.resource_id,
+        )
         return self
+
+    def open_authenticated_portal_service_center(self) -> "ResourceMgmtPage":
+        """Open cloud service center and establish the existing IAM session."""
+        portal = PortalHomePage(self.page).open_route("/#/service-center/2")
+        portal.should_be_on_portal_domain()
+        login_entry = self.page.get_by_text("登录", exact=True).first
+        if login_entry.is_visible(timeout=2000):
+            login_page = LoginPage(self.page).click_login_entry()
+            if login_page.login_form_visible():
+                login_page.fill_credentials().click_login_button(
+                    expected_host=urlparse(settings.PORTAL_BASE_URL).netloc.lower()
+                )
+        authenticated_entry = self.page.get_by_text(
+            re.compile(r"^(管理后台|工作台)$")
+        ).first
+        expect(authenticated_entry).to_be_visible(timeout=settings.NAVIGATION_TIMEOUT)
+        expect(self.page.get_by_text("登录", exact=True)).to_have_count(0)
+        portal.open_route("/#/service-center/2")
+        expect(self.page).to_have_url(re.compile(r"cloud\.cscec\.com/#/service-center/2$"))
+        expect(self.page.get_by_text("云产品", exact=True).first).to_be_visible()
+        return self
+
+    @classmethod
+    def _parse_portal_search_response(
+        cls,
+        response: Response,
+    ) -> PortalResourceSearchSnapshot:
+        """Validate the public search envelope and retain resource identity."""
+        assert response.status == 200, "服务中心搜索接口 HTTP 失败"
+        payload = response.json()
+        assert isinstance(payload, dict), "服务中心搜索接口不是对象"
+        assert type(payload.get("code")) is int and payload["code"] == 0, (
+            "服务中心搜索接口业务失败"
+        )
+        data = payload.get("data")
+        assert isinstance(data, Mapping), "服务中心搜索 data 不是对象"
+        raw_records = data.get("list")
+        assert isinstance(raw_records, list), "服务中心搜索 data.list 不是列表"
+        records = tuple(cls._parse_portal_resource(row) for row in raw_records)
+        try:
+            total = int(data.get("total"))
+        except (TypeError, ValueError):
+            raise AssertionError("服务中心搜索 total 不是整数") from None
+        assert total >= len(records), "服务中心搜索 total 小于当前记录数"
+        return PortalResourceSearchSnapshot(records, total)
+
+    @staticmethod
+    def _parse_portal_resource(raw: Any) -> PortalResourceRecord:
+        assert isinstance(raw, Mapping), "服务中心搜索记录不是对象"
+        resource_type = raw.get("resourceType")
+        assert type(resource_type) is int, "服务中心资源类型不是整数"
+        fields = {
+            "resource_id": raw.get("id"),
+            "name": raw.get("name"),
+            "description": raw.get("description"),
+            "app_name": raw.get("appName"),
+        }
+        missing = [name for name, value in fields.items() if not str(value or "").strip()]
+        assert not missing, f"服务中心资源缺少必需字段: {', '.join(missing)}"
+        return PortalResourceRecord(
+            resource_type=resource_type,
+            **{name: str(value).strip() for name, value in fields.items()},
+        )
+
+    @staticmethod
+    def _validate_portal_search_request(
+        request: Any,
+        snapshot: PortalResourceSearchSnapshot,
+        resource_name: str,
+    ) -> None:
+        assert isinstance(request, dict), "服务中心搜索请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, dict), "服务中心搜索缺少 queryfilter"
+        assert query.get("resourceType") == "2", "搜索未限定云产品类型"
+        assert query.get("keyword") == resource_name, "搜索未提交目标资源名"
+        assert snapshot.total == 1 and len(snapshot.records) == 1, (
+            "目标云产品未唯一命中"
+        )
+        assert snapshot.first_record.name == resource_name, "搜索返回了其他云产品"
+
+    @staticmethod
+    def _validate_portal_detail_response(
+        response: Response,
+        expected: PortalResourceRecord,
+    ) -> Mapping[str, Any]:
+        assert response.status == 200, "服务中心详情接口 HTTP 失败"
+        payload = response.json()
+        assert isinstance(payload, dict), "服务中心详情接口不是对象"
+        assert type(payload.get("code")) is int and payload["code"] == 0, (
+            "服务中心详情接口业务失败"
+        )
+        data = payload.get("data")
+        assert isinstance(data, Mapping), "服务中心详情 data 不是对象"
+        assert str(data.get("id")) == expected.resource_id, "详情返回了其他资源"
+        assert data.get("resourceType") == expected.resource_type, "详情资源类型不一致"
+        assert str(data.get("name")) == expected.name, "详情资源名称不一致"
+        assert str(data.get("description")) == expected.description, "详情描述不一致"
+        return data
 
     def search_resource_advanced(self, status: str, keyword: str) -> "ResourceMgmtPage":
         """M1-SUPP-001: 资源列表多维度高级组合检索。"""

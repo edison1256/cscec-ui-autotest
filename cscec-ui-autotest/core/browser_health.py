@@ -138,7 +138,10 @@ class BrowserHealthMonitor:
 
     def _on_console(self, message: ConsoleMessage) -> None:
         if message.type == "error":
-            self._record("console.error", message.text)
+            location = message.location
+            source_url = location.get("url", "") if location else ""
+            detail = f"{message.text} @ {source_url}" if source_url else message.text
+            self._record("console.error", detail)
 
     def _on_page_error(self, error: Error) -> None:
         self._record("pageerror", str(error))

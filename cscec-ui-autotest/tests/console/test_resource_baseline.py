@@ -84,7 +84,19 @@ class TestResourceBaseline:
             health.stop()
         health.assert_healthy()
 
-    def test_m1_04_portal_search_and_open_resource(self, logged_in_page):
+    @pytest.mark.prod_conditional
+    def test_m1_04_portal_search_and_open_resource(self, logged_in_page) -> None:
         """M1-04 门户/服务中心可搜索并打开固定冒烟资源。"""
-        resource_page = ResourceMgmtPage(logged_in_page)
-        resource_page.search_and_open_portal_service_center("测试资源")
+        resource_page = ResourceMgmtPage(
+            logged_in_page
+        ).open_authenticated_portal_service_center()
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M1-04",
+            "cloud 服务中心云产品搜索及详情",
+        ).start()
+        try:
+            resource_page.search_and_open_portal_service_center("CKafka消息队列")
+        finally:
+            health.stop()
+        health.assert_healthy()

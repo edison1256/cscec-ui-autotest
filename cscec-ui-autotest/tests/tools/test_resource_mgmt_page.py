@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from pages.console.resource_mgmt_page import ResourceMgmtPage
+from pages.console.resource_mgmt_page import (
+    PortalResourceSearchSnapshot,
+    ResourceMgmtPage,
+)
 
 
 class _FakeResourceResponse:
@@ -76,3 +79,98 @@ def test_resource_list_response_requires_row_identity() -> None:
                 }
             )
         )
+
+
+def _portal_record() -> dict:
+    return {
+        "id": "RESOURCE-1",
+        "resourceType": 2,
+        "name": "CKafka消息队列",
+        "description": "消息队列服务",
+        "appName": "云原生",
+    }
+
+
+def test_portal_search_response_preserves_resource_identity() -> None:
+    snapshot = ResourceMgmtPage._parse_portal_search_response(  # noqa: SLF001
+        _FakeResourceResponse(
+            {"code": 0, "data": {"list": [_portal_record()], "total": "1"}}
+        )
+    )
+
+    assert snapshot.total == 1
+    assert snapshot.first_record.resource_id == "RESOURCE-1"
+    assert snapshot.first_record.resource_type == 2
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"code": 50000, "data": {"list": [], "total": 0}},
+        {"code": 0, "data": {"list": None, "total": 0}},
+        {"code": 0, "data": {"list": [_portal_record()], "total": 0}},
+        {"code": 0, "data": {"list": [], "total": "bad"}},
+    ],
+)
+def test_portal_search_response_rejects_invalid_contract(payload: dict) -> None:
+    with pytest.raises(AssertionError):
+        ResourceMgmtPage._parse_portal_search_response(  # noqa: SLF001
+            _FakeResourceResponse(payload)
+        )
+
+
+@pytest.mark.parametrize(
+    "query,records,valid",
+    [
+        ({"resourceType": "2", "keyword": "CKafka消息队列"}, [_portal_record()], True),
+        ({"resourceType": "1", "keyword": "CKafka消息队列"}, [_portal_record()], False),
+        ({"resourceType": "2", "keyword": "其他"}, [_portal_record()], False),
+        ({"resourceType": "2", "keyword": "CKafka消息队列"}, [], False),
+    ],
+)
+def test_portal_search_request_and_identity(
+    query: dict,
+    records: list[dict],
+    valid: bool,
+) -> None:
+    snapshot = PortalResourceSearchSnapshot(
+        tuple(ResourceMgmtPage._parse_portal_resource(row) for row in records),  # noqa: SLF001
+        len(records),
+    )
+    action = lambda: ResourceMgmtPage._validate_portal_search_request(  # noqa: E731, SLF001
+        {"queryfilter": query}, snapshot, "CKafka消息队列"
+    )
+    if valid:
+        action()
+    else:
+        with pytest.raises(AssertionError):
+            action()
+
+
+@pytest.mark.parametrize(
+    "code,data,valid",
+    [
+        (0, _portal_record(), True),
+        (50000, _portal_record(), False),
+        (0, {**_portal_record(), "id": "RESOURCE-2"}, False),
+        (0, {**_portal_record(), "resourceType": 1}, False),
+        (0, {**_portal_record(), "name": "其他"}, False),
+        (0, {**_portal_record(), "description": "其他描述"}, False),
+    ],
+)
+def test_portal_detail_matches_searched_resource(
+    code: int,
+    data: dict,
+    valid: bool,
+) -> None:
+    expected = ResourceMgmtPage._parse_portal_resource(_portal_record())  # noqa: SLF001
+    response = _FakeResourceResponse({"code": code, "data": data})
+    if valid:
+        assert ResourceMgmtPage._validate_portal_detail_response(  # noqa: SLF001
+            response, expected
+        ) == data
+    else:
+        with pytest.raises(AssertionError):
+            ResourceMgmtPage._validate_portal_detail_response(  # noqa: SLF001
+                response, expected
+            )
