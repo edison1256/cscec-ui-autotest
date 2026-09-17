@@ -3665,3 +3665,51 @@ assets:
     markers: [console, readonly, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
     notes: "仅校验真实菜单、消息推送路由、标题及浏览器健康；不新建、保存或发送消息。"
+
+  - asset_id: UI-PROD-BATCH-H1-RESOURCE-APP-001
+    module: 资源管理
+    title: 应用管理列表与详情只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-APP-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验真实菜单、应用列表接口动态身份、精确虚拟表格行及同 ID 详情接口；不新增、编辑、上架、排序或同步。"
+
+  - asset_id: UI-PROD-BATCH-H1-RESOURCE-CLOUD-001
+    module: 资源管理
+    title: 云产品管理列表与查看弹窗只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-CLOUD-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验真实菜单、云产品列表接口动态名称和编码、精确行及查看弹窗四个页签；不变更、上下架或排序。"
+
+  - asset_id: UI-PROD-BATCH-H1-RESOURCE-API-001
+    module: 资源管理
+    title: API管理应用选择区只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-API-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验真实菜单、应用接口业务成功且 data 为列表，以及选择应用控件；生产当前返回空列表，不能选择应用，不宣称 API 列表覆盖。"
+
+  - asset_id: UI-PROD-BATCH-H1-RESOURCE-COMPONENT-001
+    module: 资源管理
+    title: 组件管理页面外壳只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-COMPONENT-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "当前仅校验真实菜单、组件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。"

@@ -1,27 +1,27 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 16:54。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 17:07。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：454
-- **生产默认收集（smoke + readonly）**：67 / 454
-- **被默认排除（write / destructive）**：387
+- **总用例数**：463
+- **生产默认收集（smoke + readonly）**：67 / 463
+- **被默认排除（write / destructive）**：396
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：153
+- **登记资产总数**：157
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
-| candidate | 31 |
+| candidate | 35 |
 | prod_regression | 26 |
 
 ### 按自动化状态（automation_status）
@@ -29,7 +29,7 @@
 | automation_status | 数量 |
 | --- | --- |
 | automated | 128 |
-| needs_stabilization | 25 |
+| needs_stabilization | 29 |
 
 ### 按模块（module）
 
@@ -39,9 +39,9 @@
 | 数据资源导入功能优化 | 24 |
 | 移动端 | 12 |
 | 系统配置 | 10 |
+| 资源管理 | 9 |
 | 控制台 | 8 |
 | 权限管理 | 5 |
-| 资源管理 | 5 |
 | 订单管理 | 5 |
 | 审批待办 | 5 |
 | 文档中心 | 4 |
@@ -57,7 +57,7 @@
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **25** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **29** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -86,6 +86,10 @@
 | UI-PROD-BATCH-G-OPERATION-INSIGHT-001 | 运营管理 | 效能洞察页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 仅校验真实三级菜单、效能洞察路由、标题及浏览器健康；暂无稳定业务接口证据。 |
 | UI-PROD-BATCH-G-OPERATION-DASHBOARD-001 | 运营管理 | 应用看板页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 仅校验真实三级菜单、应用看板路由、标题及浏览器健康；不修改看板配置。 |
 | UI-PROD-BATCH-G-OPERATION-MESSAGE-001 | 运营管理 | 消息推送页面只读探查候选 | `tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell` | 仅校验真实菜单、消息推送路由、标题及浏览器健康；不新建、保存或发送消息。 |
+| UI-PROD-BATCH-H1-RESOURCE-APP-001 | 资源管理 | 应用管理列表与详情只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、应用列表接口动态身份、精确虚拟表格行及同 ID 详情接口；不新增、编辑、上架、排序或同步。 |
+| UI-PROD-BATCH-H1-RESOURCE-CLOUD-001 | 资源管理 | 云产品管理列表与查看弹窗只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、云产品列表接口动态名称和编码、精确行及查看弹窗四个页签；不变更、上下架或排序。 |
+| UI-PROD-BATCH-H1-RESOURCE-API-001 | 资源管理 | API管理应用选择区只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、应用接口业务成功且 data 为列表，以及选择应用控件；生产当前返回空列表，不能选择应用，不宣称 API 列表覆盖。 |
+| UI-PROD-BATCH-H1-RESOURCE-COMPONENT-001 | 资源管理 | 组件管理页面外壳只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 当前仅校验真实菜单、组件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。 |
 
 ## 4. 复用与维护约定
 
