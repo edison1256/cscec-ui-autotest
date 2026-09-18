@@ -1015,3 +1015,33 @@ cases:
     expected_state: [订阅服务侧栏数据资产列表、动态记录和同订单详情一致]
     critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/workbench/rsc/data/apply/history/list", "/order/orderDetail[?]"]
     owner_note: 不申请、取消或变更订阅
+
+  - <<: *mandatory_defaults
+    case_id: SUBSCRIPTION-APP-PROCESS-001
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_process_history
+    parameter_id: SUBSCRIPTION-APP-001-PROCESS
+    entry_type: UI
+    max_depth: L4
+    expected_state: [应用订阅详情流转明细和流程图状态图例正常]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/console/rsc/app/apply/history/list", "/order/orderDetail[?]"]
+    owner_note: 只切换详情页签和打开关闭流程图
+
+  - <<: *mandatory_defaults
+    case_id: SUBSCRIPTION-CLOUD-PROCESS-001
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_process_history
+    parameter_id: SUBSCRIPTION-CLOUD-001-PROCESS
+    entry_type: UI
+    max_depth: L4
+    expected_state: [云产品订阅详情流转明细和流程图状态图例正常]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/cloud/applyList", "/order/orderDetail[?]"]
+    owner_note: 只切换详情页签和打开关闭流程图
+
+  - <<: *mandatory_defaults
+    case_id: SUBSCRIPTION-DATA-ASSET-PROCESS-001
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_process_history
+    parameter_id: SUBSCRIPTION-DATA-ASSET-001-PROCESS
+    entry_type: UI
+    max_depth: L4
+    expected_state: [数据资产订阅详情流转明细和流程图状态图例正常]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/workbench/rsc/data/apply/history/list", "/order/orderDetail[?]"]
+    owner_note: 取消订阅按钮当前禁用，不绕过禁用状态

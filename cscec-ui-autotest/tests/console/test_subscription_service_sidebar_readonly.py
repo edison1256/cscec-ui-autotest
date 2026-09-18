@@ -6,6 +6,7 @@ import pytest
 
 from core.browser_health import BrowserHealthMonitor
 from pages.console.subscription_service_page import (
+    PROCESS_LEAVES,
     SUBSCRIPTION_LEAVES,
     SubscriptionLeaf,
     SubscriptionServicePage,
@@ -41,6 +42,26 @@ class TestSubscriptionServiceSidebarReadonly:
         ).start()
         try:
             SubscriptionServicePage(logged_in_page).inspect_leaf(leaf)
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.parametrize(
+        "leaf",
+        [pytest.param(leaf, id=f"{leaf.case_id}-PROCESS") for leaf in PROCESS_LEAVES],
+    )
+    def test_subscription_process_history(
+        self,
+        logged_in_page,
+        leaf: SubscriptionLeaf,
+    ) -> None:
+        """Inspect transfer history and process diagram without changing state."""
+        health = BrowserHealthMonitor(
+            logged_in_page,
+            f"订阅服务流程详情 {leaf.title}",
+        ).start()
+        try:
+            SubscriptionServicePage(logged_in_page).inspect_process_history(leaf)
         finally:
             health.stop()
         health.assert_healthy()

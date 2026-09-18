@@ -80,6 +80,12 @@ SUBSCRIPTION_LEAVES = (
     ),
 )
 
+PROCESS_LEAVES = tuple(
+    leaf
+    for leaf in SUBSCRIPTION_LEAVES
+    if leaf.title in {"应用列表", "云产品列表", "数据资产列表"}
+)
+
 
 class SubscriptionServicePage(ConsoleMenuPage):
     """Inspect subscription lists through their authorized sidebar paths."""
@@ -124,4 +130,43 @@ class SubscriptionServicePage(ConsoleMenuPage):
             )
         else:
             expect(row.get_by_role("button", name="详情", exact=True)).to_have_count(0)
+        return self
+
+    def inspect_process_history(
+        self,
+        leaf: SubscriptionLeaf,
+    ) -> "SubscriptionServicePage":
+        """Verify transfer history and process diagram in a subscription detail."""
+        assert leaf in PROCESS_LEAVES, f"{leaf.title}未登记流程详情覆盖"
+        self.inspect_leaf(leaf)
+        detail = self.page.locator(
+            ".ant-drawer:visible, .ant-modal:visible, "
+            ".el-dialog:visible, .el-drawer:visible"
+        ).first
+
+        transfer_tab = detail.get_by_role("tab", name="流转明细", exact=True)
+        transfer_tab.click()
+        expect(transfer_tab).to_have_attribute("aria-selected", "true")
+        transfer_panel = detail.get_by_role(
+            "tabpanel",
+            name="流转明细",
+            exact=True,
+        )
+        expect(transfer_panel.get_by_text("发起人：", exact=True)).to_be_visible()
+        expect(transfer_panel.get_by_text("流转状态：", exact=True).first).to_be_visible()
+
+        detail.get_by_role("button", name="流程图", exact=True).click()
+        process_dialog = self.page.locator(".ant-modal:visible").filter(
+            has_text="查看流程图"
+        ).last
+        expect(process_dialog).to_be_visible()
+        for status in ("已完成", "进行中", "未办理"):
+            expect(process_dialog.get_by_text(status, exact=True)).to_be_visible()
+        close = process_dialog.locator(
+            ".ant-modal-close, .el-dialog__headerbtn, [aria-label='close']"
+        ).first
+        close.click()
+        expect(
+            self.page.locator(".ant-modal:visible").filter(has_text="查看流程图")
+        ).to_have_count(0)
         return self

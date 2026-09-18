@@ -3833,3 +3833,39 @@ assets:
     markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "从真实侧栏进入数据资产列表，校验动态资源名称和同一订单详情资产列表。"
+
+  - asset_id: UI-PROD-BATCH-J-SUBSCRIPTION-APP-PROCESS-001
+    module: 订阅服务
+    title: 应用订阅流转明细与流程图发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch J, manual_case_id: SUBSCRIPTION-APP-PROCESS-001}
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_process_history
+    page_objects: [pages/console/subscription_service_page.py, pages/console/console_workbench_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "应用订阅详情切换流转明细，验证发起人与流转状态，并打开关闭流程图。"
+
+  - asset_id: UI-PROD-BATCH-J-SUBSCRIPTION-CLOUD-PROCESS-001
+    module: 订阅服务
+    title: 云产品订阅流转明细与流程图发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch J, manual_case_id: SUBSCRIPTION-CLOUD-PROCESS-001}
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_process_history
+    page_objects: [pages/console/subscription_service_page.py, pages/console/console_workbench_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "云产品订阅详情切换流转明细，验证发起人与流转状态，并打开关闭流程图。"
+
+  - asset_id: UI-PROD-BATCH-J-SUBSCRIPTION-DATA-ASSET-PROCESS-001
+    module: 订阅服务
+    title: 数据资产订阅流转明细与流程图发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch J, manual_case_id: SUBSCRIPTION-DATA-ASSET-PROCESS-001}
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_process_history
+    page_objects: [pages/console/subscription_service_page.py, pages/console/console_workbench_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "数据资产订阅详情切换流转明细并查看流程图；取消订阅按钮当前禁用，不绕过。"
