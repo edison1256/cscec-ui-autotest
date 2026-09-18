@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any
 
 from playwright.sync_api import Page, Response, expect
@@ -27,6 +28,8 @@ class MeteringStatisticsPage(ConsoleMenuPage):
 
     RESOURCE_API = "/metrology/resource/overview/page"
     SUBSCRIPTION_API = "/metrology/tenant/apply/list"
+    RESOURCE_DETAIL_API = "/metrology/resource/overview/view/tenant/detail"
+    SUBSCRIPTION_DETAIL_API = "/metrology/tenant/apply/info"
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -49,6 +52,75 @@ class MeteringStatisticsPage(ConsoleMenuPage):
             r"[#/]sub/resource/measurement/subscription(?:[/?]|$)",
             "订阅概览",
         )
+
+    def inspect_first_resource_tenant_detail(self) -> "MeteringStatisticsPage":
+        """Open the first resource tenant's read-only metering detail."""
+        self.open_resource_overview()
+        record = self._require_record()
+        with self.page.expect_response(
+            lambda response: self.RESOURCE_DETAIL_API in response.url,
+        ) as response_info:
+            self._open_record_detail(record)
+        self._assert_success(response_info.value, "租户资源详情")
+        expect(self.page).to_have_url(
+            re.compile(rf"/measurement/resource/tenant.*tenantNo={record.tenant_no}")
+        )
+        expect(
+            self.page.get_by_text("租户的资源概览", exact=True)
+            .filter(visible=True)
+            .last
+        ).to_be_visible()
+        self._expect_tabs("云产品", "服务组件", "数据资产", "企业应用", "解决方案")
+        expect(
+            self.page.get_by_text("资源订阅详情", exact=True)
+            .filter(visible=True)
+            .last
+        ).to_be_visible()
+        logger.info("[只读详情] 租户资源详情正常: %s", record.tenant_no)
+        return self
+
+    def inspect_first_subscription_tenant_detail(self) -> "MeteringStatisticsPage":
+        """Open the first subscription tenant's read-only metering detail."""
+        self.open_subscription_overview()
+        record = self._require_record()
+        with self.page.expect_response(
+            lambda response: self.SUBSCRIPTION_DETAIL_API in response.url,
+        ) as response_info:
+            self._open_record_detail(record)
+        self._assert_success(response_info.value, "租户订阅详情")
+        expect(self.page).to_have_url(
+            re.compile(
+                rf"/measurement/subscription/tenant.*tenantNo={record.tenant_no}"
+            )
+        )
+        expect(
+            self.page.get_by_text("租户的订阅概览", exact=True)
+            .filter(visible=True)
+            .last
+        ).to_be_visible()
+        self._expect_tabs("云产品", "服务组件", "数据资产", "企业应用")
+        expect(
+            self.page.get_by_text("资源订阅详情", exact=True)
+            .filter(visible=True)
+            .last
+        ).to_be_visible()
+        logger.info("[只读详情] 租户订阅详情正常: %s", record.tenant_no)
+        return self
+
+    def _open_record_detail(self, record: TenantOverviewRecord) -> None:
+        row = self.page.get_by_text(record.tenant_no, exact=True).first.locator(
+            "xpath=ancestor::div[contains(@class,'table-row')][1]"
+        )
+        expect(row).to_contain_text(record.tenant_name)
+        row.get_by_role("button", name="查看", exact=True).click()
+
+    def _expect_tabs(self, *names: str) -> None:
+        for name in names:
+            expect(self.page.get_by_role("tab", name=name, exact=True)).to_be_visible()
+
+    def _require_record(self) -> TenantOverviewRecord:
+        assert self._record is not None, "尚未绑定计量统计租户记录"
+        return self._record
 
     def _open_overview(
         self,
@@ -89,6 +161,15 @@ class MeteringStatisticsPage(ConsoleMenuPage):
         return TenantOverviewRecord(
             cls._required_field(row, "tenantNo", "tenantCode"),
             cls._required_field(row, "tenantName", "orgName", "name"),
+        )
+
+    @staticmethod
+    def _assert_success(response: Response, label: str) -> None:
+        assert response.status == 200, f"{label}接口 HTTP 失败: {response.status}"
+        payload = response.json()
+        assert isinstance(payload, dict), f"{label}接口响应不是对象"
+        assert payload.get("code") in (0, 200, "0", "200"), (
+            f"{label}接口业务失败: {payload.get('code')}/{payload.get('message')}"
         )
 
     @staticmethod

@@ -1055,3 +1055,23 @@ cases:
     expected_state: [评价中心真实菜单、动态模板身份、动态评价身份、精确行和详情字段]
     critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/assessment-template/page$", "/assessment/page$"]
     owner_note: 不点击隐藏、显示、回复、编辑、停用或删除
+
+  - <<: *mandatory_defaults
+    case_id: METER-RESOURCE-DETAIL-001
+    test_path: tests/console/test_metering_statistics_deep_readonly.py::TestMeteringStatisticsDeepReadonly::test_first_resource_tenant_detail
+    parameter_id: null
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [资源概览真实菜单、动态租户身份、同租户详情路由、资源分类页签和详情接口]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/resource/overview/page$", "/metrology/resource/overview/view/tenant/detail$"]
+    owner_note: 只查看租户资源统计，不修改表格设置或资源
+
+  - <<: *mandatory_defaults
+    case_id: METER-SUBSCRIPTION-DETAIL-001
+    test_path: tests/console/test_metering_statistics_deep_readonly.py::TestMeteringStatisticsDeepReadonly::test_first_subscription_tenant_detail
+    parameter_id: null
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [订阅概览真实菜单、动态租户身份、同租户详情路由、订阅分类页签和详情接口]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/tenant/apply/list$", "/metrology/tenant/apply/info$"]
+    owner_note: 只查看租户订阅统计，不修改订阅

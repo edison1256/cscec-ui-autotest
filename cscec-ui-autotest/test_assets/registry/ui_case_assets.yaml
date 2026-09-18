@@ -3881,3 +3881,27 @@ assets:
     markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "从真实菜单进入评价数据管理，基于模板和评价列表接口动态绑定首条评价并打开详情；不执行隐藏、回复或模板写操作。"
+
+  - asset_id: UI-PROD-BATCH-L-METER-RESOURCE-DETAIL-001
+    module: 计量统计
+    title: 租户资源首条详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch L, manual_case_id: METER-RESOURCE-DETAIL-001}
+    test_path: tests/console/test_metering_statistics_deep_readonly.py::TestMeteringStatisticsDeepReadonly::test_first_resource_tenant_detail
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从资源概览动态绑定首条租户并进入同编码详情，校验五类资源页签和详情接口；不修改资源或表格设置。"
+
+  - asset_id: UI-PROD-BATCH-L-METER-SUBSCRIPTION-DETAIL-001
+    module: 计量统计
+    title: 租户订阅首条详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch L, manual_case_id: METER-SUBSCRIPTION-DETAIL-001}
+    test_path: tests/console/test_metering_statistics_deep_readonly.py::TestMeteringStatisticsDeepReadonly::test_first_subscription_tenant_detail
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从订阅概览动态绑定首条租户并进入同编码详情，校验四类订阅页签和详情接口；不修改订阅。"
