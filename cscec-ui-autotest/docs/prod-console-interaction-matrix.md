@@ -863,3 +863,16 @@ Step 4 完成必须同时满足：7 条均带 `prod_mandatory`、无跳过和直
 “租户的资源 → 资源概览”和“租户的订阅 → 订阅概览”均存在首层租户列表及“查看”入口。本批从真实三级菜单进入，分别通过 `/metrology/resource/overview/page` 和 `/metrology/tenant/apply/list` 动态绑定首条租户编码，再点击同一行“查看”，要求详情 URL 的 `tenantNo` 与列表记录一致。
 
 资源详情校验 `/metrology/resource/overview/view/tenant/detail` 业务成功、租户资源概览、资源订阅详情以及云产品、服务组件、数据资产、企业应用、解决方案五类页签；订阅详情校验 `/metrology/tenant/apply/info` 业务成功、租户订阅概览、资源订阅详情以及云产品、服务组件、数据资产、企业应用四类页签。首次合并运行中资源详情因页面保留两个微前端实例导致同名文本 strict-mode 失败，限定当前可见实例后重跑通过；订阅详情首次即通过。全程未修改表格设置、资源或订阅。晋级后生产默认门禁由 92 条增长到 94 条，控制台严格 Mandatory 由 32 条增长到 34 条。
+
+## 35. Batch M：计量统计租户资源叶子页
+
+| 用例 | 真实菜单路径 | 列表证据 | 深层证据 |
+|---|---|---|---|
+| METER-RESOURCE-CLOUD-001 | 计量统计 → 租户的资源 → 云产品资源 | `/metrology/cloud/apply/page` 业务成功；有数据时动态校验租户与资源身份 | L2；无稳定详情证据，不宣称详情覆盖 |
+| METER-RESOURCE-COMPONENT-001 | 计量统计 → 租户的资源 → 组件资源 | `/metrology/component/apply/page` 动态租户、编码和名称 | `/metrology/specPackage/apply/page` 与同资源详情弹窗，L3 |
+| METER-RESOURCE-APP-001 | 计量统计 → 租户的资源 → 应用资源 | `/metrology/app/apply/page` 动态租户、编码和名称 | L2；未建立稳定详情证据 |
+| METER-RESOURCE-DATA-001 | 计量统计 → 租户的资源 → 数据资产资源 | `/metrology/data/apply/page` 动态租户、编码和名称 | `/metrology/data/apply/detail` 与同资源详情弹窗，L3 |
+
+云产品页在交互探查时为空，但正式生产 pytest 执行时已出现动态记录，说明生产数据会变化。用例不固定任何租户或资源种子：接口业务成功后，有记录就严格校验首行身份，无记录只接受页面与接口一致的真实空态。该双态只用于允许为空的云产品页，不会把接口错误或渲染缺失误判为通过。
+
+组件和数据资产继续进入首行“查看”并校验详情接口与弹窗；应用资源目前只登记列表级证据。四条均通过真实三级菜单进入，全程不修改表格设置、不新增、删除或变更资源。2026-09-18 生产验证 `4 passed, 0 failed`，晋级后生产默认门禁由 94 条增长到 98 条，控制台严格 Mandatory 由 34 条增长到 38 条。

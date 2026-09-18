@@ -3905,3 +3905,51 @@ assets:
     markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "从订阅概览动态绑定首条租户并进入同编码详情，校验四类订阅页签和详情接口；不修改订阅。"
+
+  - asset_id: UI-PROD-BATCH-M-METER-RESOURCE-CLOUD-001
+    module: 计量统计
+    title: 租户云产品资源列表发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch M, manual_case_id: METER-RESOURCE-CLOUD-001}
+    test_path: tests/console/test_metering_resource_leaves_readonly.py::TestMeteringResourceLeavesReadonly::test_metering_resource_leaf
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实三级菜单进入云产品资源，接口成功时兼容真实空态或动态记录，并在有记录时校验租户、资源编码和名称。"
+
+  - asset_id: UI-PROD-BATCH-M-METER-RESOURCE-COMPONENT-001
+    module: 计量统计
+    title: 租户组件资源列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch M, manual_case_id: METER-RESOURCE-COMPONENT-001}
+    test_path: tests/console/test_metering_resource_leaves_readonly.py::TestMeteringResourceLeavesReadonly::test_metering_resource_leaf
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "动态绑定组件资源首行，打开同资源申请详情并校验详情接口；不修改资源。"
+
+  - asset_id: UI-PROD-BATCH-M-METER-RESOURCE-APP-001
+    module: 计量统计
+    title: 租户应用资源列表发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch M, manual_case_id: METER-RESOURCE-APP-001}
+    test_path: tests/console/test_metering_resource_leaves_readonly.py::TestMeteringResourceLeavesReadonly::test_metering_resource_leaf
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "动态绑定应用资源首行并校验租户、资源编码和名称；当前证据止于列表层，不虚报详情覆盖。"
+
+  - asset_id: UI-PROD-BATCH-M-METER-RESOURCE-DATA-001
+    module: 计量统计
+    title: 租户数据资产资源列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch M, manual_case_id: METER-RESOURCE-DATA-001}
+    test_path: tests/console/test_metering_resource_leaves_readonly.py::TestMeteringResourceLeavesReadonly::test_metering_resource_leaf
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "动态绑定数据资产资源首行，打开同资源申请详情并校验详情接口；不修改资源。"

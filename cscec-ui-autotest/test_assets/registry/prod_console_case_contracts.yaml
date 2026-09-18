@@ -1075,3 +1075,43 @@ cases:
     expected_state: [订阅概览真实菜单、动态租户身份、同租户详情路由、订阅分类页签和详情接口]
     critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/tenant/apply/list$", "/metrology/tenant/apply/info$"]
     owner_note: 只查看租户订阅统计，不修改订阅
+
+  - <<: *mandatory_defaults
+    case_id: METER-RESOURCE-CLOUD-001
+    test_path: tests/console/test_metering_resource_leaves_readonly.py::TestMeteringResourceLeavesReadonly::test_metering_resource_leaf
+    parameter_id: METER-RESOURCE-CLOUD-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [云产品资源真实菜单、列表接口业务成功、空态或动态记录身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/cloud/apply/page$"]
+    owner_note: 生产数据可动态增减；有记录时严格校验首行身份，无记录时只接受接口成功的真实空态
+
+  - <<: *mandatory_defaults
+    case_id: METER-RESOURCE-COMPONENT-001
+    test_path: tests/console/test_metering_resource_leaves_readonly.py::TestMeteringResourceLeavesReadonly::test_metering_resource_leaf
+    parameter_id: METER-RESOURCE-COMPONENT-001
+    entry_type: UI
+    max_depth: L3
+    expected_state: [组件资源真实菜单、动态记录身份、同资源详情弹窗和详情接口]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/component/apply/page$", "/metrology/specPackage/apply/page$"]
+    owner_note: 只查看组件申请详情，不修改表格设置或资源
+
+  - <<: *mandatory_defaults
+    case_id: METER-RESOURCE-APP-001
+    test_path: tests/console/test_metering_resource_leaves_readonly.py::TestMeteringResourceLeavesReadonly::test_metering_resource_leaf
+    parameter_id: METER-RESOURCE-APP-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [应用资源真实菜单、列表接口和动态记录身份一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/app/apply/page$"]
+    owner_note: 当前只登记列表级证据，不宣称应用详情覆盖
+
+  - <<: *mandatory_defaults
+    case_id: METER-RESOURCE-DATA-001
+    test_path: tests/console/test_metering_resource_leaves_readonly.py::TestMeteringResourceLeavesReadonly::test_metering_resource_leaf
+    parameter_id: METER-RESOURCE-DATA-001
+    entry_type: UI
+    max_depth: L3
+    expected_state: [数据资产资源真实菜单、动态记录身份、同资源详情弹窗和详情接口]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/data/apply/page$", "/metrology/data/apply/detail$"]
+    owner_note: 只查看数据资产申请详情，不修改表格设置或资源

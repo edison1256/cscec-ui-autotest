@@ -23,6 +23,59 @@ class TenantOverviewRecord:
     tenant_name: str
 
 
+@dataclass(frozen=True)
+class MeteringResourceLeaf:
+    """Configuration for one tenant-resource metering leaf."""
+
+    case_id: str
+    title: str
+    route_name: str
+    list_api: str
+    detail_api: str | None = None
+    allow_empty: bool = False
+
+
+@dataclass(frozen=True)
+class MeteringResourceRecord:
+    """Business identity for one metered resource row."""
+
+    tenant_no: str
+    tenant_name: str
+    resource_code: str
+    resource_name: str
+
+
+RESOURCE_LEAVES = (
+    MeteringResourceLeaf(
+        "METER-RESOURCE-CLOUD-001",
+        "云产品资源",
+        "cloud",
+        "/metrology/cloud/apply/page",
+        allow_empty=True,
+    ),
+    MeteringResourceLeaf(
+        "METER-RESOURCE-COMPONENT-001",
+        "组件资源",
+        "comp",
+        "/metrology/component/apply/page",
+        "/metrology/specPackage/apply/page",
+    ),
+    MeteringResourceLeaf(
+        "METER-RESOURCE-APP-001",
+        "应用资源",
+        "app",
+        "/metrology/app/apply/page",
+    ),
+    MeteringResourceLeaf(
+        "METER-RESOURCE-DATA-001",
+        "数据资产资源",
+        "data",
+        "/metrology/data/apply/page",
+        "/metrology/data/apply/detail",
+    ),
+)
+
+
 class MeteringStatisticsPage(ConsoleMenuPage):
     """Inspect resource and subscription overviews without opening write flows."""
 
@@ -107,6 +160,58 @@ class MeteringStatisticsPage(ConsoleMenuPage):
         logger.info("[只读详情] 租户订阅详情正常: %s", record.tenant_no)
         return self
 
+    def inspect_resource_leaf(
+        self,
+        leaf: MeteringResourceLeaf,
+    ) -> "MeteringStatisticsPage":
+        """Validate one tenant-resource leaf and its safe detail when available."""
+        self.open_console_home()
+        titles = ("计量统计", "租户的资源", leaf.title)
+        prerequisite = self.menu_path_prerequisite(*titles)
+        assert prerequisite.satisfied, prerequisite.reason
+        response = self.open_menu_path(
+            *titles,
+            response_pattern=leaf.list_api,
+            route_pattern=rf"[#/]sub/resource/measurement/resource/{leaf.route_name}(?:[/?]|$)",
+        )
+        record = self._resource_record_from_response(
+            response,
+            leaf.title,
+            allow_empty=leaf.allow_empty,
+        )
+        expect(self.page.get_by_role("button", name="查 询", exact=True)).to_be_visible()
+        expect(self.page.get_by_role("button", name="重 置", exact=True)).to_be_visible()
+        if record is None:
+            expect(self.page.get_by_text("暂无数据", exact=True).first).to_be_visible()
+            logger.info("[只读交互] %s接口成功且当前为空", leaf.title)
+            return self
+
+        row = self.page.get_by_text(record.resource_code, exact=True).first.locator(
+            "xpath=ancestor::div[contains(@class,'table-row')][1]"
+        )
+        for identity in (
+            record.tenant_no,
+            record.tenant_name,
+            record.resource_name,
+        ):
+            expect(row).to_contain_text(identity)
+        if leaf.detail_api:
+            with self.page.expect_response(
+                lambda detail_response: leaf.detail_api in detail_response.url,
+            ) as response_info:
+                row.get_by_role("button", name="查看", exact=True).click()
+            self._assert_success(response_info.value, f"{leaf.title}详情")
+            dialog = self.page.get_by_role("dialog").filter(visible=True).last
+            expect(dialog).to_contain_text(record.resource_name)
+            expect(dialog.get_by_text("详情", exact=False).first).to_be_visible()
+        logger.info(
+            "[只读交互] %s动态身份正常: %s/%s",
+            leaf.title,
+            record.tenant_no,
+            record.resource_code,
+        )
+        return self
+
     def _open_record_detail(self, record: TenantOverviewRecord) -> None:
         row = self.page.get_by_text(record.tenant_no, exact=True).first.locator(
             "xpath=ancestor::div[contains(@class,'table-row')][1]"
@@ -170,6 +275,28 @@ class MeteringStatisticsPage(ConsoleMenuPage):
         assert isinstance(payload, dict), f"{label}接口响应不是对象"
         assert payload.get("code") in (0, 200, "0", "200"), (
             f"{label}接口业务失败: {payload.get('code')}/{payload.get('message')}"
+        )
+
+    @classmethod
+    def _resource_record_from_response(
+        cls,
+        response: Response,
+        label: str,
+        *,
+        allow_empty: bool,
+    ) -> MeteringResourceRecord | None:
+        cls._assert_success(response, label)
+        payload = response.json()
+        rows = cls._records(payload.get("data"))
+        if not rows and allow_empty:
+            return None
+        assert rows and isinstance(rows[0], dict), f"{label}接口未返回有效记录"
+        row = rows[0]
+        return MeteringResourceRecord(
+            tenant_no=cls._required_field(row, "tenantNo"),
+            tenant_name=cls._required_field(row, "tenantName"),
+            resource_code=cls._required_field(row, "resourceCode", "propertyCode"),
+            resource_name=cls._required_field(row, "resourceName", "propertyName"),
         )
 
     @staticmethod
