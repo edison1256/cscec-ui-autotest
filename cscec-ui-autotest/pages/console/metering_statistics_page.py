@@ -45,6 +45,17 @@ class MeteringResourceRecord:
     resource_name: str
 
 
+@dataclass(frozen=True)
+class MeteringSubscriptionLeaf:
+    """Configuration for one tenant-subscription metering leaf."""
+
+    case_id: str
+    title: str
+    route_name: str
+    detail_api: str
+    asset: bool = False
+
+
 RESOURCE_LEAVES = (
     MeteringResourceLeaf(
         "METER-RESOURCE-CLOUD-001",
@@ -72,6 +83,35 @@ RESOURCE_LEAVES = (
         "data",
         "/metrology/data/apply/page",
         "/metrology/data/apply/detail",
+    ),
+)
+
+
+SUBSCRIPTION_LEAVES = (
+    MeteringSubscriptionLeaf(
+        "METER-SUBSCRIPTION-CLOUD-001",
+        "云产品订阅",
+        "cloud",
+        "/metrology/tenant/apply/detail/info",
+    ),
+    MeteringSubscriptionLeaf(
+        "METER-SUBSCRIPTION-COMPONENT-001",
+        "组件订阅",
+        "comp",
+        "/metrology/tenant/apply/detail/info",
+    ),
+    MeteringSubscriptionLeaf(
+        "METER-SUBSCRIPTION-APP-001",
+        "应用订阅",
+        "app",
+        "/metrology/tenant/apply/detail/info",
+    ),
+    MeteringSubscriptionLeaf(
+        "METER-SUBSCRIPTION-DATA-001",
+        "数据资产订阅",
+        "data",
+        "/metrology/data/apply/detail",
+        asset=True,
     ),
 )
 
@@ -212,6 +252,63 @@ class MeteringStatisticsPage(ConsoleMenuPage):
         )
         return self
 
+    def inspect_subscription_leaf(
+        self,
+        leaf: MeteringSubscriptionLeaf,
+    ) -> "MeteringStatisticsPage":
+        """Validate one tenant-subscription leaf and its first safe detail."""
+        self.open_console_home()
+        titles = ("计量统计", "租户的订阅", leaf.title)
+        prerequisite = self.menu_path_prerequisite(*titles)
+        assert prerequisite.satisfied, prerequisite.reason
+        response = self.open_menu_path(
+            *titles,
+            response_pattern="/metrology/tenant/apply/rscList",
+            route_pattern=(
+                rf"[#/]sub/resource/measurement/subscription/"
+                rf"{leaf.route_name}(?:[/?]|$)"
+            ),
+        )
+        record = self._resource_record_from_response(
+            response,
+            leaf.title,
+            allow_empty=False,
+        )
+        assert record is not None
+        expect(self.page.get_by_role("button", name="查 询", exact=True)).to_be_visible()
+        expect(self.page.get_by_role("button", name="重 置", exact=True)).to_be_visible()
+
+        row = self.page.get_by_text(record.resource_code, exact=True).first.locator(
+            "xpath=ancestor::div[contains(@class,'table-row')][1]"
+        )
+        for identity in (
+            record.tenant_no,
+            record.tenant_name,
+            record.resource_name,
+        ):
+            expect(row).to_contain_text(identity)
+        with self.page.expect_response(
+            lambda detail_response: leaf.detail_api in detail_response.url,
+        ) as response_info:
+            row.get_by_role("button", name="查看", exact=True).click()
+        self._assert_success(response_info.value, f"{leaf.title}详情")
+        dialog = self.page.get_by_role("dialog").filter(visible=True).last
+        expect(dialog).to_contain_text(record.resource_name)
+        if leaf.asset:
+            expect(dialog).to_contain_text(record.tenant_name)
+            expect(dialog).to_contain_text("资产编码")
+            expect(dialog).to_contain_text("订阅租户")
+        else:
+            expect(dialog).to_contain_text(record.tenant_no)
+            expect(dialog.get_by_role("columnheader", name="资源编码")).to_be_visible()
+        logger.info(
+            "[只读交互] %s列表与详情身份正常: %s/%s",
+            leaf.title,
+            record.tenant_no,
+            record.resource_code,
+        )
+        return self
+
     def _open_record_detail(self, record: TenantOverviewRecord) -> None:
         row = self.page.get_by_text(record.tenant_no, exact=True).first.locator(
             "xpath=ancestor::div[contains(@class,'table-row')][1]"
@@ -295,8 +392,12 @@ class MeteringStatisticsPage(ConsoleMenuPage):
         return MeteringResourceRecord(
             tenant_no=cls._required_field(row, "tenantNo"),
             tenant_name=cls._required_field(row, "tenantName"),
-            resource_code=cls._required_field(row, "resourceCode", "propertyCode"),
-            resource_name=cls._required_field(row, "resourceName", "propertyName"),
+            resource_code=cls._required_field(
+                row, "resourceCode", "propertyCode", "assetCode"
+            ),
+            resource_name=cls._required_field(
+                row, "resourceName", "propertyName", "assetName"
+            ),
         )
 
     @staticmethod

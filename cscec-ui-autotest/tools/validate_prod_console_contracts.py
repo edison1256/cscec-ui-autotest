@@ -23,9 +23,9 @@ from core.execution_contract import (  # noqa: E402
 )
 
 
-EXPECTED_TOTAL = 93
+EXPECTED_TOTAL = 97
 EXPECTED_COUNTS = {
-    CaseClassification.MANDATORY: 38,
+    CaseClassification.MANDATORY: 42,
     CaseClassification.CONDITIONAL: 55,
     CaseClassification.PROBE: 0,
     CaseClassification.CONTROLLED_WRITE: 0,

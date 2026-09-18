@@ -3953,3 +3953,51 @@ assets:
     markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "动态绑定数据资产资源首行，打开同资源申请详情并校验详情接口；不修改资源。"
+
+  - asset_id: UI-PROD-BATCH-N-METER-SUBSCRIPTION-CLOUD-001
+    module: 计量统计
+    title: 租户云产品订阅列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch N, manual_case_id: METER-SUBSCRIPTION-CLOUD-001}
+    test_path: tests/console/test_metering_subscription_leaves_readonly.py::TestMeteringSubscriptionLeavesReadonly::test_metering_subscription_leaf
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实三级菜单进入云产品订阅，动态绑定首行并校验同资源详情弹窗与接口；不修改订阅。"
+
+  - asset_id: UI-PROD-BATCH-N-METER-SUBSCRIPTION-COMPONENT-001
+    module: 计量统计
+    title: 租户组件订阅列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch N, manual_case_id: METER-SUBSCRIPTION-COMPONENT-001}
+    test_path: tests/console/test_metering_subscription_leaves_readonly.py::TestMeteringSubscriptionLeavesReadonly::test_metering_subscription_leaf
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实三级菜单进入组件订阅，动态绑定首行并校验同资源详情弹窗与接口；不修改订阅。"
+
+  - asset_id: UI-PROD-BATCH-N-METER-SUBSCRIPTION-APP-001
+    module: 计量统计
+    title: 租户应用订阅列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch N, manual_case_id: METER-SUBSCRIPTION-APP-001}
+    test_path: tests/console/test_metering_subscription_leaves_readonly.py::TestMeteringSubscriptionLeavesReadonly::test_metering_subscription_leaf
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实三级菜单进入应用订阅，动态绑定首行并校验同资源详情弹窗与接口；不修改订阅。"
+
+  - asset_id: UI-PROD-BATCH-N-METER-SUBSCRIPTION-DATA-001
+    module: 计量统计
+    title: 租户数据资产订阅列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch N, manual_case_id: METER-SUBSCRIPTION-DATA-001}
+    test_path: tests/console/test_metering_subscription_leaves_readonly.py::TestMeteringSubscriptionLeavesReadonly::test_metering_subscription_leaf
+    page_objects: [pages/console/metering_statistics_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实三级菜单进入数据资产订阅，动态绑定首行并校验同资产详情弹窗与独立详情接口；不修改订阅。"

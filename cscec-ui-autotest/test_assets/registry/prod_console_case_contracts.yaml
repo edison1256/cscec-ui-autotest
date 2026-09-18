@@ -1115,3 +1115,43 @@ cases:
     expected_state: [数据资产资源真实菜单、动态记录身份、同资源详情弹窗和详情接口]
     critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/data/apply/page$", "/metrology/data/apply/detail$"]
     owner_note: 只查看数据资产申请详情，不修改表格设置或资源
+
+  - <<: *mandatory_defaults
+    case_id: METER-SUBSCRIPTION-CLOUD-001
+    test_path: tests/console/test_metering_subscription_leaves_readonly.py::TestMeteringSubscriptionLeavesReadonly::test_metering_subscription_leaf
+    parameter_id: METER-SUBSCRIPTION-CLOUD-001
+    entry_type: UI
+    max_depth: L3
+    expected_state: [云产品订阅真实菜单、动态记录身份、同资源详情弹窗和详情接口]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/tenant/apply/rscList$", "/metrology/tenant/apply/detail/info$"]
+    owner_note: 只查看云产品订阅统计详情，不申请、取消或变更订阅
+
+  - <<: *mandatory_defaults
+    case_id: METER-SUBSCRIPTION-COMPONENT-001
+    test_path: tests/console/test_metering_subscription_leaves_readonly.py::TestMeteringSubscriptionLeavesReadonly::test_metering_subscription_leaf
+    parameter_id: METER-SUBSCRIPTION-COMPONENT-001
+    entry_type: UI
+    max_depth: L3
+    expected_state: [组件订阅真实菜单、动态记录身份、同资源详情弹窗和详情接口]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/tenant/apply/rscList$", "/metrology/tenant/apply/detail/info$"]
+    owner_note: 只查看组件订阅统计详情，不申请、取消或变更订阅
+
+  - <<: *mandatory_defaults
+    case_id: METER-SUBSCRIPTION-APP-001
+    test_path: tests/console/test_metering_subscription_leaves_readonly.py::TestMeteringSubscriptionLeavesReadonly::test_metering_subscription_leaf
+    parameter_id: METER-SUBSCRIPTION-APP-001
+    entry_type: UI
+    max_depth: L3
+    expected_state: [应用订阅真实菜单、动态记录身份、同资源详情弹窗和详情接口]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/tenant/apply/rscList$", "/metrology/tenant/apply/detail/info$"]
+    owner_note: 只查看应用订阅统计详情，不申请、取消或变更订阅
+
+  - <<: *mandatory_defaults
+    case_id: METER-SUBSCRIPTION-DATA-001
+    test_path: tests/console/test_metering_subscription_leaves_readonly.py::TestMeteringSubscriptionLeavesReadonly::test_metering_subscription_leaf
+    parameter_id: METER-SUBSCRIPTION-DATA-001
+    entry_type: UI
+    max_depth: L3
+    expected_state: [数据资产订阅真实菜单、动态记录身份、同资产详情弹窗和详情接口]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/tenant/apply/rscList$", "/metrology/data/apply/detail$"]
+    owner_note: 只查看数据资产订阅统计详情，不申请、取消或变更订阅

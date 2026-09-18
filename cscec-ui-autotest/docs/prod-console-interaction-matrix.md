@@ -876,3 +876,14 @@ Step 4 完成必须同时满足：7 条均带 `prod_mandatory`、无跳过和直
 云产品页在交互探查时为空，但正式生产 pytest 执行时已出现动态记录，说明生产数据会变化。用例不固定任何租户或资源种子：接口业务成功后，有记录就严格校验首行身份，无记录只接受页面与接口一致的真实空态。该双态只用于允许为空的云产品页，不会把接口错误或渲染缺失误判为通过。
 
 组件和数据资产继续进入首行“查看”并校验详情接口与弹窗；应用资源目前只登记列表级证据。四条均通过真实三级菜单进入，全程不修改表格设置、不新增、删除或变更资源。2026-09-18 生产验证 `4 passed, 0 failed`，晋级后生产默认门禁由 94 条增长到 98 条，控制台严格 Mandatory 由 34 条增长到 38 条。
+
+## 36. Batch N：租户订阅叶子页生产门禁
+
+| 用例 ID | 真实菜单路径 | 列表证据 | 详情证据 |
+| :--- | :--- | :--- | :--- |
+| METER-SUBSCRIPTION-CLOUD-001 | 计量统计 → 租户的订阅 → 云产品订阅 | `/metrology/tenant/apply/rscList` 动态租户、资源编码和名称 | `/metrology/tenant/apply/detail/info` 与同资源详情弹窗，L3 |
+| METER-SUBSCRIPTION-COMPONENT-001 | 计量统计 → 租户的订阅 → 组件订阅 | `/metrology/tenant/apply/rscList` 动态租户、资源编码和名称 | `/metrology/tenant/apply/detail/info` 与同资源详情弹窗，L3 |
+| METER-SUBSCRIPTION-APP-001 | 计量统计 → 租户的订阅 → 应用订阅 | `/metrology/tenant/apply/rscList` 动态租户、资源编码和名称 | `/metrology/tenant/apply/detail/info` 与同资源详情弹窗，L3 |
+| METER-SUBSCRIPTION-DATA-001 | 计量统计 → 租户的订阅 → 数据资产订阅 | `/metrology/tenant/apply/rscList` 动态租户、资产编码和名称 | `/metrology/data/apply/detail` 与同资产详情抽屉，L3 |
+
+四条均使用生产接口返回的首条记录动态绑定对象，并从真实三级菜单进入详情；不修改表格设置，不申请、取消或变更订阅。2026-09-18 首轮 `3 passed, 1 failed`，失败原因为数据资产详情不展示租户编码；按页面真实语义改为校验租户名称、资产编码和订阅租户后，失败项复测通过。晋级后生产默认门禁由 98 条增长到 102 条，控制台严格 Mandatory 由 38 条增长到 42 条。
