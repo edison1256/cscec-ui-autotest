@@ -3773,3 +3773,63 @@ assets:
     markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
     env_policy: {uat: false, pre: false, prod_default: true, prod_explicit: true}
     notes: "仅精确检索生产专用云产品 金仓数据库_测试专用，悬浮展开更多后打开删除确认框并取消；不点击最终确定。"
+
+  - asset_id: UI-PROD-BATCH-I-SUBSCRIPTION-APP-001
+    module: 订阅服务
+    title: 侧栏应用订阅列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch I, manual_case_id: SUBSCRIPTION-APP-001}
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    page_objects: [pages/console/subscription_service_page.py, pages/console/console_workbench_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实侧栏进入应用列表，校验列表首条动态资源和同一订单详情；不执行订阅变更。"
+
+  - asset_id: UI-PROD-BATCH-I-SUBSCRIPTION-CLOUD-001
+    module: 订阅服务
+    title: 侧栏云产品订阅列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch I, manual_case_id: SUBSCRIPTION-CLOUD-001}
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    page_objects: [pages/console/subscription_service_page.py, pages/console/console_workbench_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实侧栏进入云产品列表，校验列表首条动态资源和同一订单详情；不点击前往管控台。"
+
+  - asset_id: UI-PROD-BATCH-I-SUBSCRIPTION-API-001
+    module: 订阅服务
+    title: 侧栏API订阅列表发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch I, manual_case_id: SUBSCRIPTION-API-001}
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    page_objects: [pages/console/subscription_service_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实侧栏进入API列表，校验动态首条记录和查询控件；当前生产页面无详情入口。"
+
+  - asset_id: UI-PROD-BATCH-I-SUBSCRIPTION-COMPONENT-001
+    module: 订阅服务
+    title: 侧栏组件订阅列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch I, manual_case_id: SUBSCRIPTION-COMPONENT-001}
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    page_objects: [pages/console/subscription_service_page.py, pages/console/console_workbench_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实侧栏进入组件列表，以列表ID和详情弹窗订单ID证明同一对象。"
+
+  - asset_id: UI-PROD-BATCH-I-SUBSCRIPTION-DATA-ASSET-001
+    module: 订阅服务
+    title: 侧栏数据资产订阅列表与详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch I, manual_case_id: SUBSCRIPTION-DATA-ASSET-001}
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    page_objects: [pages/console/subscription_service_page.py, pages/console/console_workbench_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实侧栏进入数据资产列表，校验动态资源名称和同一订单详情资产列表。"

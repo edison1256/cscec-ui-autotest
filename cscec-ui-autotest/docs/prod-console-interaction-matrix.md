@@ -833,3 +833,15 @@ Step 4 完成必须同时满足：7 条均带 `prod_mandatory`、无跳过和直
 反查表明，早期探查器主要枚举点击入口，遗漏了 Ant Design `hover` 触发的下拉浮层，因而无法看到“更多”内的二级动作。H3 将 hover 浮层作为独立交互层，并只允许对登记的生产专用样本到达最终确认边界。云产品“上架”会进入完整写入表单并触发 POST 型解密查询，不纳入只读门禁。
 
 2026-09-18 晋级后，Batch G/H 共 16 条新增 Mandatory：生产默认门禁由 67 条增长到 83 条，控制台严格 Mandatory 由 7 条增长到 23 条。数量不是固定上限，后续生产探查在安全边界明确且稳定通过后应继续纳入发布门禁。
+
+## 31. Batch I：订阅服务侧栏路径
+
+| 用例 | 真实侧栏路径 | 列表证据 | 详情证据 |
+|---|---|---|---|
+| SUBSCRIPTION-APP-001 | 订阅服务 → 应用列表 | `/console/rsc/app/apply/history/list` 动态 ID 和资源名 | `/order/orderDetail?id=<orderId>` 同一订单与资源 |
+| SUBSCRIPTION-CLOUD-001 | 订阅服务 → 云产品列表 | `/cloud/applyList` 动态 ID 和资源名 | `/order/orderDetail?id=<orderId>` 同一订单与资源 |
+| SUBSCRIPTION-API-001 | 订阅服务 → API列表 | `/console/rsc/api/apply/history/list` 动态 ID、资源名和查询控件 | 当前页面无详情按钮，覆盖止于 L2 |
+| SUBSCRIPTION-COMPONENT-001 | 订阅服务 → 组件列表 | `/console/rsc/compt/apply/history/list` 动态 ID 和资源名 | 详情无独立接口，以弹窗订单 ID 反证同一对象 |
+| SUBSCRIPTION-DATA-ASSET-001 | 订阅服务 → 数据资产列表 | `/workbench/rsc/data/apply/history/list` 动态 ID 和资源名 | `/order/orderDetail?id=<orderId>` 同一订单、资源和资产列表 |
+
+五条均从菜单接口确认授权后沿真实左侧菜单进入，不复用工作台卡片入口。生产首次合并回归 `5 passed, 0 failed`；应用、云产品、组件和数据资产达到 L3，API 页面因产品本身无详情入口保持 L2。全部用例只读，不点击“前往管控台”，不申请、取消或变更订阅。晋级后生产默认门禁由 83 条增长到 88 条，控制台严格 Mandatory 由 23 条增长到 28 条。

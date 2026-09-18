@@ -1,9 +1,9 @@
 # AGENTS.md — CSCEC UI Automation Project Instructions
 
 ## Mandatory Production Release Walkthrough Suite
-- **Mandatory Suite**: All 83 PC + Mobile read-only smoke cases defined in `docs/prod-release-mandatory-walkthrough-suite.md` are mandatory on every release. This count grows when a production probe is stabilized and approved as a release gate.
-- **Production Execution**: `python run_tests.py --env prod` automatically executes the full 83-case mandatory suite with 0 write risk.
-- **Strict Console Gate**: `python run_tests.py --env prod --prod-suite mandatory` executes the 23 strict console Mandatory cases with no skip or soft-pass path.
+- **Mandatory Suite**: All 88 PC + Mobile read-only smoke cases defined in `docs/prod-release-mandatory-walkthrough-suite.md` are mandatory on every release. This count grows when a production probe is stabilized and approved as a release gate.
+- **Production Execution**: `python run_tests.py --env prod` automatically executes the full 88-case mandatory suite with 0 write risk.
+- **Strict Console Gate**: `python run_tests.py --env prod --prod-suite mandatory` executes the 28 strict console Mandatory cases with no skip or soft-pass path.
 - **Conditional Console Gate**: `python run_tests.py --env prod --prod-suite conditional` currently executes 42 API-gated console cases, including 5 deep permission-management cases, and reports unmet preconditions as `NOT_APPLICABLE`.
 
 ## Automatic Git & DevOps Maintenance

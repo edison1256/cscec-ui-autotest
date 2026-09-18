@@ -965,3 +965,53 @@ cases:
     expected_state: [消息推送真实菜单、路由、标题和浏览器健康]
     critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
     owner_note: 不新建、保存或发送消息
+
+  - <<: *mandatory_defaults
+    case_id: SUBSCRIPTION-APP-001
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    parameter_id: SUBSCRIPTION-APP-001
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [订阅服务侧栏应用列表、动态记录和同订单详情一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/console/rsc/app/apply/history/list", "/order/orderDetail[?]"]
+    owner_note: 不申请、取消或变更订阅
+
+  - <<: *mandatory_defaults
+    case_id: SUBSCRIPTION-CLOUD-001
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    parameter_id: SUBSCRIPTION-CLOUD-001
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [订阅服务侧栏云产品列表、动态记录和同订单详情一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/cloud/applyList", "/order/orderDetail[?]"]
+    owner_note: 不点击前往管控台，不申请、取消或变更订阅
+
+  - <<: *mandatory_defaults
+    case_id: SUBSCRIPTION-API-001
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    parameter_id: SUBSCRIPTION-API-001
+    entry_type: HYBRID
+    max_depth: L2
+    expected_state: [订阅服务侧栏API列表、动态记录和查询控件一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/console/rsc/api/apply/history/list"]
+    owner_note: 当前页面无详情入口，不宣称详情覆盖
+
+  - <<: *mandatory_defaults
+    case_id: SUBSCRIPTION-COMPONENT-001
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    parameter_id: SUBSCRIPTION-COMPONENT-001
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [订阅服务侧栏组件列表、动态记录和同订单详情一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/console/rsc/compt/apply/history/list"]
+    owner_note: 详情无独立接口，以弹窗订单ID反证同一对象
+
+  - <<: *mandatory_defaults
+    case_id: SUBSCRIPTION-DATA-ASSET-001
+    test_path: tests/console/test_subscription_service_sidebar_readonly.py::TestSubscriptionServiceSidebarReadonly::test_subscription_sidebar_leaf
+    parameter_id: SUBSCRIPTION-DATA-ASSET-001
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [订阅服务侧栏数据资产列表、动态记录和同订单详情一致]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/workbench/rsc/data/apply/history/list", "/order/orderDetail[?]"]
+    owner_note: 不申请、取消或变更订阅
