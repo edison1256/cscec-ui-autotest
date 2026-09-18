@@ -1155,3 +1155,33 @@ cases:
     expected_state: [数据资产订阅真实菜单、动态记录身份、同资产详情弹窗和详情接口]
     critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/metrology/tenant/apply/rscList$", "/metrology/data/apply/detail$"]
     owner_note: 只查看数据资产订阅统计详情，不申请、取消或变更订阅
+
+  - <<: *mandatory_defaults
+    case_id: FLOW-MANAGEMENT-001
+    test_path: tests/console/test_approval_flow_management_readonly.py::TestApprovalFlowManagementReadonly::test_flow_management_dynamic_list
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    expected_state: [审批流程真实菜单、流程管理动态模板身份、查询重置和管理动作边界可见]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/irp-api/irp-portal-console/flow-template/page$"]
+    ignore_rules:
+      - category: requestfailed
+        detail_pattern: "GET .*/udpweb/portal/image/skeleton-screen\\.png: net::ERR_ABORTED"
+        reason: SPA 从控制台工作台切换业务微应用时主动取消未使用的骨架占位图
+        expires_on: 2026-12-31
+    owner_note: 不点击新建、上下架、流程画布、配置表单或更多菜单中的管理动作
+
+  - <<: *mandatory_defaults
+    case_id: FLOW-MONITOR-001
+    test_path: tests/console/test_approval_flow_management_readonly.py::TestApprovalFlowManagementReadonly::test_flow_monitor_first_history
+    parameter_id: null
+    entry_type: UI
+    max_depth: L3
+    expected_state: [审批流程真实菜单、动态流程实例身份、待办任务历史和评论树接口正常]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/workflow/process/getProcessedMonitor$", "/workflow/task/getTasksByProcInst[?]", "/workflow/process/getProcessCommentTree$"]
+    ignore_rules:
+      - category: requestfailed
+        detail_pattern: "GET .*/udpweb/portal/image/skeleton-screen\\.png: net::ERR_ABORTED"
+        reason: SPA 从控制台工作台切换业务微应用时主动取消未使用的骨架占位图
+        expires_on: 2026-12-31
+    owner_note: 只打开待办任务历史，不点击导出、转签、加签、驳回或跳过

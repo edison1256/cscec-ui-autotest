@@ -4001,3 +4001,27 @@ assets:
     markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "从真实三级菜单进入数据资产订阅，动态绑定首行并校验同资产详情弹窗与独立详情接口；不修改订阅。"
+
+  - asset_id: UI-PROD-BATCH-O-FLOW-MANAGEMENT-001
+    module: 审批流程
+    title: 流程管理动态列表发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch O, manual_case_id: FLOW-MANAGEMENT-001}
+    test_path: tests/console/test_approval_flow_management_readonly.py::TestApprovalFlowManagementReadonly::test_flow_management_dynamic_list
+    page_objects: [pages/console/approval_flow_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实菜单进入流程管理，以接口首条动态模板反证页面身份；不点击任何流程管理写操作。"
+
+  - asset_id: UI-PROD-BATCH-O-FLOW-MONITOR-001
+    module: 审批流程
+    title: 流程监控任务历史发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch O, manual_case_id: FLOW-MONITOR-001}
+    test_path: tests/console/test_approval_flow_management_readonly.py::TestApprovalFlowManagementReadonly::test_flow_monitor_first_history
+    page_objects: [pages/console/approval_flow_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实菜单进入流程监控，动态绑定首条实例并打开待办任务历史；不点击导出或任务流转动作。"
