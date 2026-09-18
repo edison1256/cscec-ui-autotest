@@ -3869,3 +3869,15 @@ assets:
     markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "数据资产订阅详情切换流转明细并查看流程图；取消订阅按钮当前禁用，不绕过。"
+
+  - asset_id: UI-PROD-BATCH-K-EVAL-DETAIL-001
+    module: 评价中心
+    title: 评价数据首条详情发布门禁
+    lifecycle: prod_regression
+    automation_status: automated
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch K, manual_case_id: EVAL-DETAIL-001}
+    test_path: tests/console/test_evaluation_management_deep_readonly.py::TestEvaluationManagementDeepReadonly::test_first_evaluation_detail
+    page_objects: [pages/console/evaluation_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
+    notes: "从真实菜单进入评价数据管理，基于模板和评价列表接口动态绑定首条评价并打开详情；不执行隐藏、回复或模板写操作。"

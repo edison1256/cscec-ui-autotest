@@ -1045,3 +1045,13 @@ cases:
     expected_state: [数据资产订阅详情流转明细和流程图状态图例正常]
     critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/workbench/rsc/data/apply/history/list", "/order/orderDetail[?]"]
     owner_note: 取消订阅按钮当前禁用，不绕过禁用状态
+
+  - <<: *mandatory_defaults
+    case_id: EVAL-DETAIL-001
+    test_path: tests/console/test_evaluation_management_deep_readonly.py::TestEvaluationManagementDeepReadonly::test_first_evaluation_detail
+    parameter_id: null
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [评价中心真实菜单、动态模板身份、动态评价身份、精确行和详情字段]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/assessment-template/page$", "/assessment/page$"]
+    owner_note: 不点击隐藏、显示、回复、编辑、停用或删除
