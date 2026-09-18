@@ -1,27 +1,27 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-17 17:07。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-18 09:02。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：463
-- **生产默认收集（smoke + readonly）**：67 / 463
-- **被默认排除（write / destructive）**：396
+- **总用例数**：466
+- **生产默认收集（smoke + readonly）**：67 / 466
+- **被默认排除（write / destructive）**：399
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：157
+- **登记资产总数**：160
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
-| candidate | 35 |
+| candidate | 38 |
 | prod_regression | 26 |
 
 ### 按自动化状态（automation_status）
@@ -29,7 +29,7 @@
 | automation_status | 数量 |
 | --- | --- |
 | automated | 128 |
-| needs_stabilization | 29 |
+| needs_stabilization | 32 |
 
 ### 按模块（module）
 
@@ -37,9 +37,9 @@
 | --- | --- |
 | 分层数据资源导入 | 53 |
 | 数据资源导入功能优化 | 24 |
+| 资源管理 | 12 |
 | 移动端 | 12 |
 | 系统配置 | 10 |
-| 资源管理 | 9 |
 | 控制台 | 8 |
 | 权限管理 | 5 |
 | 订单管理 | 5 |
@@ -57,7 +57,7 @@
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **29** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **32** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -90,6 +90,9 @@
 | UI-PROD-BATCH-H1-RESOURCE-CLOUD-001 | 资源管理 | 云产品管理列表与查看弹窗只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、云产品列表接口动态名称和编码、精确行及查看弹窗四个页签；不变更、上下架或排序。 |
 | UI-PROD-BATCH-H1-RESOURCE-API-001 | 资源管理 | API管理应用选择区只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、应用接口业务成功且 data 为列表，以及选择应用控件；生产当前返回空列表，不能选择应用，不宣称 API 列表覆盖。 |
 | UI-PROD-BATCH-H1-RESOURCE-COMPONENT-001 | 资源管理 | 组件管理页面外壳只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 当前仅校验真实菜单、组件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。 |
+| UI-PROD-BATCH-H2-RESOURCE-DATA-ASSET-001 | 资源管理 | 数据资产管理列表与详情只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、数据资产列表接口动态名称和编码、精确行及三类元数据详情；不批量编辑、导出、修改或上下架。 |
+| UI-PROD-BATCH-H2-RESOURCE-SOLUTION-001 | 资源管理 | 解决方案管理列表与详情只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、解决方案列表接口动态名称和编码、精确行及详情专属内容；不新增、编辑、上下架或排序。 |
+| UI-PROD-BATCH-H2-RESOURCE-HARDWARE-001 | 资源管理 | 硬件管理页面外壳只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 当前仅校验真实菜单、硬件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。 |
 
 ## 4. 复用与维护约定
 

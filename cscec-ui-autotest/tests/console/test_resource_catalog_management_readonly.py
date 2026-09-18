@@ -28,12 +28,18 @@ class TestResourceCatalogManagementReadonly:
             ("RESOURCE-CLOUD-001", "inspect_cloud_product_list_and_detail", "云产品管理列表与详情只读探查"),
             ("RESOURCE-API-001", "inspect_api_management_shell", "API管理应用选择区只读探查"),
             ("RESOURCE-COMPONENT-001", "inspect_component_management_shell", "组件管理页面只读探查"),
+            ("RESOURCE-DATA-ASSET-001", "inspect_data_asset_list_and_detail", "数据资产管理列表与详情只读探查"),
+            ("RESOURCE-SOLUTION-001", "inspect_solution_list_and_detail", "解决方案管理列表与详情只读探查"),
+            ("RESOURCE-HARDWARE-001", "inspect_hardware_management_shell", "硬件管理页面只读探查"),
         ],
         ids=[
             "RESOURCE-APP-001",
             "RESOURCE-CLOUD-001",
             "RESOURCE-API-001",
             "RESOURCE-COMPONENT-001",
+            "RESOURCE-DATA-ASSET-001",
+            "RESOURCE-SOLUTION-001",
+            "RESOURCE-HARDWARE-001",
         ],
     )
     def test_resource_catalog_leaf(

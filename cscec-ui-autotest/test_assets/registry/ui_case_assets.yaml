@@ -3713,3 +3713,39 @@ assets:
     markers: [console, readonly, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
     notes: "当前仅校验真实菜单、组件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。"
+
+  - asset_id: UI-PROD-BATCH-H2-RESOURCE-DATA-ASSET-001
+    module: 资源管理
+    title: 数据资产管理列表与详情只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-DATA-ASSET-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验真实菜单、数据资产列表接口动态名称和编码、精确行及三类元数据详情；不批量编辑、导出、修改或上下架。"
+
+  - asset_id: UI-PROD-BATCH-H2-RESOURCE-SOLUTION-001
+    module: 资源管理
+    title: 解决方案管理列表与详情只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-SOLUTION-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "校验真实菜单、解决方案列表接口动态名称和编码、精确行及详情专属内容；不新增、编辑、上下架或排序。"
+
+  - asset_id: UI-PROD-BATCH-H2-RESOURCE-HARDWARE-001
+    module: 资源管理
+    title: 硬件管理页面外壳只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-HARDWARE-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    notes: "当前仅校验真实菜单、硬件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。"

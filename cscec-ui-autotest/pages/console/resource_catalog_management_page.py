@@ -29,6 +29,8 @@ class ResourceCatalogManagementPage(ConsoleMenuPage):
     APPLICATION_DETAIL_API = "/app/detail"
     CLOUD_LIST_API = "/cloud/list"
     API_APPLICATION_LIST_API = "/app/list-businessArea-app"
+    DATA_ASSET_LIST_API = "/data-property/tableList"
+    SOLUTION_LIST_API = "/solution/page"
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -130,6 +132,74 @@ class ResourceCatalogManagementPage(ConsoleMenuPage):
             route_pattern=r"[#/]resource/comp(?:[/?]|$)",
         )
         expect(self.page.get_by_text("组件管理", exact=True).filter(visible=True).last).to_be_visible()
+        return self
+
+    def inspect_data_asset_list_and_detail(self) -> "ResourceCatalogManagementPage":
+        """Open an exact data-asset row and verify its metadata detail tabs."""
+        response = self._open_list_page(
+            "数据资产管理",
+            self.DATA_ASSET_LIST_API,
+            r"[#/]resource/data(?:[/?]|$)",
+        )
+        self.record = self._record_from_response(
+            response,
+            label="数据资产管理",
+            name_fields=("name",),
+            code_fields=("propertyCode",),
+        )
+        row = self._record_row(self.record.name)
+        expect(row).to_contain_text(self.record.name)
+        expect(row).to_contain_text(self.record.code)
+        click_and_expect(
+            row.get_by_text("详情", exact=True),
+            lambda: expect(
+                self.page.get_by_text("技术元数据", exact=True).last
+            ).to_be_visible(),
+            action_name=f"查看数据资产详情 {self.record.name}",
+        )
+        for tab in ("技术元数据", "业务元数据", "管理元数据"):
+            expect(self.page.get_by_text(tab, exact=True).last).to_be_visible()
+        expect(self.page.get_by_role("button", name="返 回", exact=True)).to_be_visible()
+        return self
+
+    def inspect_solution_list_and_detail(self) -> "ResourceCatalogManagementPage":
+        """Open an exact solution row and verify its read-only detail fields."""
+        response = self._open_list_page(
+            "解决方案管理",
+            self.SOLUTION_LIST_API,
+            r"[#/]resource/solution(?:[/?]|$)",
+        )
+        self.record = self._record_from_response(
+            response,
+            label="解决方案管理",
+            name_fields=("name",),
+            code_fields=("code",),
+        )
+        row = self._record_row(self.record.name)
+        expect(row).to_contain_text(self.record.name)
+        expect(row).to_contain_text(self.record.code)
+        click_and_expect(
+            row.get_by_text("详情", exact=True),
+            lambda: expect(
+                self.page.get_by_text("正文内容", exact=True).last
+            ).to_be_visible(),
+            action_name=f"查看解决方案详情 {self.record.name}",
+        )
+        for label in ("基础信息", "联系人信息", "热门推荐图片", "方案名称"):
+            expect(self.page.get_by_text(label, exact=True).last).to_be_visible()
+        return self
+
+    def inspect_hardware_management_shell(self) -> "ResourceCatalogManagementPage":
+        """Verify the currently exposed hardware-management route and title."""
+        self.open_console_home()
+        titles = ("资源管理", "硬件管理")
+        prerequisite = self.menu_path_prerequisite(*titles)
+        assert prerequisite.satisfied, prerequisite.reason
+        self.open_menu_route(
+            *titles,
+            route_pattern=r"[#/]resource/hardware(?:[/?]|$)",
+        )
+        expect(self.page.get_by_text("硬件管理", exact=True).filter(visible=True).last).to_be_visible()
         return self
 
     def _open_list_page(
