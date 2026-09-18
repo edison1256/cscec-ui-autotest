@@ -1,27 +1,27 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-18 09:02。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-18 09:19。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：466
-- **生产默认收集（smoke + readonly）**：67 / 466
-- **被默认排除（write / destructive）**：399
+- **总用例数**：468
+- **生产默认收集（smoke + readonly）**：83 / 468
+- **被默认排除（write / destructive）**：385
 
 > 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：160
+- **登记资产总数**：162
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
 | uat_automated | 96 |
-| candidate | 38 |
+| candidate | 40 |
 | prod_regression | 26 |
 
 ### 按自动化状态（automation_status）
@@ -29,7 +29,7 @@
 | automation_status | 数量 |
 | --- | --- |
 | automated | 128 |
-| needs_stabilization | 32 |
+| needs_stabilization | 34 |
 
 ### 按模块（module）
 
@@ -37,7 +37,7 @@
 | --- | --- |
 | 分层数据资源导入 | 53 |
 | 数据资源导入功能优化 | 24 |
-| 资源管理 | 12 |
+| 资源管理 | 14 |
 | 移动端 | 12 |
 | 系统配置 | 10 |
 | 控制台 | 8 |
@@ -57,7 +57,7 @@
 
 ## 3. 待稳定资产与监控项（needs_stabilization）
 
-共 **32** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **34** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -93,6 +93,8 @@
 | UI-PROD-BATCH-H2-RESOURCE-DATA-ASSET-001 | 资源管理 | 数据资产管理列表与详情只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、数据资产列表接口动态名称和编码、精确行及三类元数据详情；不批量编辑、导出、修改或上下架。 |
 | UI-PROD-BATCH-H2-RESOURCE-SOLUTION-001 | 资源管理 | 解决方案管理列表与详情只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 校验真实菜单、解决方案列表接口动态名称和编码、精确行及详情专属内容；不新增、编辑、上下架或排序。 |
 | UI-PROD-BATCH-H2-RESOURCE-HARDWARE-001 | 资源管理 | 硬件管理页面外壳只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf` | 当前仅校验真实菜单、硬件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。 |
+| UI-PROD-BATCH-H3-RESOURCE-APP-CONFIRM-001 | 资源管理 | 生产专用应用下架确认边界只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_prod_dedicated_sample_confirmation_guard` | 仅精确检索生产专用应用 0512prodtest，打开下架确认框并取消；断言最终确认前没有非 GET 请求。 |
+| UI-PROD-BATCH-H3-RESOURCE-CLOUD-CONFIRM-001 | 资源管理 | 生产专用云产品删除确认边界只读探查候选 | `tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_prod_dedicated_sample_confirmation_guard` | 仅精确检索生产专用云产品 金仓数据库_测试专用，悬浮展开更多后打开删除确认框并取消；不点击最终确定。 |
 
 ## 4. 复用与维护约定
 

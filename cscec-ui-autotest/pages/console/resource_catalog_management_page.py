@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import re
 from typing import Any
 
-from playwright.sync_api import Page, Response, expect
+from playwright.sync_api import Locator, Page, Request, Response, expect
 
 from config.settings import settings
 from core.interaction_evidence import click_and_expect, require_actionable
@@ -31,6 +31,8 @@ class ResourceCatalogManagementPage(ConsoleMenuPage):
     API_APPLICATION_LIST_API = "/app/list-businessArea-app"
     DATA_ASSET_LIST_API = "/data-property/tableList"
     SOLUTION_LIST_API = "/solution/page"
+    PROD_APPLICATION_SAMPLE = "0512prodtest"
+    PROD_CLOUD_SAMPLE = "金仓数据库_测试专用"
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -202,6 +204,47 @@ class ResourceCatalogManagementPage(ConsoleMenuPage):
         expect(self.page.get_by_text("硬件管理", exact=True).filter(visible=True).last).to_be_visible()
         return self
 
+    def inspect_prod_application_unpublish_confirmation(
+        self,
+    ) -> "ResourceCatalogManagementPage":
+        """Open and cancel unpublish confirmation for the dedicated prod app."""
+        row = self._search_exact_record(
+            title="应用管理",
+            api_pattern=self.APPLICATION_LIST_API,
+            route_pattern=r"[#/]resource/appInfo/appList(?:[/?]|$)",
+            placeholder="请输入应用名称",
+            name=self.PROD_APPLICATION_SAMPLE,
+        )
+        self._open_and_cancel_confirmation(
+            row.get_by_text("下架", exact=True),
+            expected_text="确定下架该应用吗？",
+            action_name=f"下架应用 {self.PROD_APPLICATION_SAMPLE}",
+        )
+        return self
+
+    def inspect_prod_cloud_delete_confirmation(
+        self,
+    ) -> "ResourceCatalogManagementPage":
+        """Open and cancel delete confirmation for the dedicated prod cloud item."""
+        row = self._search_exact_record(
+            title="云产品管理",
+            api_pattern=self.CLOUD_LIST_API,
+            route_pattern=r"[#/]resource/cloud(?:[/?]|$)",
+            placeholder="请输入名称",
+            name=self.PROD_CLOUD_SAMPLE,
+        )
+        more = row.get_by_text("更多", exact=True)
+        require_actionable(more, f"展开云产品操作 {self.PROD_CLOUD_SAMPLE}")
+        more.hover()
+        dropdown = self.page.locator(".ant-dropdown:visible").last
+        expect(dropdown).to_be_visible()
+        self._open_and_cancel_confirmation(
+            dropdown.get_by_text("删除", exact=True),
+            expected_text="是否确认删除该云资源，删除后将不可恢复？",
+            action_name=f"删除云产品 {self.PROD_CLOUD_SAMPLE}",
+        )
+        return self
+
     def _open_list_page(
         self,
         title: str,
@@ -216,6 +259,57 @@ class ResourceCatalogManagementPage(ConsoleMenuPage):
             *titles,
             response_pattern=api_pattern,
             route_pattern=route_pattern,
+        )
+
+    def _search_exact_record(
+        self,
+        *,
+        title: str,
+        api_pattern: str,
+        route_pattern: str,
+        placeholder: str,
+        name: str,
+    ) -> Locator:
+        self._open_list_page(title, api_pattern, route_pattern)
+        search = self.page.get_by_placeholder(placeholder, exact=True)
+        expect(search).to_be_visible()
+        search.fill(name)
+        with self.page.expect_response(
+            lambda response: api_pattern in response.url,
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ):
+            self.page.get_by_role("button", name="查 询", exact=True).click()
+        row = self._record_row(name)
+        expect(row).to_contain_text(name)
+        return row
+
+    def _open_and_cancel_confirmation(
+        self,
+        action: Locator,
+        *,
+        expected_text: str,
+        action_name: str,
+    ) -> None:
+        require_actionable(action, action_name)
+        non_get_requests: list[str] = []
+
+        def record_non_get(request: Request) -> None:
+            if request.method.upper() != "GET":
+                non_get_requests.append(f"{request.method} {request.url}")
+
+        self.page.on("request", record_non_get)
+        try:
+            action.click()
+            dialog = self.page.get_by_role("dialog").filter(has_text=expected_text)
+            expect(dialog).to_be_visible()
+            cancel = dialog.get_by_role("button", name="取 消", exact=True)
+            require_actionable(cancel, f"取消{action_name}")
+            cancel.click()
+            expect(dialog).to_be_hidden()
+        finally:
+            self.page.remove_listener("request", record_non_get)
+        assert not non_get_requests, (
+            f"{action_name}在最终确认前产生了非 GET 请求: {non_get_requests}"
         )
 
     def _record_row(self, name: str):

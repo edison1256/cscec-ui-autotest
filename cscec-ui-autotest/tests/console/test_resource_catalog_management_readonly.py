@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from config.settings import settings
 from core.browser_health import BrowserHealthMonitor
 from pages.console.resource_catalog_management_page import (
     ResourceCatalogManagementPage,
@@ -13,11 +14,15 @@ from pages.console.resource_catalog_management_page import (
 pytestmark = [
     pytest.mark.console,
     pytest.mark.readonly,
+    pytest.mark.smoke,
+    pytest.mark.prod_mandatory,
     pytest.mark.regression,
     pytest.mark.domain_split,
 ]
 
 
+@pytest.mark.smoke
+@pytest.mark.prod_mandatory
 class TestResourceCatalogManagementReadonly:
     """Exercise the four H1 leaves without invoking write actions."""
 
@@ -50,6 +55,39 @@ class TestResourceCatalogManagementReadonly:
         action_name: str,
     ) -> None:
         """Require a real menu path, strict page evidence, and browser health."""
+        health = BrowserHealthMonitor(logged_in_page, action_name).start()
+        try:
+            catalog = ResourceCatalogManagementPage(logged_in_page)
+            getattr(catalog, method_name)()
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.skipif(settings.ENV != "prod", reason="仅使用生产专用测试样本")
+    @pytest.mark.parametrize(
+        ("case_id", "method_name", "action_name"),
+        [
+            (
+                "RESOURCE-APP-CONFIRM-001",
+                "inspect_prod_application_unpublish_confirmation",
+                "生产专用应用下架确认框只读探查",
+            ),
+            (
+                "RESOURCE-CLOUD-CONFIRM-001",
+                "inspect_prod_cloud_delete_confirmation",
+                "生产专用云产品删除确认框只读探查",
+            ),
+        ],
+        ids=["RESOURCE-APP-CONFIRM-001", "RESOURCE-CLOUD-CONFIRM-001"],
+    )
+    def test_prod_dedicated_sample_confirmation_guard(
+        self,
+        logged_in_page,
+        case_id: str,
+        method_name: str,
+        action_name: str,
+    ) -> None:
+        """Reach a destructive confirmation boundary and cancel without writes."""
         health = BrowserHealthMonitor(logged_in_page, action_name).start()
         try:
             catalog = ResourceCatalogManagementPage(logged_in_page)

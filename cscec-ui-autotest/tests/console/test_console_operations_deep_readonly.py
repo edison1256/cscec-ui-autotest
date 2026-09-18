@@ -12,11 +12,15 @@ from pages.console.operations_monitoring_page import OperationsMonitoringPage
 pytestmark = [
     pytest.mark.console,
     pytest.mark.readonly,
+    pytest.mark.smoke,
+    pytest.mark.prod_mandatory,
     pytest.mark.regression,
     pytest.mark.domain_split,
 ]
 
 
+@pytest.mark.smoke
+@pytest.mark.prod_mandatory
 class TestConsoleOperationsDeepReadonly:
     """Validate every authorized Batch G leaf through the real menu tree."""
 

@@ -805,3 +805,163 @@ cases:
     expected_state: [工单配置真实菜单、分类树接口和动态根分类身份一致]
     critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/work-order-config/getCategory$"]
     owner_note: 修改分类和全局处理人仅验证入口可见
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-APP-CONFIRM-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_prod_dedicated_sample_confirmation_guard
+    parameter_id: RESOURCE-APP-CONFIRM-001
+    entry_type: UI
+    max_depth: L3
+    expected_state: [精确检索生产专用应用、下架确认框可见、取消后关闭且未发出非 GET 请求]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/app-list/console-list"]
+    owner_note: 仅允许操作 0512prodtest，禁止点击最终确定
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-CLOUD-CONFIRM-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_prod_dedicated_sample_confirmation_guard
+    parameter_id: RESOURCE-CLOUD-CONFIRM-001
+    entry_type: UI
+    max_depth: L3
+    expected_state: [精确检索生产专用云产品、悬浮展开更多、删除确认框可见并取消]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/cloud/list"]
+    owner_note: 仅允许操作 金仓数据库_测试专用，禁止点击最终确定
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-APP-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    parameter_id: RESOURCE-APP-001
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [应用管理真实菜单、动态列表身份和同一对象详情完整]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/app-list/console-list", "/app/detail"]
+    owner_note: 不新增、编辑、上架、排序或同步
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-CLOUD-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    parameter_id: RESOURCE-CLOUD-001
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [云产品管理真实菜单、动态列表身份和查看弹窗完整]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/cloud/list"]
+    owner_note: 不编辑、变更、上下架或排序
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-API-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    parameter_id: RESOURCE-API-001
+    entry_type: HYBRID
+    max_depth: L2
+    expected_state: [API管理真实菜单、应用列表接口和应用选择控件可用]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/app/list-businessArea-app"]
+    owner_note: 空列表允许通过，但接口和选择控件必须健康
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-COMPONENT-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    parameter_id: RESOURCE-COMPONENT-001
+    entry_type: UI
+    max_depth: L1
+    expected_state: [组件管理真实菜单、路由和页面标题可见]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 当前无稳定业务接口，不执行写操作
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-DATA-ASSET-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    parameter_id: RESOURCE-DATA-ASSET-001
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [数据资产真实菜单、动态列表身份和三类元数据详情完整]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/data-property/tableList"]
+    owner_note: 不批量编辑、导出、修改或上下架
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-SOLUTION-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    parameter_id: RESOURCE-SOLUTION-001
+    entry_type: HYBRID
+    max_depth: L3
+    expected_state: [解决方案真实菜单、动态列表身份和详情内容完整]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]", "/solution/page"]
+    owner_note: 不新增、编辑、上下架或排序
+
+  - <<: *mandatory_defaults
+    case_id: RESOURCE-HARDWARE-001
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
+    parameter_id: RESOURCE-HARDWARE-001
+    entry_type: UI
+    max_depth: L1
+    expected_state: [硬件管理真实菜单、路由和页面标题可见]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 当前无稳定业务接口，不执行写操作
+
+  - <<: *mandatory_defaults
+    case_id: OPS-CAPACITY-001
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    parameter_id: OPS-CAPACITY-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [容量指标真实菜单、路由、标题和浏览器健康]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 不触发配置或写操作
+
+  - <<: *mandatory_defaults
+    case_id: OPS-PERFORMANCE-001
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    parameter_id: OPS-PERFORMANCE-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [性能指标真实菜单、路由、查询区和浏览器健康]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 不触发查询外的写操作
+
+  - <<: *mandatory_defaults
+    case_id: OPS-POLLING-001
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    parameter_id: OPS-POLLING-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [运维巡检真实菜单、页签、任务指标和图表健康]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 不启动巡检
+
+  - <<: *mandatory_defaults
+    case_id: OPERATION-KANBAN-001
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    parameter_id: OPERATION-KANBAN-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [运营看板真实菜单、路由、标题和浏览器健康]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 不修改看板配置
+
+  - <<: *mandatory_defaults
+    case_id: OPERATION-INSIGHT-001
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    parameter_id: OPERATION-INSIGHT-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [效能洞察真实菜单、路由、标题和浏览器健康]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 不修改页面配置
+
+  - <<: *mandatory_defaults
+    case_id: OPERATION-DASHBOARD-001
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    parameter_id: OPERATION-DASHBOARD-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [应用看板真实菜单、路由、标题和浏览器健康]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 不修改看板配置
+
+  - <<: *mandatory_defaults
+    case_id: OPERATION-MESSAGE-001
+    test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
+    parameter_id: OPERATION-MESSAGE-001
+    entry_type: UI
+    max_depth: L2
+    expected_state: [消息推送真实菜单、路由、标题和浏览器健康]
+    critical_api_patterns: ["/engine/metadata/getMenuTreeForPortal[?]"]
+    owner_note: 不新建、保存或发送消息

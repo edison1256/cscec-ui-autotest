@@ -3590,8 +3590,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-CAPACITY-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "仅校验真实三级菜单、容量指标路由、标题及浏览器健康；暂无稳定业务接口证据，不触发配置或写操作。"
 
   - asset_id: UI-PROD-BATCH-G-OPS-PERFORMANCE-001
@@ -3602,8 +3602,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-PERFORMANCE-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "校验真实三级菜单、性能指标路由、标题、分类/系统查询区与空态；不触发写操作。"
 
   - asset_id: UI-PROD-BATCH-G-OPS-POLLING-001
@@ -3614,8 +3614,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-POLLING-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "校验真实菜单、巡检路由、概览/人工/自动页签、任务指标和可见图表画布；不启动巡检。"
 
   - asset_id: UI-PROD-BATCH-G-OPERATION-KANBAN-001
@@ -3626,8 +3626,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-KANBAN-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "仅校验真实三级菜单、运营看板路由、标题及浏览器健康；不修改看板配置。"
 
   - asset_id: UI-PROD-BATCH-G-OPERATION-INSIGHT-001
@@ -3638,8 +3638,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-INSIGHT-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "仅校验真实三级菜单、效能洞察路由、标题及浏览器健康；暂无稳定业务接口证据。"
 
   - asset_id: UI-PROD-BATCH-G-OPERATION-DASHBOARD-001
@@ -3650,8 +3650,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-DASHBOARD-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "仅校验真实三级菜单、应用看板路由、标题及浏览器健康；不修改看板配置。"
 
   - asset_id: UI-PROD-BATCH-G-OPERATION-MESSAGE-001
@@ -3662,8 +3662,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-MESSAGE-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "仅校验真实菜单、消息推送路由、标题及浏览器健康；不新建、保存或发送消息。"
 
   - asset_id: UI-PROD-BATCH-H1-RESOURCE-APP-001
@@ -3674,8 +3674,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-APP-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "校验真实菜单、应用列表接口动态身份、精确虚拟表格行及同 ID 详情接口；不新增、编辑、上架、排序或同步。"
 
   - asset_id: UI-PROD-BATCH-H1-RESOURCE-CLOUD-001
@@ -3686,8 +3686,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-CLOUD-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "校验真实菜单、云产品列表接口动态名称和编码、精确行及查看弹窗四个页签；不变更、上下架或排序。"
 
   - asset_id: UI-PROD-BATCH-H1-RESOURCE-API-001
@@ -3698,8 +3698,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-API-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "校验真实菜单、应用接口业务成功且 data 为列表，以及选择应用控件；生产当前返回空列表，不能选择应用，不宣称 API 列表覆盖。"
 
   - asset_id: UI-PROD-BATCH-H1-RESOURCE-COMPONENT-001
@@ -3710,8 +3710,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-COMPONENT-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "当前仅校验真实菜单、组件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。"
 
   - asset_id: UI-PROD-BATCH-H2-RESOURCE-DATA-ASSET-001
@@ -3722,8 +3722,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-DATA-ASSET-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "校验真实菜单、数据资产列表接口动态名称和编码、精确行及三类元数据详情；不批量编辑、导出、修改或上下架。"
 
   - asset_id: UI-PROD-BATCH-H2-RESOURCE-SOLUTION-001
@@ -3734,8 +3734,8 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-SOLUTION-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "校验真实菜单、解决方案列表接口动态名称和编码、精确行及详情专属内容；不新增、编辑、上下架或排序。"
 
   - asset_id: UI-PROD-BATCH-H2-RESOURCE-HARDWARE-001
@@ -3746,6 +3746,30 @@ assets:
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-HARDWARE-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
-    markers: [console, readonly, regression, domain_split]
-    env_policy: {uat: true, pre: true, prod_default: false, prod_explicit: true}
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "当前仅校验真实菜单、硬件管理路由、标题和浏览器健康；未观察到稳定业务接口或页面内容。"
+
+  - asset_id: UI-PROD-BATCH-H3-RESOURCE-APP-CONFIRM-001
+    module: 资源管理
+    title: 生产专用应用下架确认边界只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H3, manual_case_id: RESOURCE-APP-CONFIRM-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_prod_dedicated_sample_confirmation_guard
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: false, pre: false, prod_default: true, prod_explicit: true}
+    notes: "仅精确检索生产专用应用 0512prodtest，打开下架确认框并取消；断言最终确认前没有非 GET 请求。"
+
+  - asset_id: UI-PROD-BATCH-H3-RESOURCE-CLOUD-CONFIRM-001
+    module: 资源管理
+    title: 生产专用云产品删除确认边界只读探查候选
+    lifecycle: candidate
+    automation_status: needs_stabilization
+    source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H3, manual_case_id: RESOURCE-CLOUD-CONFIRM-001}
+    test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_prod_dedicated_sample_confirmation_guard
+    page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
+    markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
+    env_policy: {uat: false, pre: false, prod_default: true, prod_explicit: true}
+    notes: "仅精确检索生产专用云产品 金仓数据库_测试专用，悬浮展开更多后打开删除确认框并取消；不点击最终确定。"
