@@ -90,7 +90,9 @@ class OrderMgmtPage(BasePage):
         expect(field).to_have_value(code)
         row = self.page.locator(".table-row").filter(
             has=self.page.get_by_text(code, exact=True)
-        )
+        ).filter(
+            has=self.page.get_by_role("button", name="更多", exact=True)
+        ).last
         expect(row).to_have_count(1)
         expect(row).to_be_visible()
         return result
@@ -308,7 +310,9 @@ class OrderMgmtPage(BasePage):
         assert code, "可删除订单缺少编码"
         row = self.page.locator(".table-row").filter(
             has=self.page.get_by_text(code, exact=True)
-        )
+        ).filter(
+            has=self.page.get_by_role("button", name="编辑", exact=True)
+        ).last
         row.get_by_role("button", name="更多", exact=True).hover()
         dropdown = self.page.locator(".ant-dropdown:visible")
         expect(dropdown).to_have_count(1)
@@ -335,6 +339,84 @@ class OrderMgmtPage(BasePage):
             self.page.remove_listener("request", listener)
         assert writes == [], f"删除确认取消前触发了写请求: {writes}"
         expect(self.page.get_by_text(code, exact=True)).to_be_visible()
+
+    def edit_boundary_prerequisite(
+        self,
+        snapshot: WorkbenchListSnapshot,
+    ) -> PrerequisiteResult:
+        """Require API edit permission and the corresponding enabled UI action."""
+        candidates = self._editable_order_candidates(snapshot)
+        return PrerequisiteResult(
+            satisfied=bool(candidates),
+            reason="订单当前页没有 API 允许且 UI 编辑按钮可用的样本",
+            expected="至少一条 operators 包含 edit 且编辑按钮可用的订单",
+            actual=f"edit_candidates={len(candidates)}",
+        )
+
+    def inspect_editable_order_readonly(
+        self,
+        snapshot: WorkbenchListSnapshot,
+    ) -> None:
+        """Enter an editable order and return without saving or advancing."""
+        index, record = self._editable_order_candidates(snapshot)[0]
+        code = str(record.get("orderCode") or "")
+        assert code, "可编辑订单缺少编码"
+        edit_button = self.page.get_by_role(
+            "button",
+            name="编辑",
+            exact=True,
+        ).nth(index)
+        expect(edit_button).to_be_enabled()
+
+        unsafe_requests: list[str] = []
+
+        def record_unsafe_request(request: Any) -> None:
+            method = request.method.upper()
+            write_api = re.search(
+                r"/(?:save|submit|update|delete|create)(?:[/?]|$)",
+                urlparse(request.url).path,
+                re.IGNORECASE,
+            )
+            if method in {"PUT", "PATCH", "DELETE"} or (
+                method == "POST" and write_api
+            ):
+                unsafe_requests.append(f"{method} {request.url}")
+
+        self.page.on("request", record_unsafe_request)
+        try:
+            previous_url = self.page.url
+            edit_button.click()
+            expect(self.page).not_to_have_url(previous_url)
+            expect(self.page.get_by_text(code, exact=True)).to_be_visible()
+            visible_buttons = self.page.get_by_role("button").all_inner_texts()
+            logger.info(
+                "[订单编辑探查] url=%s buttons=%s unsafe=%s",
+                self.page.url,
+                visible_buttons,
+                unsafe_requests,
+            )
+            self.page.go_back(wait_until="domcontentloaded")
+            expect(self.page.get_by_text("订单列表", exact=True)).to_be_visible()
+            expect(self.page.get_by_text(code, exact=True)).to_be_visible()
+        finally:
+            self.page.remove_listener("request", record_unsafe_request)
+        assert unsafe_requests == [], (
+            f"进入订单编辑页并返回时触发了写接口: {unsafe_requests}"
+        )
+
+    def _editable_order_candidates(
+        self,
+        snapshot: WorkbenchListSnapshot,
+    ) -> list[tuple[int, Mapping[str, Any]]]:
+        """Match API records to their same-index rendered edit controls."""
+        edit_buttons = self.page.get_by_role("button", name="编辑", exact=True)
+        limit = min(len(snapshot.records), edit_buttons.count())
+        return [
+            (index, snapshot.records[index])
+            for index in range(limit)
+            if "edit" in (snapshot.records[index].get("operators") or [])
+            and edit_buttons.nth(index).is_enabled()
+        ]
 
     @staticmethod
     def _validate_history(response: Response, order_id: str) -> list[dict]:

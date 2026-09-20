@@ -583,6 +583,22 @@ cases:
       - /irp-api/irp-portal-console/order/page$
 
   - <<: *conditional_data_defaults
+    case_id: M2-09
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_09_order_edit_readonly_preview
+    parameter_id: null
+    entry_type: UI
+    max_depth: L4
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: editable_order
+        expected: 当前页至少一条 operators 包含 edit 且对应编辑按钮可用的订单
+    owner_note: 仅进入可编辑订单表单核对回显后返回，不修改、不保存草稿、不进入下一步
+    expected_state: [API 允许编辑的精确订单进入表单，订单身份与关键字段回显一致，返回列表且无业务写请求]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
+
+  - <<: *conditional_data_defaults
     case_id: M3-01
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
     parameter_id: null
