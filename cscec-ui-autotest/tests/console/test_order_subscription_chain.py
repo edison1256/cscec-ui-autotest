@@ -11,6 +11,7 @@
 - M2-08 订单删除确认边界取消且零写入
 - M2-09 订单草稿编辑页只读回显且零写入
 - M2-10 订单评价入口只读回显且零写入
+- M2-11 订单终止确认边界取消且零写入
 """
 
 from __future__ import annotations
@@ -268,6 +269,32 @@ class TestOrderSubscriptionChain:
                 order_page.evaluation_boundary_prerequisite(snapshot),
             )
             order_page.inspect_order_evaluation_readonly(snapshot)
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m2_11_order_termination_confirmation_cancel(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M2-11 订单终止确认边界取消且零写入。"""
+        order_page = OrderMgmtPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M2-11", order_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M2-11",
+            "订单终止确认取消",
+        ).start()
+        try:
+            snapshot = order_page.open_console_orders()
+            require_case_prerequisite(
+                "M2-11",
+                order_page.termination_boundary_prerequisite(snapshot),
+            )
+            order_page.verify_termination_confirmation_cancel(snapshot)
         finally:
             health.stop()
         health.assert_healthy()

@@ -521,6 +521,86 @@ class OrderMgmtPage(BasePage):
                 candidates.append((index, record))
         return candidates
 
+    def termination_boundary_prerequisite(
+        self,
+        snapshot: WorkbenchListSnapshot,
+    ) -> PrerequisiteResult:
+        """Require API termination permission and an enabled menu action."""
+        candidates = self._enabled_more_action_candidates(
+            snapshot,
+            operator="terminate",
+            action_label="终止",
+        )
+        return PrerequisiteResult(
+            satisfied=bool(candidates),
+            reason="订单当前页没有 API 允许且 UI 终止按钮可用的样本",
+            expected="至少一条 operators 包含 terminate 且终止按钮可用的订单",
+            actual=f"termination_candidates={len(candidates)}",
+        )
+
+    def verify_termination_confirmation_cancel(
+        self,
+        snapshot: WorkbenchListSnapshot,
+    ) -> None:
+        """Open an allowed termination boundary and cancel without writes."""
+        index, record = self._enabled_more_action_candidates(
+            snapshot,
+            operator="terminate",
+            action_label="终止",
+        )[0]
+        code = str(record.get("orderCode") or "")
+        assert code, "可终止订单缺少编码"
+
+        more_button = self.page.get_by_role(
+            "button",
+            name="更多",
+            exact=True,
+        ).nth(index)
+        more_button.hover()
+        dropdown = self.page.locator(".ant-dropdown:visible")
+        expect(dropdown).to_have_count(1)
+        terminate_button = dropdown.get_by_role("button", name="终止", exact=True)
+        expect(terminate_button).to_be_enabled()
+
+        unsafe_requests: list[str] = []
+
+        def record_unsafe_request(request: Any) -> None:
+            method = request.method.upper()
+            write_api = re.search(
+                r"/(?:terminate|stop|cancel|submit|update)(?:[/?]|$)",
+                urlparse(request.url).path,
+                re.IGNORECASE,
+            )
+            if method in {"PUT", "PATCH", "DELETE"} or (
+                method == "POST" and write_api
+            ):
+                unsafe_requests.append(f"{method} {request.url}")
+
+        self.page.on("request", record_unsafe_request)
+        try:
+            terminate_button.click()
+            surface = self.page.locator(
+                ".ant-modal-confirm:visible, .ant-modal:visible, "
+                ".el-dialog:visible"
+            ).filter(has=self.page.get_by_text("终止", exact=False)).first
+            expect(surface).to_be_visible(timeout=settings.NAVIGATION_TIMEOUT)
+            confirm = surface.get_by_role(
+                "button",
+                name=re.compile(r"确定|确认|终止"),
+            ).last
+            expect(confirm).to_be_enabled()
+            cancel = surface.get_by_role(
+                "button",
+                name=re.compile(r"取消|关闭|返回|Close"),
+            ).first
+            expect(cancel).to_be_enabled()
+            cancel.click()
+            expect(surface).to_be_hidden()
+        finally:
+            self.page.remove_listener("request", record_unsafe_request)
+        assert unsafe_requests == [], f"终止确认取消前触发了写接口: {unsafe_requests}"
+        expect(self.page.get_by_text(code, exact=True)).to_be_visible()
+
     @staticmethod
     def _validate_history(response: Response, order_id: str) -> list[dict]:
         """Require flow history to belong to the selected order."""

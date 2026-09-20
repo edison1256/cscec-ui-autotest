@@ -615,6 +615,22 @@ cases:
       - /irp-api/irp-portal-console/order/page$
 
   - <<: *conditional_data_defaults
+    case_id: M2-11
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_11_order_termination_confirmation_cancel
+    parameter_id: null
+    entry_type: UI
+    max_depth: L3
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: terminable_order
+        expected: 当前页至少一条 operators 包含 terminate 且对应终止按钮可用的订单
+    owner_note: 仅打开终止确认边界并取消，不填写原因，不点击最终确认
+    expected_state: [API 允许终止的精确订单打开终止确认边界，取消后订单仍在且无业务写请求]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
+
+  - <<: *conditional_data_defaults
     case_id: M3-01
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
     parameter_id: null
