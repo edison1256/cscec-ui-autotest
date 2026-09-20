@@ -664,6 +664,22 @@ cases:
     critical_api_patterns:
       - /irp-api/irp-portal-console/work-order/allWorkOrderList$
     owner_note: 提醒按钮点击即调用写接口且没有确认框，只验证入口存在；严禁点击
+
+  - <<: *conditional_data_defaults
+    case_id: M4-05
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_05_ticket_pagination_identity
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 工单中心下发工单管理菜单
+      - type: second_page
+        expected: 当前工单列表至少包含两页数据
+    expected_state: [第二页请求 pageIndex=2 且工单身份变化，返回第一页请求 pageIndex=1 并恢复首条身份]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/work-order/allWorkOrderList$
+    owner_note: 仅翻到第二页再返回第一页，不点击查看、处理或提醒
     owner_note: 仅点击目标行查看并关闭弹窗，不点击处理、提醒或下载
 
   - <<: *mandatory_defaults

@@ -193,6 +193,46 @@ class TicketCenterPage(BasePage):
             expected.code,
         )
 
+    @staticmethod
+    def pagination_prerequisite(snapshot: TicketListSnapshot) -> PrerequisiteResult:
+        """Require at least two pages of ticket records."""
+        return PrerequisiteResult(
+            satisfied=snapshot.total > len(snapshot.records) and bool(snapshot.records),
+            reason="工单列表当前不足两页，无法验证翻页链路",
+            expected="总数大于当前页记录数",
+            actual=f"total={snapshot.total}, records={len(snapshot.records)}",
+        )
+
+    def verify_ticket_pagination(self, first_page: TicketListSnapshot) -> None:
+        """Navigate to page two and back while validating ticket identities."""
+        first_code = first_page.first_record.code
+        pager = self.page.locator(".ant-pagination:visible")
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as second_capture:
+            pager.get_by_text("2", exact=True).click()
+        second = self._parse_list_response(second_capture.value)
+        second_request = second_capture.value.request.post_data_json
+        assert isinstance(second_request, dict), "工单第二页请求不是对象"
+        assert second_request.get("pageIndex") == 2, "工单翻页未请求第 2 页"
+        assert second.records, "工单第二页没有可验证记录"
+        second_code = second.first_record.code
+        assert second_code != first_code, "工单第二页仍显示第一页首条"
+        expect(pager.locator(".ant-pagination-item-active")).to_have_text("2")
+        expect(self.page.get_by_text(second_code, exact=True)).to_be_visible()
+
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as first_capture:
+            pager.get_by_text("1", exact=True).click()
+        first_request = first_capture.value.request.post_data_json
+        assert isinstance(first_request, dict), "工单返回第一页请求不是对象"
+        assert first_request.get("pageIndex") == 1, "工单分页未返回第 1 页"
+        expect(pager.locator(".ant-pagination-item-active")).to_have_text("1")
+        expect(self.page.get_by_text(first_code, exact=True)).to_be_visible()
+
     @classmethod
     def _parse_list_response(cls, response: Response) -> TicketListSnapshot:
         """Validate the ticket-list transport, envelope and required identity."""
