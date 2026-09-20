@@ -233,6 +233,54 @@ class OrderMgmtPage(BasePage):
         expect(self.page.get_by_placeholder("请输入订单编码", exact=True)).to_be_empty()
         return result
 
+    def pagination_prerequisite(self) -> PrerequisiteResult:
+        """Require the order list to expose a second page."""
+        pager = self.page.locator(".ant-pagination:visible")
+        second_page = pager.get_by_text("2", exact=True)
+        return PrerequisiteResult(
+            satisfied=pager.count() == 1 and second_page.count() == 1,
+            reason="订单列表当前不足两页，无法验证翻页链路",
+            expected="分页器包含第 2 页",
+            actual=f"pager={pager.count()}, page_2={second_page.count()}",
+        )
+
+    def verify_order_pagination(
+        self,
+        first_page: WorkbenchListSnapshot,
+    ) -> None:
+        """Navigate to page two and back while validating request identities."""
+        first_code = str(first_page.first_record.get("orderCode") or "")
+        assert first_code, "订单第一页首条缺少编码"
+        pager = self.page.locator(".ant-pagination:visible")
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as second_capture:
+            pager.get_by_text("2", exact=True).click()
+        second = ConsoleWorkbenchPage._parse_list_response(
+            second_capture.value,
+            "订单第二页",
+        )
+        second_request = second_capture.value.request.post_data_json
+        assert isinstance(second_request, dict), "订单第二页请求不是对象"
+        assert second_request.get("pageIndex") == 2, "订单翻页未请求第 2 页"
+        assert second.records, "订单第二页没有记录"
+        second_code = str(second.first_record.get("orderCode") or "")
+        assert second_code and second_code != first_code, "订单第二页仍显示第一页首条"
+        expect(pager.locator(".ant-pagination-item-active")).to_have_text("2")
+        expect(self.page.get_by_text(second_code, exact=True)).to_be_visible()
+
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as first_capture:
+            pager.get_by_text("1", exact=True).click()
+        first_request = first_capture.value.request.post_data_json
+        assert isinstance(first_request, dict), "订单返回第一页请求不是对象"
+        assert first_request.get("pageIndex") == 1, "订单分页未返回第 1 页"
+        expect(pager.locator(".ant-pagination-item-active")).to_have_text("1")
+        expect(self.page.get_by_text(first_code, exact=True)).to_be_visible()
+
     @staticmethod
     def _validate_history(response: Response, order_id: str) -> list[dict]:
         """Require flow history to belong to the selected order."""

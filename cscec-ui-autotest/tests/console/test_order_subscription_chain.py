@@ -7,6 +7,7 @@
 - M2-04 测试订单详情核心信息和流转信息可见
 - M2-05 订单详情流程图可打开并完整渲染
 - M2-06 订单状态筛选和重置请求一致
+- M2-07 订单分页请求与页面身份一致
 """
 
 from __future__ import annotations
@@ -158,6 +159,33 @@ class TestOrderSubscriptionChain:
             order_page.open_console_orders()
             order_page.filter_completed_orders()
             order_page.reset_order_filters()
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.smoke
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m2_07_order_pagination_identity(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M2-07 订单第二页及返回第一页的请求和记录身份一致。"""
+        order_page = OrderMgmtPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M2-07", order_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M2-07",
+            "订单分页身份",
+        ).start()
+        try:
+            first_page = order_page.open_console_orders()
+            require_case_prerequisite(
+                "M2-07",
+                order_page.pagination_prerequisite(),
+            )
+            order_page.verify_order_pagination(first_page)
         finally:
             health.stop()
         health.assert_healthy()

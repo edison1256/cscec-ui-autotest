@@ -551,6 +551,22 @@ cases:
       - /irp-api/irp-portal-console/order/page$
 
   - <<: *conditional_data_defaults
+    case_id: M2-07
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_07_order_pagination_identity
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: second_page
+        expected: 当前订单列表至少包含两页数据
+    owner_note: 仅翻到第二页再返回第一页，不点击任何订单行操作
+    expected_state: [第二页请求 pageIndex=2 且记录身份变化，返回第一页请求 pageIndex=1 并恢复首条身份]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
+
+  - <<: *conditional_data_defaults
     case_id: M3-01
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
     parameter_id: null
