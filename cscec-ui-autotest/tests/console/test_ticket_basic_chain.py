@@ -4,6 +4,7 @@
 - M4-01 固定工单处理人可打开工单列表并查询
 - M4-02 工单详情核心信息可见
 - M4-03 低影响测试工单最小处理后状态同步 (write)
+- M4-04 工单管理动作安全边界
 """
 
 from __future__ import annotations
@@ -70,6 +71,34 @@ class TestTicketBasicChain:
             )
             selected = ticket_page.query_existing_ticket(snapshot)
             ticket_page.inspect_ticket_detail(selected)
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.smoke
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m4_04_ticket_management_action_boundaries(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M4-04 工单管理行只验证动作边界，不触发提醒或处理。"""
+        ticket_page = TicketCenterPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M4-04", ticket_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M4-04",
+            "工单管理动作安全边界",
+        ).start()
+        try:
+            snapshot = ticket_page.open_ticket_management()
+            require_case_prerequisite(
+                "M4-04",
+                ticket_page.sample_prerequisite(snapshot),
+            )
+            selected = ticket_page.query_existing_ticket(snapshot)
+            ticket_page.verify_management_action_boundaries(selected)
         finally:
             health.stop()
         health.assert_healthy()

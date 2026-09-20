@@ -616,6 +616,22 @@ cases:
       - /irp-api/irp-portal-console/work-order/allWorkOrderList$
       - /irp-api/irp-portal-console/work-order/detail[?]
       - /irp-api/irp-portal-console/work-order/processList$
+
+  - <<: *conditional_data_defaults
+    case_id: M4-04
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_04_ticket_management_action_boundaries
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 工单中心下发工单管理菜单
+      - type: existing_ticket
+        expected: 本次列表至少一条包含完整身份字段的现有工单
+    expected_state: [精确工单行查看可用、处理禁用、提醒入口存在且全程不点击提醒]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/work-order/allWorkOrderList$
+    owner_note: 提醒按钮点击即调用写接口且没有确认框，只验证入口存在；严禁点击
     owner_note: 仅点击目标行查看并关闭弹窗，不点击处理、提醒或下载
 
   - <<: *mandatory_defaults

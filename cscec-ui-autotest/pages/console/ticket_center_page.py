@@ -175,6 +175,24 @@ class TicketCenterPage(BasePage):
         expect(dialog).to_have_count(0)
         expect(self.page.get_by_placeholder("请输入工单编号", exact=True)).to_be_visible()
 
+    def verify_management_action_boundaries(
+        self,
+        snapshot: TicketListSnapshot,
+    ) -> None:
+        """Verify safe action availability without triggering ticket writes."""
+        expected = snapshot.first_record
+        row = self._ticket_row(expected.code)
+        expect(row).to_have_count(1)
+        expect(row.get_by_role("button", name="查看", exact=True)).to_be_enabled()
+        expect(row.get_by_role("button", name="处理", exact=True)).to_be_disabled()
+        reminder = row.get_by_role("button", name="提醒", exact=True)
+        expect(reminder).to_have_count(1)
+        expect(reminder).to_be_enabled()
+        logger.info(
+            "[只读边界] 工单 %s 查看可用、处理禁用、提醒未点击",
+            expected.code,
+        )
+
     @classmethod
     def _parse_list_response(cls, response: Response) -> TicketListSnapshot:
         """Validate the ticket-list transport, envelope and required identity."""
