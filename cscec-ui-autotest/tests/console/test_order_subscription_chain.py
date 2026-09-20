@@ -8,6 +8,7 @@
 - M2-05 订单详情流程图可打开并完整渲染
 - M2-06 订单状态筛选和重置请求一致
 - M2-07 订单分页请求与页面身份一致
+- M2-08 订单删除确认边界取消且零写入
 """
 
 from __future__ import annotations
@@ -186,6 +187,33 @@ class TestOrderSubscriptionChain:
                 order_page.pagination_prerequisite(),
             )
             order_page.verify_order_pagination(first_page)
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.smoke
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m2_08_order_delete_confirmation_cancel(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M2-08 订单删除确认边界取消且零写入。"""
+        order_page = OrderMgmtPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M2-08", order_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M2-08",
+            "订单删除确认取消",
+        ).start()
+        try:
+            snapshot = order_page.open_console_orders()
+            require_case_prerequisite(
+                "M2-08",
+                order_page.delete_boundary_prerequisite(snapshot),
+            )
+            order_page.verify_delete_confirmation_cancel(snapshot)
         finally:
             health.stop()
         health.assert_healthy()

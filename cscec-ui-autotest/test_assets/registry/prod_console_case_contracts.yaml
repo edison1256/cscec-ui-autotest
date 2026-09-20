@@ -567,6 +567,22 @@ cases:
       - /irp-api/irp-portal-console/order/page$
 
   - <<: *conditional_data_defaults
+    case_id: M2-08
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_08_order_delete_confirmation_cancel
+    parameter_id: null
+    entry_type: UI
+    max_depth: L3
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: deletable_order
+        expected: 当前页至少一条 operators 包含 delete 的订单
+    owner_note: 仅打开删除确认框并取消，严禁点击最终确定
+    expected_state: [API 允许删除的精确订单打开删除确认框，取消前后无写请求且订单仍可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
+
+  - <<: *conditional_data_defaults
     case_id: M3-01
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
     parameter_id: null

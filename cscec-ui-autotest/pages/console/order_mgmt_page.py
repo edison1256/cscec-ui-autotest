@@ -282,6 +282,61 @@ class OrderMgmtPage(BasePage):
         expect(self.page.get_by_text(first_code, exact=True)).to_be_visible()
 
     @staticmethod
+    def delete_boundary_prerequisite(
+        snapshot: WorkbenchListSnapshot,
+    ) -> PrerequisiteResult:
+        """Require a visible order whose API operators include delete."""
+        candidates = [
+            row for row in snapshot.records if "delete" in (row.get("operators") or [])
+        ]
+        return PrerequisiteResult(
+            satisfied=bool(candidates),
+            reason="订单当前页没有 API 明确允许删除的样本",
+            expected="至少一条 operators 包含 delete 的订单",
+            actual=f"delete_candidates={len(candidates)}",
+        )
+
+    def verify_delete_confirmation_cancel(
+        self,
+        snapshot: WorkbenchListSnapshot,
+    ) -> None:
+        """Open an allowed delete confirmation and cancel without writes."""
+        record = next(
+            row for row in snapshot.records if "delete" in (row.get("operators") or [])
+        )
+        code = str(record.get("orderCode") or "")
+        assert code, "可删除订单缺少编码"
+        row = self.page.locator(".table-row").filter(
+            has=self.page.get_by_text(code, exact=True)
+        )
+        row.get_by_role("button", name="更多", exact=True).hover()
+        dropdown = self.page.locator(".ant-dropdown:visible")
+        expect(dropdown).to_have_count(1)
+        delete_button = dropdown.get_by_role("button", name="删除", exact=True)
+        expect(delete_button).to_be_enabled()
+
+        writes: list[str] = []
+        listener = lambda request: (
+            writes.append(f"{request.method} {request.url}")
+            if request.method not in {"GET", "HEAD", "OPTIONS"}
+            else None
+        )
+        self.page.on("request", listener)
+        try:
+            delete_button.click()
+            confirm = self.page.locator(".ant-modal-confirm:visible").filter(
+                has=self.page.get_by_text("确定删除这条订单记录么", exact=True)
+            )
+            expect(confirm).to_have_count(1)
+            expect(confirm.get_by_role("button", name="确 定")).to_be_enabled()
+            confirm.get_by_role("button", name="取 消").click()
+            expect(confirm).to_be_hidden()
+        finally:
+            self.page.remove_listener("request", listener)
+        assert writes == [], f"删除确认取消前触发了写请求: {writes}"
+        expect(self.page.get_by_text(code, exact=True)).to_be_visible()
+
+    @staticmethod
     def _validate_history(response: Response, order_id: str) -> list[dict]:
         """Require flow history to belong to the selected order."""
         assert response.status == 200, "订单流转接口 HTTP 失败"
