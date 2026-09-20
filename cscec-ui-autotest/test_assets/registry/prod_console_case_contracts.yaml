@@ -535,6 +535,22 @@ cases:
       - /irp-api/irp-portal-console/order/orderDetail[?]
 
   - <<: *conditional_data_defaults
+    case_id: M2-06
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_06_order_status_filter_and_reset
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: completed_order
+        expected: 订阅成功状态至少存在一条可只读查询的订单
+    owner_note: 仅执行状态查询与重置，不点击编辑、更多、终止或其他写操作
+    expected_state: [订阅成功筛选提交 state=8 且返回状态一致，重置后请求和控件均清空]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
+
+  - <<: *conditional_data_defaults
     case_id: M3-01
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
     parameter_id: null

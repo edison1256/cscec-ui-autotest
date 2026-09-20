@@ -38,6 +38,7 @@ class OrderMgmtPage(BasePage):
     ORDER_DRAFT_API = re.compile(
         r"/irp-api/irp-portal-public/order/getOrderDraft[?]"
     )
+    COMPLETED_STATE = 8
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -179,6 +180,58 @@ class OrderMgmtPage(BasePage):
         detail.get_by_role("button", name=re.compile(r"^返\s*回$")).click()
         expect(detail).to_have_count(0)
         expect(self.page.get_by_placeholder("请输入订单编码", exact=True)).to_be_visible()
+
+    def filter_completed_orders(self) -> WorkbenchListSnapshot:
+        """Filter completed orders and prove request, response, and UI agree."""
+        status_item = self.page.locator(".ant-form-item").filter(
+            has=self.page.get_by_text("订单状态", exact=True)
+        )
+        status_item.get_by_role("combobox").click()
+        self.page.get_by_text("订阅成功", exact=True).last.click()
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            self.page.get_by_role("button", name=re.compile(r"^查\s*询$")).click()
+        result = ConsoleWorkbenchPage._parse_list_response(
+            captured.value,
+            "订单状态筛选",
+        )
+        request = captured.value.request.post_data_json
+        assert isinstance(request, dict), "订单状态筛选请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, dict), "订单状态筛选请求缺少 queryfilter"
+        assert query.get("state") == self.COMPLETED_STATE, "订单状态筛选值不正确"
+        assert result.records, "订阅成功筛选没有返回可验证订单"
+        assert all(
+            row.get("state") == self.COMPLETED_STATE for row in result.records
+        ), "订单状态筛选返回了其他状态"
+        expect(status_item.get_by_text("订阅成功", exact=True)).to_be_visible()
+        first_code = str(result.first_record.get("orderCode") or "")
+        assert first_code, "状态筛选首条订单缺少编码"
+        expect(self.page.get_by_text(first_code, exact=True)).to_be_visible()
+        return result
+
+    def reset_order_filters(self) -> WorkbenchListSnapshot:
+        """Reset the query and require an unfiltered list request and UI state."""
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            self.page.get_by_role("button", name=re.compile(r"^重\s*置$")).click()
+        result = ConsoleWorkbenchPage._parse_list_response(captured.value, "订单筛选重置")
+        request = captured.value.request.post_data_json
+        assert isinstance(request, dict), "订单重置请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, dict), "订单重置请求缺少 queryfilter"
+        for field in ("state", "orderCode", "resourceName", "resourceType"):
+            assert not query.get(field), f"订单重置后仍携带 {field}"
+        status_item = self.page.locator(".ant-form-item").filter(
+            has=self.page.get_by_text("订单状态", exact=True)
+        )
+        expect(status_item.get_by_text("请选择", exact=True)).to_be_visible()
+        expect(self.page.get_by_placeholder("请输入订单编码", exact=True)).to_be_empty()
+        return result
 
     @staticmethod
     def _validate_history(response: Response, order_id: str) -> list[dict]:
