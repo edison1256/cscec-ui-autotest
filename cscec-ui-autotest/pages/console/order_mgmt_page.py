@@ -148,6 +148,38 @@ class OrderMgmtPage(BasePage):
         expect(overlay).to_have_count(0)
         expect(self.page.get_by_placeholder("请输入订单编码", exact=True)).to_be_visible()
 
+    def inspect_order_flow_diagram(self, snapshot: WorkbenchListSnapshot) -> None:
+        """Open and validate the selected order's read-only flow diagram."""
+        ConsoleWorkbenchPage(self.page).open_first_detail(
+            snapshot,
+            row_identity_field="orderCode",
+            detail_identity_field="id",
+            required_labels=("基础信息", "订单编码", "资源信息", "审批进度"),
+            detail_api_pattern=r"/order/orderDetail[?]",
+        )
+        detail = self.page.locator(
+            ".ant-drawer:visible, .ant-modal:visible, "
+            ".el-dialog:visible, .el-drawer:visible"
+        )
+        expect(detail).to_have_count(1)
+        flow_button = detail.get_by_role("button", name="流程图", exact=True)
+        expect(flow_button).to_be_enabled()
+        flow_button.click()
+
+        flow_dialog = self.page.get_by_role("dialog").filter(
+            has=self.page.get_by_text("查看流程图", exact=True)
+        )
+        expect(flow_dialog).to_have_count(1)
+        expect(flow_dialog).to_be_visible()
+        for legend in ("已完成", "进行中", "未办理"):
+            expect(flow_dialog.get_by_text(legend, exact=True)).to_be_visible()
+
+        flow_dialog.get_by_role("button", name="Close", exact=True).click()
+        expect(flow_dialog).to_have_count(0)
+        detail.get_by_role("button", name=re.compile(r"^返\s*回$")).click()
+        expect(detail).to_have_count(0)
+        expect(self.page.get_by_placeholder("请输入订单编码", exact=True)).to_be_visible()
+
     @staticmethod
     def _validate_history(response: Response, order_id: str) -> list[dict]:
         """Require flow history to belong to the selected order."""

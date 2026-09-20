@@ -518,6 +518,23 @@ cases:
       - /irp-api/irp-portal-console/order/change/list[?]
 
   - <<: *conditional_data_defaults
+    case_id: M2-05
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_05_order_flow_diagram_visible
+    parameter_id: null
+    entry_type: UI
+    max_depth: L5
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: existing_order
+        expected: 本次列表至少一条可只读查看的订单
+    owner_note: 仅打开并关闭流程图，不审批、撤回、下单或修改订单
+    expected_state: [查询同一订单并打开详情，流程图弹窗及已完成、进行中、未办理图例完整可见]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
+      - /irp-api/irp-portal-console/order/orderDetail[?]
+
+  - <<: *conditional_data_defaults
     case_id: M3-01
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
     parameter_id: null

@@ -5,6 +5,7 @@
 - M2-02 提交固定冒烟资源并生成低影响测试订单 (write)
 - M2-03 订单列表可查询到低影响测试订单
 - M2-04 测试订单详情核心信息和流转信息可见
+- M2-05 订单详情流程图可打开并完整渲染
 """
 
 from __future__ import annotations
@@ -104,6 +105,34 @@ class TestOrderSubscriptionChain:
             )
             selected = order_page.query_existing_order(snapshot)
             order_page.inspect_order_detail(selected)
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.smoke
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m2_05_order_flow_diagram_visible(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M2-05 订单详情流程图可打开并完整渲染。"""
+        order_page = OrderMgmtPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M2-05", order_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M2-05",
+            "订单详情流程图",
+        ).start()
+        try:
+            snapshot = order_page.open_console_orders()
+            require_case_prerequisite(
+                "M2-05",
+                ConsoleWorkbenchPage.detail_prerequisite(snapshot),
+            )
+            selected = order_page.query_existing_order(snapshot)
+            order_page.inspect_order_flow_diagram(selected)
         finally:
             health.stop()
         health.assert_healthy()
