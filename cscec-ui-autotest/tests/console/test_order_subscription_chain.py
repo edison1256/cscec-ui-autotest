@@ -10,6 +10,7 @@
 - M2-07 订单分页请求与页面身份一致
 - M2-08 订单删除确认边界取消且零写入
 - M2-09 订单草稿编辑页只读回显且零写入
+- M2-10 订单评价入口只读回显且零写入
 """
 
 from __future__ import annotations
@@ -241,6 +242,32 @@ class TestOrderSubscriptionChain:
                 order_page.edit_boundary_prerequisite(snapshot),
             )
             order_page.inspect_editable_order_readonly(snapshot)
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m2_10_order_evaluation_readonly_preview(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M2-10 订单评价入口只读回显且零写入。"""
+        order_page = OrderMgmtPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M2-10", order_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M2-10",
+            "订单评价入口只读回显",
+        ).start()
+        try:
+            snapshot = order_page.open_console_orders()
+            require_case_prerequisite(
+                "M2-10",
+                order_page.evaluation_boundary_prerequisite(snapshot),
+            )
+            order_page.inspect_order_evaluation_readonly(snapshot)
         finally:
             health.stop()
         health.assert_healthy()

@@ -599,6 +599,22 @@ cases:
       - /irp-api/irp-portal-console/order/page$
 
   - <<: *conditional_data_defaults
+    case_id: M2-10
+    test_path: tests/console/test_order_subscription_chain.py::TestOrderSubscriptionChain::test_m2_10_order_evaluation_readonly_preview
+    parameter_id: null
+    entry_type: UI
+    max_depth: L4
+    prerequisites:
+      - type: authorized_menu
+        expected: 订单中心下发订单管理菜单
+      - type: evaluable_order
+        expected: 当前页至少一条 operators 包含 evaluate 且对应评价按钮可用的订单
+    owner_note: 仅打开评价界面核对订单和表单结构后关闭，不评分、不填写、不提交
+    expected_state: [API 允许评价的精确订单打开评价界面，订单身份和评价结构可见，关闭后无业务写请求]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/order/page$
+
+  - <<: *conditional_data_defaults
     case_id: M3-01
     test_path: tests/console/test_approval_todo_chain.py::TestApprovalTodoChain::test_m3_01_todo_list_accessible
     parameter_id: null

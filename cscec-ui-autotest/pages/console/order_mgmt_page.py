@@ -418,6 +418,109 @@ class OrderMgmtPage(BasePage):
             and edit_buttons.nth(index).is_enabled()
         ]
 
+    def evaluation_boundary_prerequisite(
+        self,
+        snapshot: WorkbenchListSnapshot,
+    ) -> PrerequisiteResult:
+        """Require API evaluation permission and an enabled menu action."""
+        candidates = self._enabled_more_action_candidates(
+            snapshot,
+            operator="evaluate",
+            action_label="评价",
+        )
+        return PrerequisiteResult(
+            satisfied=bool(candidates),
+            reason="订单当前页没有 API 允许且 UI 评价按钮可用的样本",
+            expected="至少一条 operators 包含 evaluate 且评价按钮可用的订单",
+            actual=f"evaluation_candidates={len(candidates)}",
+        )
+
+    def inspect_order_evaluation_readonly(
+        self,
+        snapshot: WorkbenchListSnapshot,
+    ) -> None:
+        """Open an allowed evaluation surface and close it without writes."""
+        index, record = self._enabled_more_action_candidates(
+            snapshot,
+            operator="evaluate",
+            action_label="评价",
+        )[0]
+        code = str(record.get("orderCode") or "")
+        assert code, "可评价订单缺少编码"
+
+        more_button = self.page.get_by_role(
+            "button",
+            name="更多",
+            exact=True,
+        ).nth(index)
+        more_button.hover()
+        dropdown = self.page.locator(".ant-dropdown:visible")
+        expect(dropdown).to_have_count(1)
+        evaluate_button = dropdown.get_by_role("button", name="评价", exact=True)
+        expect(evaluate_button).to_be_enabled()
+
+        unsafe_requests: list[str] = []
+
+        def record_unsafe_request(request: Any) -> None:
+            method = request.method.upper()
+            write_api = re.search(
+                r"/(?:save|submit|update|delete|create|evaluate)(?:[/?]|$)",
+                urlparse(request.url).path,
+                re.IGNORECASE,
+            )
+            if method in {"PUT", "PATCH", "DELETE"} or (
+                method == "POST" and write_api
+            ):
+                unsafe_requests.append(f"{method} {request.url}")
+
+        self.page.on("request", record_unsafe_request)
+        try:
+            evaluate_button.click()
+            surface = self.page.locator(
+                ".ant-modal:visible, .ant-drawer:visible, "
+                ".el-dialog:visible, .el-drawer:visible"
+            ).filter(has=self.page.get_by_text("评价", exact=False)).first
+            expect(surface).to_be_visible(timeout=settings.NAVIGATION_TIMEOUT)
+            expect(surface.get_by_text(code, exact=True)).to_be_visible()
+            submit = surface.get_by_role(
+                "button",
+                name=re.compile(r"提交|确定|保存"),
+            )
+            expect(submit).to_have_count(1)
+            close = surface.get_by_role(
+                "button",
+                name=re.compile(r"取消|关闭|返回|Close"),
+            ).first
+            expect(close).to_be_enabled()
+            close.click()
+            expect(surface).to_be_hidden()
+        finally:
+            self.page.remove_listener("request", record_unsafe_request)
+        assert unsafe_requests == [], f"评价界面关闭前触发了写接口: {unsafe_requests}"
+        expect(self.page.get_by_text(code, exact=True)).to_be_visible()
+
+    def _enabled_more_action_candidates(
+        self,
+        snapshot: WorkbenchListSnapshot,
+        *,
+        operator: str,
+        action_label: str,
+    ) -> list[tuple[int, Mapping[str, Any]]]:
+        """Match API operators to same-index enabled actions in each More menu."""
+        more_buttons = self.page.get_by_role("button", name="更多", exact=True)
+        limit = min(len(snapshot.records), more_buttons.count())
+        candidates: list[tuple[int, Mapping[str, Any]]] = []
+        for index in range(limit):
+            record = snapshot.records[index]
+            if operator not in (record.get("operators") or []):
+                continue
+            more_buttons.nth(index).hover()
+            dropdown = self.page.locator(".ant-dropdown:visible")
+            action = dropdown.get_by_role("button", name=action_label, exact=True)
+            if dropdown.count() == 1 and action.count() == 1 and action.is_enabled():
+                candidates.append((index, record))
+        return candidates
+
     @staticmethod
     def _validate_history(response: Response, order_id: str) -> list[dict]:
         """Require flow history to belong to the selected order."""
