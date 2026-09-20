@@ -29,6 +29,7 @@ class TicketRecord:
     description: str
     type_code: str
     type_description: str
+    urgency_level: str
     creator_name: str
     assignee_name: str
     created_at: str
@@ -285,6 +286,10 @@ class TicketCenterPage(BasePage):
             has=self.page.get_by_text("工单类型", exact=True)
         )
         expect(type_item.get_by_text("请选择", exact=True)).to_be_visible()
+        urgency_item = self.page.locator(".ant-form-item:visible").filter(
+            has=self.page.get_by_text("紧急度", exact=True)
+        )
+        expect(urgency_item.get_by_text("请选择", exact=True)).to_be_visible()
         expect(self.page.get_by_placeholder("请输入工单编号", exact=True)).to_be_empty()
         return result
 
@@ -293,30 +298,8 @@ class TicketCenterPage(BasePage):
         snapshot: TicketListSnapshot,
     ) -> TicketListSnapshot:
         """Filter by a real ticket type and prove request, response, and UI agree."""
-        type_item = self.page.locator(".ant-form-item:visible").filter(
-            has=self.page.get_by_text("工单类型", exact=True)
-        )
-        expect(type_item).to_have_count(1)
-        type_item.get_by_role("combobox").click()
-        dropdown = self.page.locator(
-            ".ant-select-dropdown:not(.ant-select-dropdown-hidden)"
-        ).last
-        option = dropdown.locator(".ant-select-item-option").first
-        expect(option).to_be_visible()
-        option_text = option.inner_text().strip()
-        assert option_text, "工单类型首个字典选项为空"
-        option.click()
-
-        with self.page.expect_response(
-            lambda response: bool(self.LIST_API.search(response.url)),
-            timeout=settings.NAVIGATION_TIMEOUT,
-        ) as captured:
-            self.page.get_by_role("button", name=re.compile(r"^查\s*询$")).click()
-        result = self._parse_list_response(captured.value)
-        request = captured.value.request.post_data_json
-        assert isinstance(request, dict), "工单类型筛选请求不是对象"
-        query = request.get("queryfilter")
-        assert isinstance(query, dict), "工单类型筛选缺少 queryfilter"
+        type_item, option_text = self._select_first_filter_option("工单类型")
+        result, query = self._query_ticket_list("工单类型筛选")
         selected_query = {key: value for key, value in query.items() if value}
         assert set(selected_query) == {"workOrderType"}, (
             f"工单类型筛选提交了意外条件: {selected_query}"
@@ -334,6 +317,57 @@ class TicketCenterPage(BasePage):
         expect(type_item.get_by_text(option_text, exact=True)).to_be_visible()
         expect(self.page.get_by_text(result.first_record.code, exact=True)).to_be_visible()
         return result
+
+    def filter_by_first_urgency(self) -> TicketListSnapshot:
+        """Filter by the first real urgency option and expose its API contract."""
+        urgency_item, option_text = self._select_first_filter_option("紧急度")
+        result, query = self._query_ticket_list("工单紧急度筛选")
+        selected_query = {key: value for key, value in query.items() if value}
+        assert set(selected_query) == {"urgencyLevel"}, (
+            f"工单紧急度筛选提交了意外条件: {selected_query}"
+        )
+        selected_level = str(selected_query["urgencyLevel"])
+        assert result.records, "工单紧急度筛选没有返回可验证记录"
+        assert all(
+            record.urgency_level == selected_level for record in result.records
+        ), "工单紧急度筛选返回了其他紧急度编码"
+        expect(urgency_item.get_by_text(option_text, exact=True)).to_be_visible()
+        expect(self.page.get_by_text(result.first_record.code, exact=True)).to_be_visible()
+        return result
+
+    def _select_first_filter_option(self, label: str):
+        """Select the first visible option for one named ticket filter."""
+        item = self.page.locator(".ant-form-item:visible").filter(
+            has=self.page.get_by_text(label, exact=True)
+        )
+        expect(item).to_have_count(1)
+        item.get_by_role("combobox").click()
+        dropdown = self.page.locator(
+            ".ant-select-dropdown:not(.ant-select-dropdown-hidden)"
+        ).last
+        option = dropdown.locator(".ant-select-item-option").first
+        expect(option).to_be_visible()
+        option_text = option.inner_text().strip()
+        assert option_text, f"{label} 首个字典选项为空"
+        option.click()
+        return item, option_text
+
+    def _query_ticket_list(
+        self,
+        label: str,
+    ) -> tuple[TicketListSnapshot, Mapping[str, Any]]:
+        """Submit the current filters and return validated records and query."""
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            self.page.get_by_role("button", name=re.compile(r"^查\s*询$")).click()
+        result = self._parse_list_response(captured.value)
+        request = captured.value.request.post_data_json
+        assert isinstance(request, dict), f"{label}请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, Mapping), f"{label}缺少 queryfilter"
+        return result, query
 
     @classmethod
     def _parse_list_response(cls, response: Response) -> TicketListSnapshot:
@@ -367,6 +401,7 @@ class TicketCenterPage(BasePage):
             "description": raw.get("workOrderDescription"),
             "type_code": raw.get("workOrderType"),
             "type_description": raw.get("workOrderTypeDesc"),
+            "urgency_level": raw.get("urgencyLevel"),
             "creator_name": raw.get("creatorName"),
             "assignee_name": raw.get("assigneeName"),
             "created_at": raw.get("insertDt"),

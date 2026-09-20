@@ -15,10 +15,10 @@ def test_contract_registry_has_reviewed_classification_counts() -> None:
     registry = CaseContractRegistry.load()
     counts = Counter(contract.classification for contract in registry.contracts)
 
-    assert len(registry.contracts) == 110
+    assert len(registry.contracts) == 111
     assert counts == {
         CaseClassification.MANDATORY: 44,
-        CaseClassification.CONDITIONAL: 66,
+        CaseClassification.CONDITIONAL: 67,
     }
 
 

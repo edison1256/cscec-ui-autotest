@@ -775,6 +775,22 @@ cases:
     expected_state: [动态类型选项、查询请求类型编码、返回记录类型及重置后的空条件一致]
     critical_api_patterns:
       - /irp-api/irp-portal-console/work-order/allWorkOrderList$
+
+  - <<: *conditional_data_defaults
+    case_id: M4-08
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_08_ticket_urgency_filter_and_reset
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 工单中心下发工单管理菜单
+      - type: ticket_sample
+        expected: 工单列表和紧急度字典均有可验证数据
+    owner_note: 仅执行动态紧急度查询与重置，不点击查看、处理或提醒
+    expected_state: [动态紧急度选项、查询请求编码、返回记录紧急度及重置后的空条件一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/work-order/allWorkOrderList$
     owner_note: 仅执行状态查询与重置，不点击处理或提醒
     owner_note: 仅点击目标行查看并关闭弹窗，不点击处理、提醒或下载
 
