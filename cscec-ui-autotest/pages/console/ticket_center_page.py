@@ -27,6 +27,7 @@ class TicketRecord:
     code: str
     title: str
     description: str
+    type_code: str
     type_description: str
     creator_name: str
     assignee_name: str
@@ -280,7 +281,58 @@ class TicketCenterPage(BasePage):
             has=self.page.get_by_text("状态", exact=True)
         )
         expect(status_item.get_by_text("请选择", exact=True)).to_be_visible()
+        type_item = self.page.locator(".ant-form-item:visible").filter(
+            has=self.page.get_by_text("工单类型", exact=True)
+        )
+        expect(type_item.get_by_text("请选择", exact=True)).to_be_visible()
         expect(self.page.get_by_placeholder("请输入工单编号", exact=True)).to_be_empty()
+        return result
+
+    def filter_by_existing_ticket_type(
+        self,
+        snapshot: TicketListSnapshot,
+    ) -> TicketListSnapshot:
+        """Filter by a real ticket type and prove request, response, and UI agree."""
+        type_item = self.page.locator(".ant-form-item:visible").filter(
+            has=self.page.get_by_text("工单类型", exact=True)
+        )
+        expect(type_item).to_have_count(1)
+        type_item.get_by_role("combobox").click()
+        dropdown = self.page.locator(
+            ".ant-select-dropdown:not(.ant-select-dropdown-hidden)"
+        ).last
+        option = dropdown.locator(".ant-select-item-option").first
+        expect(option).to_be_visible()
+        option_text = option.inner_text().strip()
+        assert option_text, "工单类型首个字典选项为空"
+        option.click()
+
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            self.page.get_by_role("button", name=re.compile(r"^查\s*询$")).click()
+        result = self._parse_list_response(captured.value)
+        request = captured.value.request.post_data_json
+        assert isinstance(request, dict), "工单类型筛选请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, dict), "工单类型筛选缺少 queryfilter"
+        selected_query = {key: value for key, value in query.items() if value}
+        assert set(selected_query) == {"workOrderType"}, (
+            f"工单类型筛选提交了意外条件: {selected_query}"
+        )
+        selected_type = str(selected_query["workOrderType"])
+        assert result.records, "工单类型筛选没有返回可验证记录"
+        assert all(record.type_code == selected_type for record in result.records), (
+            "工单类型筛选返回了其他类型编码"
+        )
+        expected_cell_text = re.sub(r"工单$", "", option_text)
+        rows = self.page.locator(".table-row").filter(
+            has=self.page.get_by_text(expected_cell_text, exact=True)
+        )
+        assert rows.count() >= len(result.records), "工单类型筛选返回了其他类型"
+        expect(type_item.get_by_text(option_text, exact=True)).to_be_visible()
+        expect(self.page.get_by_text(result.first_record.code, exact=True)).to_be_visible()
         return result
 
     @classmethod
@@ -313,6 +365,7 @@ class TicketCenterPage(BasePage):
             "code": raw.get("workOrderCode"),
             "title": raw.get("title"),
             "description": raw.get("workOrderDescription"),
+            "type_code": raw.get("workOrderType"),
             "type_description": raw.get("workOrderTypeDesc"),
             "creator_name": raw.get("creatorName"),
             "assignee_name": raw.get("assigneeName"),

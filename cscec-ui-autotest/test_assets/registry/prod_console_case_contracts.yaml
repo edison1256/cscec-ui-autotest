@@ -759,6 +759,22 @@ cases:
     expected_state: [待处理筛选提交 orderStatus=1 且返回状态一致，重置后请求和控件均清空]
     critical_api_patterns:
       - /irp-api/irp-portal-console/work-order/allWorkOrderList$
+
+  - <<: *conditional_data_defaults
+    case_id: M4-07
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_07_ticket_type_filter_and_reset
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 工单中心下发工单管理菜单
+      - type: ticket_sample
+        expected: 当前页至少一条包含类型编码和类型描述的工单
+    owner_note: 仅执行动态工单类型查询与重置，不点击查看、处理或提醒
+    expected_state: [动态类型选项、查询请求类型编码、返回记录类型及重置后的空条件一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/work-order/allWorkOrderList$
     owner_note: 仅执行状态查询与重置，不点击处理或提醒
     owner_note: 仅点击目标行查看并关闭弹窗，不点击处理、提醒或下载
 

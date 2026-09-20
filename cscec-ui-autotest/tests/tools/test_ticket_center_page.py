@@ -46,6 +46,7 @@ def ticket_raw(**overrides: Any) -> dict[str, Any]:
         "workOrderCode": "WO-1",
         "title": "测试工单",
         "workOrderDescription": "测试描述",
+        "workOrderType": 1,
         "workOrderTypeDesc": "咨询",
         "creatorName": "创建人",
         "assigneeName": "处理人",
