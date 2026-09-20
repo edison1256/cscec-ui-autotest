@@ -6,6 +6,7 @@
 - M4-03 低影响测试工单最小处理后状态同步 (write)
 - M4-04 工单管理动作安全边界
 - M4-05 工单分页请求与页面身份一致
+- M4-06 工单待处理筛选和重置请求一致
 """
 
 from __future__ import annotations
@@ -127,6 +128,30 @@ class TestTicketBasicChain:
                 ticket_page.pagination_prerequisite(first_page),
             )
             ticket_page.verify_ticket_pagination(first_page)
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.smoke
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m4_06_ticket_status_filter_and_reset(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M4-06 工单待处理筛选和重置请求一致。"""
+        ticket_page = TicketCenterPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M4-06", ticket_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M4-06",
+            "工单状态筛选和重置",
+        ).start()
+        try:
+            ticket_page.open_ticket_management()
+            ticket_page.filter_pending_tickets()
+            ticket_page.reset_ticket_filters()
         finally:
             health.stop()
         health.assert_healthy()

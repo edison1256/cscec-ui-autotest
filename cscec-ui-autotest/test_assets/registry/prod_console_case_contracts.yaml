@@ -680,6 +680,22 @@ cases:
     critical_api_patterns:
       - /irp-api/irp-portal-console/work-order/allWorkOrderList$
     owner_note: 仅翻到第二页再返回第一页，不点击查看、处理或提醒
+
+  - <<: *conditional_data_defaults
+    case_id: M4-06
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_06_ticket_status_filter_and_reset
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 工单中心下发工单管理菜单
+      - type: pending_ticket
+        expected: 待处理状态至少存在一条可只读查询的工单
+    expected_state: [待处理筛选提交 orderStatus=1 且返回状态一致，重置后请求和控件均清空]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/work-order/allWorkOrderList$
+    owner_note: 仅执行状态查询与重置，不点击处理或提醒
     owner_note: 仅点击目标行查看并关闭弹窗，不点击处理、提醒或下载
 
   - <<: *mandatory_defaults

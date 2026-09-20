@@ -62,6 +62,7 @@ class TicketCenterPage(BasePage):
     PROCESS_API = re.compile(
         r"/irp-api/irp-portal-console/work-order/processList$"
     )
+    PENDING_STATUS = 1
 
     def __init__(self, page: Page) -> None:
         super().__init__(page)
@@ -232,6 +233,55 @@ class TicketCenterPage(BasePage):
         assert first_request.get("pageIndex") == 1, "工单分页未返回第 1 页"
         expect(pager.locator(".ant-pagination-item-active")).to_have_text("1")
         expect(self.page.get_by_text(first_code, exact=True)).to_be_visible()
+
+    def filter_pending_tickets(self) -> TicketListSnapshot:
+        """Filter pending tickets and prove request, response, and UI agree."""
+        status_item = self.page.locator(".ant-form-item:visible").filter(
+            has=self.page.get_by_text("状态", exact=True)
+        )
+        status_item.get_by_role("combobox").click()
+        dropdown = self.page.locator(
+            ".ant-select-dropdown:not(.ant-select-dropdown-hidden)"
+        ).last
+        dropdown.get_by_text("待处理", exact=True).click()
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            self.page.get_by_role("button", name=re.compile(r"^查\s*询$")).click()
+        result = self._parse_list_response(captured.value)
+        request = captured.value.request.post_data_json
+        assert isinstance(request, dict), "工单状态筛选请求不是对象"
+        query = request.get("queryfilter")
+        assert isinstance(query, dict), "工单状态筛选缺少 queryfilter"
+        assert query.get("orderStatus") == self.PENDING_STATUS, "工单状态筛选值不正确"
+        payload = captured.value.json()
+        records = payload["data"]["records"]
+        assert records, "待处理筛选没有返回可验证工单"
+        assert all(
+            row.get("workOrderStatus") == self.PENDING_STATUS for row in records
+        ), "工单状态筛选返回了其他状态"
+        expect(status_item.get_by_text("待处理", exact=True)).to_be_visible()
+        expect(self.page.get_by_text(result.first_record.code, exact=True)).to_be_visible()
+        return result
+
+    def reset_ticket_filters(self) -> TicketListSnapshot:
+        """Reset ticket filters and require an empty query and control state."""
+        with self.page.expect_response(
+            lambda response: bool(self.LIST_API.search(response.url)),
+            timeout=settings.NAVIGATION_TIMEOUT,
+        ) as captured:
+            self.page.get_by_role("button", name=re.compile(r"^重\s*置$")).click()
+        result = self._parse_list_response(captured.value)
+        request = captured.value.request.post_data_json
+        assert isinstance(request, dict), "工单重置请求不是对象"
+        assert request.get("queryfilter") == {}, "工单重置后查询条件未清空"
+        status_item = self.page.locator(".ant-form-item:visible").filter(
+            has=self.page.get_by_text("状态", exact=True)
+        )
+        expect(status_item.get_by_text("请选择", exact=True)).to_be_visible()
+        expect(self.page.get_by_placeholder("请输入工单编号", exact=True)).to_be_empty()
+        return result
 
     @classmethod
     def _parse_list_response(cls, response: Response) -> TicketListSnapshot:
