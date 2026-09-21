@@ -109,15 +109,14 @@ git -C "$PROJECT_DIR" push github master
 
 ## 4. 生产上线当天必测走查套件执行 (Release Day Walkthrough)
 
-每次新版本部署上线后，必须执行全量 49 条走查套件：
+每次新版本部署上线后，必须执行当前全量生产只读走查套件。套件数量会随稳定用例晋级而增长，当前基线为 115 条：
 
 ```powershell
 # 1. 刷新生产登录态 (如需)
 python run_tests.py --env prod --refresh-auth -p tests/login/test_login.py
 
-# 2. 一键执行 PC + 移动端 49 条必测走查套件
+# 2. 一键执行 PC + 移动端 115 条必测走查套件
 python run_tests.py --env prod
 ```
 
 详细规范请查阅：[`docs/prod-release-mandatory-walkthrough-suite.md`](prod-release-mandatory-walkthrough-suite.md)
-

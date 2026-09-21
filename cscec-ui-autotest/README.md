@@ -2,6 +2,18 @@
 
 基于 `pytest`、`pytest-playwright` 和 Page Object 的 UI 自动化工程。当前阶段只迁移和稳定现有登录、控制台、文档中心、运维巡检用例，不新增业务场景。
 
+## 新人入口
+
+第一次接触工程时，请先阅读 [快速开始与失败排查](docs/getting-started-and-troubleshooting.md)。文档包含从零安装、环境配置、首次登录、常用运行方式、报告读取、失败分类和生产安全边界。
+
+只想先确认本机环境和用例是否完整，可以在项目根目录执行：
+
+```powershell
+.\.venv\Scripts\python.exe run_tests.py --env uat --dry-run
+```
+
+该命令只收集用例，不访问业务页面，也不会写入业务数据。
+
 ## 工程结构
 
 ```text
@@ -32,11 +44,11 @@ cscec-ui-autotest/
 
 ```dotenv
 ENV=uat
-USERNAME=20431644
-PASSWORD=Infoshare1!
-UAT_PASSWORD=Infoshare1!
-PRE_PASSWORD=Infoshare1!
-PROD_PASSWORD=Infoshare1!!
+USERNAME=<账号>
+PASSWORD=<兼容兜底密码，可留空>
+UAT_PASSWORD=<UAT 密码>
+PRE_PASSWORD=<PRE 密码>
+PROD_PASSWORD=<PROD 密码>
 HEADLESS=true
 BROWSER_CHANNEL=chrome
 ```
@@ -45,9 +57,9 @@ BROWSER_CHANNEL=chrome
 
 | ENV | 使用密码 |
 | --- | --- |
-| `uat` | `UAT_PASSWORD`，当前为 `Infoshare1!` |
-| `pre` | `PRE_PASSWORD`，当前为 `Infoshare1!` |
-| `prod` | `PROD_PASSWORD`，当前为 `Infoshare1!!` |
+| `uat` | `UAT_PASSWORD` |
+| `pre` | `PRE_PASSWORD` |
+| `prod` | `PROD_PASSWORD` |
 
 `PASSWORD` 只作为兜底兼容配置，不作为优先密码来源。
 
@@ -75,7 +87,7 @@ python run_tests.py --env uat --refresh-auth -m smoke
 
 - `python run_tests.py --env prod` 默认只跑 `smoke and readonly`。
 - `python run_tests.py --env prod --dry-run` 只收集 `smoke and readonly`。
-- `python run_tests.py --env prod --prod-suite mandatory` 运行当前 7 条控制台严格发布门禁。
+- `python run_tests.py --env prod --prod-suite mandatory` 运行当前 44 条控制台严格发布门禁。
 - `python run_tests.py --env prod --prod-suite conditional` 当前运行 69 条控制台条件用例；前置条件不满足时单独统计 `NOT_APPLICABLE`。
 - `--prod-suite probe/controlled-write` 分别选择探查和受控写入责任套件；迁移完成前可能尚未收集全部契约用例。
 - 如果显式传入 `-m`、`-p` 或 `-k`，按用户指定执行，不额外阻断写操作。
@@ -162,7 +174,7 @@ self.antd.click_save_button()
 资产登记文件：
 
 - `test_assets/registry/ui_case_assets.yaml`：当前已自动化、候选、待稳定和写入类资产。
-- `test_assets/registry/prod_console_case_contracts.yaml`：49 条生产控制台 Case 的执行责任、入口、深度和证据契约。
+- `test_assets/registry/prod_console_case_contracts.yaml`：113 条生产控制台 Case 的执行责任、入口、深度和证据契约。
 - `test_assets/incoming/`：新需求黑盒用例转换出的候选清单。
 - `test_assets/schema/ui-case-asset.schema.json`：资产字段约束。
 
