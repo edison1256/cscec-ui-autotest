@@ -9,6 +9,8 @@
 - M4-06 工单待处理筛选和重置请求一致
 - M4-07 工单类型筛选和重置请求一致
 - M4-08 工单紧急度筛选和重置请求一致
+- M4-09 工单标题或描述筛选和重置请求一致
+- M4-10 工单发起时间筛选和重置请求一致
 """
 
 from __future__ import annotations
@@ -209,6 +211,62 @@ class TestTicketBasicChain:
                 ticket_page.sample_prerequisite(snapshot),
             )
             ticket_page.filter_by_first_urgency()
+            ticket_page.reset_ticket_filters()
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.smoke
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m4_09_ticket_description_filter_and_reset(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M4-09 工单标题或描述筛选和重置请求一致。"""
+        ticket_page = TicketCenterPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M4-09", ticket_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M4-09",
+            "工单标题或描述筛选和重置",
+        ).start()
+        try:
+            snapshot = ticket_page.open_ticket_management()
+            require_case_prerequisite(
+                "M4-09",
+                ticket_page.sample_prerequisite(snapshot),
+            )
+            ticket_page.filter_by_existing_title_or_description(snapshot)
+            ticket_page.reset_ticket_filters()
+        finally:
+            health.stop()
+        health.assert_healthy()
+
+    @pytest.mark.smoke
+    @pytest.mark.readonly
+    @pytest.mark.prod_conditional
+    def test_m4_10_ticket_creation_day_filter_and_reset(
+        self,
+        logged_in_page,
+        require_case_prerequisite,
+    ) -> None:
+        """M4-10 工单发起时间筛选和重置请求一致。"""
+        ticket_page = TicketCenterPage(logged_in_page).prepare_console_menu()
+        require_case_prerequisite("M4-10", ticket_page.menu_prerequisite())
+        health = BrowserHealthMonitor.for_case(
+            logged_in_page,
+            "M4-10",
+            "工单发起时间筛选和重置",
+        ).start()
+        try:
+            snapshot = ticket_page.open_ticket_management()
+            require_case_prerequisite(
+                "M4-10",
+                ticket_page.sample_prerequisite(snapshot),
+            )
+            ticket_page.filter_by_existing_creation_day(snapshot)
             ticket_page.reset_ticket_filters()
         finally:
             health.stop()

@@ -791,8 +791,38 @@ cases:
     expected_state: [动态紧急度选项、查询请求编码、返回记录紧急度及重置后的空条件一致]
     critical_api_patterns:
       - /irp-api/irp-portal-console/work-order/allWorkOrderList$
-    owner_note: 仅执行状态查询与重置，不点击处理或提醒
-    owner_note: 仅点击目标行查看并关闭弹窗，不点击处理、提醒或下载
+
+  - <<: *conditional_data_defaults
+    case_id: M4-09
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_09_ticket_description_filter_and_reset
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 工单中心下发工单管理菜单
+      - type: ticket_sample
+        expected: 工单列表存在标题完整且可用于只读查询的记录
+    expected_state: [标题或描述查询字段、返回记录匹配关系及重置后的空条件一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/work-order/allWorkOrderList$
+    owner_note: 仅使用现有工单标题执行查询与重置，不点击查看、处理或提醒
+
+  - <<: *conditional_data_defaults
+    case_id: M4-10
+    test_path: tests/console/test_ticket_basic_chain.py::TestTicketBasicChain::test_m4_10_ticket_creation_day_filter_and_reset
+    parameter_id: null
+    entry_type: UI
+    max_depth: L2
+    prerequisites:
+      - type: authorized_menu
+        expected: 工单中心下发工单管理菜单
+      - type: ticket_sample
+        expected: 工单列表存在创建时间完整且日期可在时间控件中选择的记录
+    expected_state: [发起时间边界、查询请求字段、返回记录日期及重置后的空条件一致]
+    critical_api_patterns:
+      - /irp-api/irp-portal-console/work-order/allWorkOrderList$
+    owner_note: 仅使用现有工单创建日期执行同日查询与重置，不点击查看、处理或提醒
 
   - <<: *mandatory_defaults
     case_id: C-P0-CONSOLE-014

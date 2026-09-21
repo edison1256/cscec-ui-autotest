@@ -291,6 +291,11 @@ class TicketCenterPage(BasePage):
         )
         expect(urgency_item.get_by_text("请选择", exact=True)).to_be_visible()
         expect(self.page.get_by_placeholder("请输入工单编号", exact=True)).to_be_empty()
+        expect(
+            self.page.get_by_placeholder("请输入工单标题或描述", exact=True)
+        ).to_be_empty()
+        expect(self.page.get_by_placeholder("开始时间", exact=True)).to_be_empty()
+        expect(self.page.get_by_placeholder("结束时间", exact=True)).to_be_empty()
         return result
 
     def filter_by_existing_ticket_type(
@@ -334,6 +339,81 @@ class TicketCenterPage(BasePage):
         expect(urgency_item.get_by_text(option_text, exact=True)).to_be_visible()
         expect(self.page.get_by_text(result.first_record.code, exact=True)).to_be_visible()
         return result
+
+    def filter_by_existing_title_or_description(
+        self,
+        snapshot: TicketListSnapshot,
+    ) -> TicketListSnapshot:
+        """Search by a real title and prove every returned ticket matches it."""
+        keyword = snapshot.first_record.title
+        self.page.get_by_placeholder(
+            "请输入工单标题或描述", exact=True
+        ).fill(keyword)
+        result, query = self._query_ticket_list("工单标题或描述筛选")
+        self._validate_description_filter(query, result, keyword)
+        expect(
+            self.page.get_by_placeholder("请输入工单标题或描述", exact=True)
+        ).to_have_value(keyword)
+        expect(self.page.get_by_text(result.first_record.code, exact=True)).to_be_visible()
+        return result
+
+    def filter_by_existing_creation_day(
+        self,
+        snapshot: TicketListSnapshot,
+    ) -> TicketListSnapshot:
+        """Filter by a real ticket's creation day and prove the date boundary."""
+        day = snapshot.first_record.created_at[:10]
+        start = self.page.get_by_placeholder("开始时间", exact=True)
+        end = self.page.get_by_placeholder("结束时间", exact=True)
+        start.click()
+        day_cell = self.page.locator(f'td[title="{day}"]')
+        expect(day_cell).to_have_count(1)
+        day_cell.click()
+        self.page.locator(f'td[title="{day}"]').click()
+
+        result, query = self._query_ticket_list("工单发起时间筛选")
+        self._validate_creation_day_filter(query, result, day)
+        expect(start).to_have_value(day)
+        expect(end).to_have_value(day)
+        expect(self.page.get_by_text(result.first_record.code, exact=True)).to_be_visible()
+        return result
+
+    @staticmethod
+    def _validate_description_filter(
+        query: Mapping[str, Any],
+        result: TicketListSnapshot,
+        keyword: str,
+    ) -> None:
+        """Require an exact description query and matching result records."""
+        selected_query = {key: value for key, value in query.items() if value}
+        assert selected_query == {"description": keyword}, (
+            f"工单标题或描述筛选提交了意外条件: {selected_query}"
+        )
+        assert result.records, "工单标题或描述筛选没有返回可验证记录"
+        assert all(
+            keyword in record.title or keyword in record.description
+            for record in result.records
+        ), "工单标题或描述筛选返回了不匹配的记录"
+
+    @staticmethod
+    def _validate_creation_day_filter(
+        query: Mapping[str, Any],
+        result: TicketListSnapshot,
+        day: str,
+    ) -> None:
+        """Require exact day boundaries and records inside the selected day."""
+        selected_query = {key: value for key, value in query.items() if value}
+        expected_query = {
+            "insertDtStart": f"{day} 00:00:00",
+            "insertDtEnd": f"{day} 23:59:59",
+        }
+        assert selected_query == expected_query, (
+            f"工单发起时间筛选提交了意外条件: {selected_query}"
+        )
+        assert result.records, "工单发起时间筛选没有返回可验证记录"
+        assert all(record.created_at.startswith(day) for record in result.records), (
+            "工单发起时间筛选返回了日期范围外的记录"
+        )
 
     def _select_first_filter_option(self, label: str):
         """Select the first visible option for one named ticket filter."""

@@ -23,10 +23,10 @@ from core.execution_contract import (  # noqa: E402
 )
 
 
-EXPECTED_TOTAL = 111
+EXPECTED_TOTAL = 113
 EXPECTED_COUNTS = {
     CaseClassification.MANDATORY: 44,
-    CaseClassification.CONDITIONAL: 67,
+    CaseClassification.CONDITIONAL: 69,
     CaseClassification.PROBE: 0,
     CaseClassification.CONTROLLED_WRITE: 0,
 }
@@ -80,6 +80,8 @@ MIGRATED_CONDITIONAL_IDS = {
     "M4-06",
     "M4-07",
     "M4-08",
+    "M4-09",
+    "M4-10",
     "PERM-LOGIN-001",
     "PERM-LOGIN-002",
     "PERM-ROLE-001",

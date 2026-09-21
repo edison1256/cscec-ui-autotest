@@ -93,6 +93,70 @@ def test_ticket_record_requires_identity_fields() -> None:
 @pytest.mark.parametrize(
     "query,records,valid",
     [
+        ({"description": "测试工单"}, [ticket_record()], True),
+        ({}, [ticket_record()], False),
+        ({"description": "测试工单", "orderStatus": 1}, [ticket_record()], False),
+        ({"description": "测试工单"}, [], False),
+        ({"description": "测试工单"}, [TicketCenterPage._parse_ticket_record(ticket_raw(title="其他", workOrderDescription="其他"))], False),
+    ],
+)
+def test_ticket_description_filter_contract(
+    query: dict[str, Any],
+    records: list[TicketRecord],
+    valid: bool,
+) -> None:
+    """Only an exact keyword query with matching records may pass."""
+    snapshot = TicketListSnapshot(tuple(records), len(records))
+    if valid:
+        TicketCenterPage._validate_description_filter(query, snapshot, "测试工单")
+    else:
+        with pytest.raises(AssertionError):
+            TicketCenterPage._validate_description_filter(query, snapshot, "测试工单")
+
+
+@pytest.mark.parametrize(
+    "query,records,valid",
+    [
+        (
+            {"insertDtStart": "2026-09-16 00:00:00", "insertDtEnd": "2026-09-16 23:59:59"},
+            [ticket_record()],
+            True,
+        ),
+        ({"insertDtStart": "2026-09-16 00:00:00"}, [ticket_record()], False),
+        (
+            {"insertDtStart": "2026-09-16 00:00:00", "insertDtEnd": "2026-09-17 23:59:59"},
+            [ticket_record()],
+            False,
+        ),
+        (
+            {"insertDtStart": "2026-09-16 00:00:00", "insertDtEnd": "2026-09-16 23:59:59"},
+            [],
+            False,
+        ),
+        (
+            {"insertDtStart": "2026-09-16 00:00:00", "insertDtEnd": "2026-09-16 23:59:59"},
+            [TicketCenterPage._parse_ticket_record(ticket_raw(insertDt="2026-09-17 10:00:00"))],
+            False,
+        ),
+    ],
+)
+def test_ticket_creation_day_filter_contract(
+    query: dict[str, Any],
+    records: list[TicketRecord],
+    valid: bool,
+) -> None:
+    """Only exact same-day boundaries with in-range records may pass."""
+    snapshot = TicketListSnapshot(tuple(records), len(records))
+    if valid:
+        TicketCenterPage._validate_creation_day_filter(query, snapshot, "2026-09-16")
+    else:
+        with pytest.raises(AssertionError):
+            TicketCenterPage._validate_creation_day_filter(query, snapshot, "2026-09-16")
+
+
+@pytest.mark.parametrize(
+    "query,records,valid",
+    [
         ({"workOrderCode": "WO-1"}, [ticket_record()], True),
         ({}, [ticket_record()], False),
         ({"workOrderCode": "WO-1"}, [], False),
