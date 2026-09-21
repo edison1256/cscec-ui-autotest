@@ -3585,8 +3585,8 @@ assets:
   - asset_id: UI-PROD-BATCH-G-OPS-CAPACITY-001
     module: 运维监控
     title: 容量指标页面只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-CAPACITY-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
@@ -3597,8 +3597,8 @@ assets:
   - asset_id: UI-PROD-BATCH-G-OPS-PERFORMANCE-001
     module: 运维监控
     title: 性能指标查询页面只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-PERFORMANCE-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
@@ -3609,8 +3609,8 @@ assets:
   - asset_id: UI-PROD-BATCH-G-OPS-POLLING-001
     module: 运维监控
     title: 运维巡检页面只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPS-POLLING-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operations_monitoring_page.py, pages/console/console_menu_page.py]
@@ -3621,8 +3621,8 @@ assets:
   - asset_id: UI-PROD-BATCH-G-OPERATION-KANBAN-001
     module: 运营管理
     title: 运营看板页面只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-KANBAN-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
@@ -3633,8 +3633,8 @@ assets:
   - asset_id: UI-PROD-BATCH-G-OPERATION-INSIGHT-001
     module: 运营管理
     title: 效能洞察页面只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-INSIGHT-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
@@ -3645,8 +3645,8 @@ assets:
   - asset_id: UI-PROD-BATCH-G-OPERATION-DASHBOARD-001
     module: 运营管理
     title: 应用看板页面只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-DASHBOARD-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
@@ -3657,8 +3657,8 @@ assets:
   - asset_id: UI-PROD-BATCH-G-OPERATION-MESSAGE-001
     module: 运营管理
     title: 消息推送页面只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch G, manual_case_id: OPERATION-MESSAGE-001}
     test_path: tests/console/test_console_operations_deep_readonly.py::TestConsoleOperationsDeepReadonly::test_operations_page_shell
     page_objects: [pages/console/operation_management_page.py, pages/console/console_menu_page.py]
@@ -3669,8 +3669,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H1-RESOURCE-APP-001
     module: 资源管理
     title: 应用管理列表与详情只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-APP-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
@@ -3681,8 +3681,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H1-RESOURCE-CLOUD-001
     module: 资源管理
     title: 云产品管理列表与查看弹窗只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-CLOUD-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
@@ -3693,8 +3693,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H1-RESOURCE-API-001
     module: 资源管理
     title: API管理应用选择区只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-API-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
@@ -3705,8 +3705,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H1-RESOURCE-COMPONENT-001
     module: 资源管理
     title: 组件管理页面外壳只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H1, manual_case_id: RESOURCE-COMPONENT-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
@@ -3717,8 +3717,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H2-RESOURCE-DATA-ASSET-001
     module: 资源管理
     title: 数据资产管理列表与详情只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-DATA-ASSET-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
@@ -3729,8 +3729,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H2-RESOURCE-SOLUTION-001
     module: 资源管理
     title: 解决方案管理列表与详情只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-SOLUTION-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
@@ -3741,8 +3741,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H2-RESOURCE-HARDWARE-001
     module: 资源管理
     title: 硬件管理页面外壳只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H2, manual_case_id: RESOURCE-HARDWARE-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_resource_catalog_leaf
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
@@ -3753,8 +3753,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H3-RESOURCE-APP-CONFIRM-001
     module: 资源管理
     title: 生产专用应用下架确认边界只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H3, manual_case_id: RESOURCE-APP-CONFIRM-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_prod_dedicated_sample_confirmation_guard
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
@@ -3765,8 +3765,8 @@ assets:
   - asset_id: UI-PROD-BATCH-H3-RESOURCE-CLOUD-CONFIRM-001
     module: 资源管理
     title: 生产专用云产品删除确认边界只读探查候选
-    lifecycle: candidate
-    automation_status: needs_stabilization
+    lifecycle: prod_regression
+    automation_status: automated
     source: {source_type: production_probe, requirement: 生产交互层级矩阵 Batch H3, manual_case_id: RESOURCE-CLOUD-CONFIRM-001}
     test_path: tests/console/test_resource_catalog_management_readonly.py::TestResourceCatalogManagementReadonly::test_prod_dedicated_sample_confirmation_guard
     page_objects: [pages/console/resource_catalog_management_page.py, pages/console/console_menu_page.py]
