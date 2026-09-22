@@ -84,6 +84,8 @@ Examples:
     parser.add_argument("--headed", dest="headless", action="store_false", help="Run browser headed")
     parser.set_defaults(headless=None)
     parser.add_argument("--report", action="store_true", help="Generate Allure report after a passing run")
+    parser.add_argument("--html-path", help="Write an additional self-contained HTML report to this path")
+    parser.add_argument("--allure-dir", help="Write Allure result files to this directory")
     parser.add_argument(
         "--keep-allure-results",
         action="store_true",
@@ -99,6 +101,12 @@ Examples:
     )
     parser.add_argument("--dry-run", action="store_true", help="Collect tests without executing them")
     parser.add_argument("--refresh-auth", action="store_true", help="Force login and rewrite auth_states/<env>.json")
+    parser.add_argument(
+        "--pytest-args",
+        nargs=argparse.REMAINDER,
+        default=[],
+        help="Arguments after this flag are passed directly to pytest",
+    )
 
     args = parser.parse_args()
 
@@ -140,10 +148,15 @@ Examples:
         cmd.extend(["--reruns", str(args.reruns), "--reruns-delay", "3"])
     if args.no_html:
         cmd.extend(["--no-header", "--tb=short"])
+    if args.html_path:
+        cmd.extend(["--html", args.html_path, "--self-contained-html"])
+    if args.allure_dir:
+        cmd.append(f"--alluredir={args.allure_dir}")
     if args.dry_run:
         cmd.append("--collect-only")
     if args.refresh_auth:
         cmd.append("--refresh-auth")
+    cmd.extend(args.pytest_args)
 
     print(f"ENV={target_env}")
     print(f"HEADLESS={os.environ.get('HEADLESS', '')}")

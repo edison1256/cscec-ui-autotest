@@ -40,7 +40,7 @@
 | 变量名 | 值 | 说明 |
 | --- | --- | --- |
 | `ENV` | `uat` | 目标环境 |
-| `USERNAME` | `20431644` | 登录账号 |
+| `USERNAME` | （测试账号） | 登录账号，建议按流水线环境配置 |
 | `UAT_PASSWORD` | （UAT 密码） | 必须设为密文 |
 | `HEADLESS` | `true` | 流水线必须无头运行 |
 | `BROWSER_CHANNEL` | `chromium` | **关键**：容器内无 Chrome，必须用 Playwright 自带 Chromium |
@@ -237,9 +237,9 @@ $PY tools/validate_prod_console_contracts.py
 $PY tools/ci_daily_test.py --env uat --scope static
 ```
 
-预期：`515 tests collected`。收集数与基线不符说明用例被误删或标记错误。
+预期：`521 tests collected`。收集数与基线不符说明用例被误删或标记错误。
 
-> 基线数字（2026-09-22 本机实测）：用例收集 **515**；生产契约 **113**（44 mandatory + 69 conditional）；
+> 基线数字（2026-09-22 本机实测）：用例收集 **521**；生产契约 **113**（44 mandatory + 69 conditional）；
 > 资产登记 **183**。三个数字是本工程当前的真实基线，脚本与文档若与之不符以实测为准。
 
 ### Stage 3 — 真实用例执行（Daily Test 主体）
@@ -338,27 +338,24 @@ BK-CI 的定时触发使用 **Cron 表达式**，通常为 5 位或 6 位：
 
 ## 7. 安全债：仓库内的明文密码
 
-**当前状态**：`.env.example` 被 git 跟踪，且内含明文密码：
+**当前状态**：`.env.example` 已改为占位符，不再保存可用账号密码。流水线必须通过密文变量注入真实凭据：
 
 ```
-USERNAME=20431644
-PASSWORD=Infoshare1!
-UAT_PASSWORD=Infoshare1!
-PROD_PASSWORD=Infoshare1!!
+USERNAME=<账号>
+PASSWORD=<兼容兜底密码，可留空>
+UAT_PASSWORD=<UAT 密码>
+PROD_PASSWORD=<PROD 密码>
 ```
 
-`config/settings.py` 在 `.env` 不存在时会**回退读取 `.env.example`**，所以流水线即使
-不注入变量也能跑——这是靠"把密码提交进仓库"换来的。
+`config/settings.py` 在 `.env` 不存在时会回退读取 `.env.example`，但占位符不能用于登录。
+因此真实用例执行前必须由 `ci_setup.py` 根据流水线密文变量生成 `.env`。
 
-**建议整改**（需用户决策，本文档不擅自执行）：
+后续安全处置：
 
-1. 在流水线变量中配置 `USERNAME` / `UAT_PASSWORD`（密文），由 `ci_setup.py` 生成 `.env`
-2. 把 `.env.example` 中的密码值改为占位符（如 `UAT_PASSWORD=<在此填写>`）
-3. 从 git 历史中清理已泄露的密码（需 `git filter-repo`，属破坏性操作，须单独评审）
+1. 在流水线变量中配置 `USERNAME` / `UAT_PASSWORD`（密文），由 `ci_setup.py` 生成 `.env`。
+2. 轮换曾写入仓库的账号密码。
+3. 是否从 Git 历史中清理旧值需单独评审；该操作会重写历史，不在日常提交中执行。
 
-> 注：`.env.example` 当前在工作区处于 **modified 未提交** 状态。
-> `handoff.md` 明确要求"不得暂存，除非用户明确要求"，故本方案的改动不含它。
->
 > **注意**：`ci_setup.py` 生成 `.env` 时会与已有 `.env` **合并**而非覆盖，
 > 且会保留 `ENV_KEYS` 之外的自定义键，避免静默丢配置。
 
@@ -371,7 +368,7 @@ PROD_PASSWORD=Infoshare1!!
    - 跑完看探针输出，确认 R1/R2/R8/R9/R10 哪些成立
    - 全部 PASS → 继续第 3 步
    - 失败在"Chromium 启动失败" → 按 Step 1.4 处理或换镜像
-3. 追加 **Stage 2**（静态校验），手动执行，确认 183 / 113 / 515 三个数字
+3. 追加 **Stage 2**（静态校验），手动执行，确认 183 / 113 / 521 三个数字
 4. 追加 **Stage 3**，先只跑 `--scope smoke`，确认能跑通真实用例并看到报告
 5. 稳定后把范围放开为 `readonly`，并配置定时触发
 6. 观察若干天，按失败率决定是否升级为阻断式门禁

@@ -108,7 +108,11 @@ def log(message: str) -> None:
 def run(cmd: list[str], timeout: int = 7200) -> int:
     print(f"    $ {' '.join(cmd)}", flush=True)
     started = time.monotonic()
-    proc = subprocess.run(cmd, cwd=PROJECT_ROOT)
+    try:
+        proc = subprocess.run(cmd, cwd=PROJECT_ROOT, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        print(f"    timeout after {timeout}s", flush=True)
+        return 124
     print(f"    exit={proc.returncode} ({time.monotonic() - started:.1f}s)", flush=True)
     return proc.returncode
 
@@ -184,14 +188,14 @@ def execute(env: str, scope: str, extra_args: list[str]) -> tuple[int, int]:
         cmd.extend(["-m", config["markers"]])
     if config["dry_run"]:
         cmd.append("--dry-run")
-    cmd.extend(extra_args)
-
     if not config["dry_run"]:
         cmd.extend([
-            "--html", str(ARCHIVE_DIR / f"report-{env}-{scope}.html"),
-            "--self-contained-html",
-            f"--alluredir={ARCHIVE_DIR / 'allure-results'}",
+            "--html-path", str(ARCHIVE_DIR / f"report-{env}-{scope}.html"),
+            "--allure-dir", str(ARCHIVE_DIR / "allure-results"),
         ])
+    if extra_args:
+        cmd.append("--pytest-args")
+        cmd.extend(extra_args)
 
     exit_code, output = run_capture(cmd)
 
@@ -206,12 +210,24 @@ def execute(env: str, scope: str, extra_args: list[str]) -> tuple[int, int]:
 
 
 def _parse_collected(output: str) -> int | None:
-    """从 pytest 输出中解析收集用例数（形如 '513 tests collected'）。"""
+    """Parse the selected node count from pytest collection output."""
+    selected = re.search(r"(\d+)/(\d+)\s+tests?\s+collected", output)
+    if selected:
+        return int(selected.group(1))
     match = re.search(r"(\d+)\s+tests?\s+collected", output)
     if match:
         return int(match.group(1))
     match = re.search(r"collected\s+(\d+)\s+items?", output)
     return int(match.group(1)) if match else None
+
+
+def clear_stale_contract_summary() -> None:
+    """Prevent a previous run's production contract counts leaking into this run."""
+    summary_path = REPORTS_DIR / "prod-console-contract-summary.json"
+    try:
+        summary_path.unlink(missing_ok=True)
+    except OSError as exc:
+        raise SystemExit(f"无法清理旧契约摘要 {summary_path}: {exc}") from exc
 
 
 def summarize(env: str, scope: str, exit_code: int,
@@ -308,6 +324,13 @@ def main() -> int:
     except SystemExit as exc:
         print(f"\n环境校验失败: {exc}", flush=True)
         return 2
+
+    if not SCOPES[args.scope]["dry_run"]:
+        try:
+            clear_stale_contract_summary()
+        except SystemExit as exc:
+            print(f"\n环境校验失败: {exc}", flush=True)
+            return 2
 
     if args.refresh_auth:
         code = refresh_auth(args.env)
