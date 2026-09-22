@@ -15,6 +15,29 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+ROOT_MARKERS = ("run_tests.py", "pytest.ini", "config/settings.py")
+
+
+def _ensure_project_root() -> None:
+    """确保工作目录为工程根目录。
+
+    CI（蓝盾等）把仓库 checkout 到 workspace 的子目录，Task 初始 CWD 不是工程根。
+    本脚本会调用 pytest --collect-only，必须从工程根执行，否则 rootdir 判定错误。
+    """
+    if all((PROJECT_ROOT / m).exists() for m in ROOT_MARKERS):
+        os.chdir(PROJECT_ROOT)
+        return
+
+    cwd = Path.cwd()
+    for depth in range(1, 4):
+        pattern = "/".join(["*"] * depth) + "/run_tests.py"
+        for candidate in sorted(cwd.glob(pattern)):
+            root = candidate.parent
+            if all((root / m).exists() for m in ROOT_MARKERS):
+                os.chdir(root)
+                return
+
+
 from core.execution_contract import (  # noqa: E402
     CaseClassification,
     CaseContract,
@@ -376,6 +399,7 @@ def _project_python() -> str:
 
 
 def main() -> int:
+    _ensure_project_root()
     try:
         registry = CaseContractRegistry.load()
         collected_nodes = collect_console_nodes()

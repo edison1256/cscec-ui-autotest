@@ -5,11 +5,36 @@ from __future__ import annotations
 
 import argparse
 import ast
+import os
 import re
 import sys
 from pathlib import Path
 
 import yaml
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+ROOT_MARKERS = ("run_tests.py", "pytest.ini", "config/settings.py")
+
+
+def _ensure_project_root() -> None:
+    """确保工作目录为工程根目录。
+
+    CI（蓝盾等）把仓库 checkout 到 workspace 的子目录，Task 初始 CWD 不是工程根，
+    导致相对路径参数（如 --registry test_assets/...）解析失败。这里统一切到工程根。
+    """
+    if all((PROJECT_ROOT / m).exists() for m in ROOT_MARKERS):
+        os.chdir(PROJECT_ROOT)
+        return
+
+    cwd = Path.cwd()
+    for depth in range(1, 4):
+        pattern = "/".join(["*"] * depth) + "/run_tests.py"
+        for candidate in sorted(cwd.glob(pattern)):
+            root = candidate.parent
+            if all((root / m).exists() for m in ROOT_MARKERS):
+                os.chdir(root)
+                return
 
 
 REQUIRED_ASSET_FIELDS = {
@@ -95,6 +120,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    _ensure_project_root()
     args = parse_args()
     path = Path(args.registry)
     payload = yaml.safe_load(path.read_text(encoding="utf-8"))
