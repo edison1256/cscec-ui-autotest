@@ -60,14 +60,14 @@ if (-not $SkipDevops) {
         Invoke-Git -C $repoRoot worktree remove --force $mirrorDir
     }
 
-    & git -C $repoRoot show-ref --verify --quiet "refs/heads/$SubtreeBranch"
-    if ($LASTEXITCODE -eq 0) {
+    $existingSubtreeBranch = & git -C $repoRoot branch --list $SubtreeBranch
+    if ($existingSubtreeBranch) {
         Invoke-Git -C $repoRoot branch -D $SubtreeBranch
     }
     Invoke-Git -C $repoRoot subtree split --prefix=$ProjectPrefix -b $SubtreeBranch
 
-    & git -C $repoRoot show-ref --verify --quiet "refs/heads/$DevopsBranch"
-    if ($LASTEXITCODE -eq 0) {
+    $existingDevopsBranch = & git -C $repoRoot branch --list $DevopsBranch
+    if ($existingDevopsBranch) {
         Invoke-Git -C $repoRoot branch -D $DevopsBranch
     }
     Invoke-Git -C $repoRoot branch $DevopsBranch $SubtreeBranch
