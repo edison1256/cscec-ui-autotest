@@ -1,16 +1,20 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-21 15:02。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-21 17:02。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：513
-- **生产默认收集（smoke + readonly）**：115 / 513
-- **被默认排除（write / destructive）**：398
+- **总用例数**：515
+- **生产默认收集（smoke + readonly）**：115 / 515
+- **被默认排除（write / destructive）**：400
 
-> 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。
+- **控制台机器契约**：113
+  - Mandatory：44
+  - Conditional：69
+
+> 生产默认节点与控制台契约是交叉集合，不可直接相减。默认套件还包含登录、门户、移动端和文档中心节点；部分 Conditional 控制台契约只允许显式执行。
 
 ## 2. 资产治理状态（来自 registry）
 
@@ -28,8 +32,8 @@
 
 | automation_status | 数量 |
 | --- | --- |
-| automated | 165 |
-| needs_stabilization | 18 |
+| automated | 173 |
+| needs_stabilization | 10 |
 
 ### 按模块（module）
 
@@ -57,9 +61,9 @@
 | 评价中心 | 2 |
 | 审批流程 | 2 |
 
-## 3. 待稳定资产与监控项（needs_stabilization）
+## 3. 外部阻塞与待稳定资产（needs_stabilization）
 
-共 **18** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：
+共 **10** 条，仍受入口、数据、环境或后端规则阻塞，处置方式见各条 notes：
 
 | asset_id | module | title | test_path | notes |
 | --- | --- | --- | --- | --- |
@@ -73,6 +77,19 @@
 | UI-LAYERED-M04-006 | 分层数据资源导入 | M04-06 数据安全分类与安全分级为空校验拦截 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04RequiredAndEnumValidation::test_m04_06_security_classification_required` |  |
 | UI-LAYERED-M04-007 | 分层数据资源导入 | M04-07 是否本系统产生的数据为空放行校验 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04PassAndOptionalValidation::test_m04_07_source_system_flag_empty_passes` |  |
 | UI-LAYERED-M04-008 | 分层数据资源导入 | M04-08 编码/长度/外键关联/来源系统等非必填放行 | `tests/layered_data_resource_import/test_m04_attribute_import.py::TestM04PassAndOptionalValidation::test_m04_08_optional_fields_pass` |  |
+
+## 4. 已自动化但未晋级的候选观察项
+
+共 **14** 条。它们可稳定显式执行，但尚未批准进入生产默认门禁：
+
+| asset_id | module | title | test_path | notes |
+| --- | --- | --- | --- | --- |
+| UI-PROD-PERM-ROLE-001 | 权限管理 | 角色成员、数据权限与编辑回显深层只读回归 | `tests/console/test_role_management_readonly_regression.py::TestRoleManagementDeepReadonlyCandidate::test_role_members_data_permissions_and_edit_preview` | 从角色列表接口动态建立角色身份；验证成员表、数据权限两个业务接口、所属租户/后端类目/领域及禁用的全量数据开关；编辑仅检查回显与禁用保存，随后取消并确认，不修改角色。 |
+| UI-PROD-PERM-LOGIN-001 | 权限管理 | 4A登录资源、组织与部门用户深层只读回归 | `tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_4a_login_resource_organization_and_users` | 从资源与组织接口动态建立身份，选择组织后严格核对 userPage 请求中的资源 ID、组织编码和首条用户回显；授权登录、取消授权仅验证可见，不点击。 |
+| UI-PROD-PERM-LOGIN-002 | 权限管理 | 组织登录资源与组织树深层只读回归 | `tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_organization_login_resource_and_tree` | 资源身份由 cloud/page 与页面选中项共同证明，组织树由当前资源 ID 查询并严格校验业务码和根组织回显；授权按钮只检查展示。 |
+| UI-PROD-PERM-USER-001 | 权限管理 | 当前用户精确查询、详情与重置深层只读回归 | `tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_user_list_exact_query_detail_and_reset` | 以当前登录账号建立可解密的用户身份；生产后端会拒绝查看其他用户详情并返回 10006，因此不再随机选择首行用户。详情仅检查禁用字段并返回，重置仅清空查询条件。 |
+| UI-PROD-PERM-TENANT-001 | 权限管理 | 中建云租户身份与成员空查询深层只读回归 | `tests/console/test_permission_management_deep_readonly.py::TestPermissionManagementDeepReadonly::test_current_tenant_identity_and_empty_member_query` | 固定核对当前中建云租户 100000 / ZH_01_0000；成员表本身有数据，测试使用每次唯一的不存在关键字验证严格空结果。添加、待加入和批量移出入口仅检查可见，不点击。 |
+| UI-LAYERED-M02-PROD-SEED-001 | 分层数据资源导入 | 生产专用域下运行时唯一层级路径种子构造与可见性验证 | `tests/layered_data_resource_import/test_m02_layering_import.py::TestM02ProdExplicitBusinessPaths::test_m02_prod_explicit_business_paths_seed` | 写入型种子按运行 token 生成唯一后缀，避免重复插入；重复校验类用例仍保留重复数据不改造。 |
 | UI-PROD-SUPP-CONSOLE-001 | 控制台 | 生产控制台补充深层只读探活候选 | `tests/console/test_console_p0_readonly_supp.py::TestConsoleP0ReadonlySupp` | 候选补充探活，不进入生产默认 smoke；入口未暴露按 skip，入口存在但页面/弹窗异常按失败处理。 |
 | UI-PROD-SUPP-ORDER-001 | 订单管理 | 生产订单链路补充只读探活候选 | `tests/console/test_order_subscription_chain_supp.py::TestOrderSubscriptionChainSupp` | 覆盖订单状态 Tab、搜索重置、订单详情审批节点渲染；仅显式执行，稳定后再评估是否晋级 smoke。 |
 | UI-PROD-SUPP-RESOURCE-001 | 资源管理 | 生产资源管理补充只读探活候选 | `tests/console/test_resource_baseline_supp.py::TestResourceBaselineSupp` | 覆盖高级检索、分页健康和全局动作按钮可见性；只验证展示和查询，不点击新增、保存、删除等动作。 |
@@ -82,8 +99,8 @@
 | UI-PROD-SUPP-MOBILE-001 | 移动端 | 生产移动端补充只读探活候选 | `tests/mobile/test_mobile_baseline_supp.py::TestMobileBaselineSupp` | 移动端金刚区穿透只允许点击服务、消息、公告、帮助、文档、知识、工作台等只读白名单入口。 |
 | UI-PROD-SUPP-PORTAL-001 | 门户 | 生产门户补充只读探活候选 | `tests/portal/test_portal_p0_readonly_supp.py::TestPortalP0ReadonlySupp` | 覆盖门户链接、用户浮层、未授权拦截、图片渲染，以及组织选择页组织树接口返回可选组织数据；候选阶段不进入生产默认 smoke。 |
 
-## 4. 复用与维护约定
+## 5. 复用与维护约定
 
 - 变更 `pages/ tests/ core/ config/ test_assets/ docs/` 中任一目录后，运行 `python tools/generate_progress_doc.py` 刷新本文档。
-- 自动提交前请遵循 AGENTS.md 的 Git 作用域约束（仅暂存本工程 6 个受监控目录）。
+- 自动提交前请遵循 AGENTS.md 的 Git 作用域约束，只暂存其中列出的本工程目录和根文件。
 

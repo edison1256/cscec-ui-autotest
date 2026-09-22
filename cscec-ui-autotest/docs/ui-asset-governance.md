@@ -106,6 +106,8 @@ UI 自动化资产可以来自以下来源：
 
 自动化状态描述工程实现状态，可以和生命周期组合使用。例如：`lifecycle=candidate` 且 `automation_status=needs_stabilization` 表示有价值但暂不稳定。
 
+候选是否晋级与自动化是否稳定是两个维度：已经能够稳定显式执行、但尚未批准进入默认门禁的探活用例，应登记为 `lifecycle=candidate` + `automation_status=automated`；只有仍受入口、定位、数据、环境或后端规则阻塞的用例使用 `needs_stabilization`。
+
 ## 8. 晋级规则
 
 ### 8.1 候选到 UAT 自动化

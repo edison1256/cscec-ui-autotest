@@ -92,6 +92,10 @@ python run_tests.py --env uat --refresh-auth -m smoke
 - `--prod-suite probe/controlled-write` 分别选择探查和受控写入责任套件；迁移完成前可能尚未收集全部契约用例。
 - 如果显式传入 `-m`、`-p` 或 `-k`，按用户指定执行，不额外阻断写操作。
 
+生产默认收集的 115 个节点与 113 条控制台契约是两个有交集的集合，不能直接相减：默认集合还包含登录、门户、移动端和文档中心用例；部分 Conditional 控制台契约只允许显式执行，不属于默认 `smoke` 集合。
+
+每次运行前默认清空可再生成的 `reports/allure-results/`，避免 Allure JSON 长期累积。需要合并多次运行结果时显式加 `--keep-allure-results`。
+
 UAT/PRE 不限制写入类用例：
 
 ```powershell

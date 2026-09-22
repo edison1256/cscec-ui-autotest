@@ -21,6 +21,11 @@ from pathlib import Path
 import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from core.execution_contract import CaseContractRegistry  # noqa: E402
+
 REGISTRY_PATH = PROJECT_ROOT / "test_assets" / "registry" / "ui_case_assets.yaml"
 OUTPUT_PATH = PROJECT_ROOT / "docs" / "PROJECT_STATUS.md"
 
@@ -60,6 +65,16 @@ def collect_prod_stats() -> dict:
     return {"error": "未能解析 dry-run 汇总行", "raw_tail": out[-400:]}
 
 
+def collect_contract_stats() -> dict:
+    """Read current console contract classifications from the registry."""
+    try:
+        contracts = CaseContractRegistry.load().contracts
+    except Exception as exc:
+        return {"error": str(exc)}
+    classifications = Counter(contract.classification.value for contract in contracts)
+    return {"total": len(contracts), "classifications": classifications}
+
+
 def summarize_assets(registry: dict) -> dict:
     assets = registry.get("assets") or []
     by_lifecycle = Counter(a.get("lifecycle", "unknown") for a in assets)
@@ -70,16 +85,24 @@ def summarize_assets(registry: dict) -> dict:
         for a in assets
         if a.get("automation_status") == "needs_stabilization"
     ]
+    candidate_observations = [
+        a
+        for a in assets
+        if a.get("lifecycle") == "candidate"
+        and a.get("automation_status") == "automated"
+        and not (a.get("env_policy") or {}).get("prod_default", False)
+    ]
     return {
         "total": len(assets),
         "by_lifecycle": by_lifecycle,
         "by_status": by_status,
         "by_module": by_module,
         "unstable": unstable,
+        "candidate_observations": candidate_observations,
     }
 
 
-def render(registry: dict, stats: dict, summary: dict) -> str:
+def render(registry: dict, stats: dict, contract_stats: dict, summary: dict) -> str:
     now = datetime.now().strftime("%Y-%m-%d %H:%M")
     lines: list[str] = []
     lines.append("# 项目状态文档（自动生成）")
@@ -106,7 +129,15 @@ def render(registry: dict, stats: dict, summary: dict) -> str:
         else:
             lines.append(f"- **生产默认收集（smoke + readonly）**：{collected}")
     lines.append("")
-    lines.append("> 生产强制走查套件 = `smoke and readonly`，与 AGENTS.md 声明一致，零写入风险。")
+    if "error" in contract_stats:
+        lines.append(f"- ⚠️ 控制台契约读取失败：{contract_stats['error']}")
+    else:
+        classifications = contract_stats["classifications"]
+        lines.append(f"- **控制台机器契约**：{contract_stats['total']}")
+        lines.append(f"  - Mandatory：{classifications.get('mandatory', 0)}")
+        lines.append(f"  - Conditional：{classifications.get('conditional', 0)}")
+    lines.append("")
+    lines.append("> 生产默认节点与控制台契约是交叉集合，不可直接相减。默认套件还包含登录、门户、移动端和文档中心节点；部分 Conditional 控制台契约只允许显式执行。")
     lines.append("")
 
     # ── 资产治理视角 ──
@@ -137,13 +168,13 @@ def render(registry: dict, stats: dict, summary: dict) -> str:
     lines.append("")
 
     # ── 待稳定 / TODO ──
-    lines.append("## 3. 待稳定资产与监控项（needs_stabilization）")
+    lines.append("## 3. 外部阻塞与待稳定资产（needs_stabilization）")
     lines.append("")
     unstable = summary["unstable"]
     if not unstable:
         lines.append("- 无。所有登记资产均已稳定。")
     else:
-        lines.append(f"共 **{len(unstable)}** 条，根因多为 UAT 未暴露对应菜单入口，处置方式见各条 notes：")
+        lines.append(f"共 **{len(unstable)}** 条，仍受入口、数据、环境或后端规则阻塞，处置方式见各条 notes：")
         lines.append("")
         lines.append("| asset_id | module | title | test_path | notes |")
         lines.append("| --- | --- | --- | --- | --- |")
@@ -155,11 +186,29 @@ def render(registry: dict, stats: dict, summary: dict) -> str:
             note = (a.get("notes") or "").replace("\n", " ")
             lines.append(f"| {aid} | {mod} | {title} | `{tp}` | {note} |")
     lines.append("")
-    lines.append("## 4. 复用与维护约定")
+    lines.append("## 4. 已自动化但未晋级的候选观察项")
+    lines.append("")
+    observations = summary["candidate_observations"]
+    if not observations:
+        lines.append("- 无。")
+    else:
+        lines.append(f"共 **{len(observations)}** 条。它们可稳定显式执行，但尚未批准进入生产默认门禁：")
+        lines.append("")
+        lines.append("| asset_id | module | title | test_path | notes |")
+        lines.append("| --- | --- | --- | --- | --- |")
+        for a in observations:
+            aid = a.get("asset_id", "")
+            mod = a.get("module", "")
+            title = a.get("title", "")
+            tp = a.get("test_path", "")
+            note = (a.get("notes") or "").replace("\n", " ")
+            lines.append(f"| {aid} | {mod} | {title} | `{tp}` | {note} |")
+    lines.append("")
+    lines.append("## 5. 复用与维护约定")
     lines.append("")
     lines.append("- 变更 `pages/ tests/ core/ config/ test_assets/ docs/` 中任一目录后，运行 "
                  "`python tools/generate_progress_doc.py` 刷新本文档。")
-    lines.append("- 自动提交前请遵循 AGENTS.md 的 Git 作用域约束（仅暂存本工程 6 个受监控目录）。")
+    lines.append("- 自动提交前请遵循 AGENTS.md 的 Git 作用域约束，只暂存其中列出的本工程目录和根文件。")
     lines.append("")
     return "\n".join(lines) + "\n"
 
@@ -170,12 +219,14 @@ def main() -> int:
         return 1
     registry = load_registry()
     stats = collect_prod_stats()
+    contract_stats = collect_contract_stats()
     summary = summarize_assets(registry)
-    md = render(registry, stats, summary)
+    md = render(registry, stats, contract_stats, summary)
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(md, encoding="utf-8")
     print(f"[完成] 状态文档已生成: {OUTPUT_PATH}")
     print(f"  资产总数={summary['total']}  待稳定={len(summary['unstable'])}  "
+          f"候选观察={len(summary['candidate_observations'])}  "
           f"prod collected={stats.get('collected')}/{stats.get('total')}")
     return 0
 

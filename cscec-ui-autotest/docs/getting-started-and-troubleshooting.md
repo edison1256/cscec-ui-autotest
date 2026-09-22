@@ -93,6 +93,12 @@ PRE 和 PROD 分别使用 `auth_states/pre.json` 与 `auth_states/prod.json`，�
 
 `-p`、`-m` 和 `-k` 可以组合缩小范围。排查时优先定向运行单个失败用例，不要一开始反复运行全套。
 
+运行器默认在每次执行前清空 `reports/allure-results/`，HTML 报告、日志和截图不受影响。确需把多次运行合并到同一份 Allure 数据时使用：
+
+```powershell
+.\.venv\Scripts\python.exe run_tests.py --env uat --keep-allure-results -k "测试名称"
+```
+
 ## 5. 生产环境运行
 
 ```powershell
@@ -113,6 +119,8 @@ PRE 和 PROD 分别使用 `auth_states/pre.json` 与 `auth_states/prod.json`，�
 ```
 
 生产默认套件当前为 115 条，但不是固定上限。以实际收集结果、`docs/PROJECT_STATUS.md` 和生产发布走查文档为准。
+
+115 个默认节点与 113 条控制台契约不是包含关系。默认节点还覆盖登录、门户、移动端和文档中心；部分 Conditional 控制台契约则只在 `--prod-suite conditional` 下显式执行。
 
 ## 6. 先看哪些结果
 

@@ -73,7 +73,7 @@ python run_tests.py --env uat --dry-run
 git -C "$PROJECT_DIR" diff --cached --name-only | Where-Object { $_ -notmatch '^cscec-ui-autotest/' } | ForEach-Object { throw "越界文件: $_" }
 
 # 仅暂存受监控路径（目录 + 根目录治理文件）
-git -C "$PROJECT_DIR" add pages tests core config test_assets docs tools utils AGENTS.md README.md .gitignore requirements.txt run_tests.py pytest.ini
+git -C "$PROJECT_DIR" add pages tests core config test_assets docs tools utils AGENTS.md handoff.md README.md .gitignore requirements.txt run_tests.py pytest.ini
 
 git -C "$PROJECT_DIR" commit -m "feat(scope): 描述本次修改的关键业务功能/用例"
 ```

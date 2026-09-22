@@ -5,6 +5,7 @@
 - **Production Execution**: `python run_tests.py --env prod` automatically executes the full 115-case mandatory suite with 0 write risk.
 - **Strict Console Gate**: `python run_tests.py --env prod --prod-suite mandatory` executes the 44 strict console Mandatory cases with no skip or soft-pass path.
 - **Conditional Console Gate**: `python run_tests.py --env prod --prod-suite conditional` currently executes 69 API-gated console cases and reports unmet preconditions as `NOT_APPLICABLE`.
+- **Count Semantics**: The 115 default production nodes (`smoke and readonly`) and the 113 console contracts are overlapping sets, not a parent/child count. The default gate also contains login, portal, mobile, and document-center nodes, while some Conditional console contracts are explicit-only and therefore outside the default gate.
 
 ## Automatic Git & DevOps Maintenance
 
@@ -12,11 +13,11 @@
 >
 > 定义常量：`PROJECT_DIR = D:/Automation/cscec-ui-autotest`（即本工程根目录）。
 
-1. **Auto-Evaluate Updates**: Automatically determine if file changes in `pages/`, `tests/`, `core/`, `config/`, `test_assets/`, `docs/`, `tools/`, `utils/`, or the project-root files (`AGENTS.md`, `README.md`, `.gitignore`, `requirements.txt`, `run_tests.py`, `pytest.ini`) constitute a key/meaningful update.
+1. **Auto-Evaluate Updates**: Automatically determine if file changes in `pages/`, `tests/`, `core/`, `config/`, `test_assets/`, `docs/`, `tools/`, `utils/`, or the project-root files (`AGENTS.md`, `handoff.md`, `README.md`, `.gitignore`, `requirements.txt`, `run_tests.py`, `pytest.ini`) constitute a key/meaningful update.
 2. **Auto-Verify**: Before committing, automatically run `python tools/validate_ui_assets.py --registry test_assets/registry/ui_case_assets.yaml`, `python tools/validate_prod_console_contracts.py`, and `python run_tests.py --env uat --dry-run`.
 3. **Auto-Commit & Push**（全部使用 `git -C "$PROJECT_DIR"` 限定作用域）:
    - **Pre-commit guard（提交前必做）**: 运行 `git -C "$PROJECT_DIR" diff --cached --name-only`，**断言所有暂存路径均以 `cscec-ui-autotest/` 开头**。若有任何路径逸出本工程子树，立即中止提交并告警，不得继续。
-   - **Stage only monitored paths（绝不使用 `.` 或 `-A`）**: `git -C "$PROJECT_DIR" add pages tests core config test_assets docs tools utils AGENTS.md README.md .gitignore requirements.txt run_tests.py pytest.ini`。
+   - **Stage only monitored paths（绝不使用 `.` 或 `-A`）**: `git -C "$PROJECT_DIR" add pages tests core config test_assets docs tools utils AGENTS.md handoff.md README.md .gitignore requirements.txt run_tests.py pytest.ini`。
    - **Commit**: Format Conventional Commits (e.g. `feat`, `fix`, `refactor`) — `git -C "$PROJECT_DIR" commit -m "<type>: <summary>"`。
    - **Push**: 先 `git -C "$PROJECT_DIR" push github master`。
    - **Dual-remote sync（GitHub + 公司内网差异化同步）**: 重要变更推送 GitHub 后，运行 `powershell -ExecutionPolicy Bypass -File tools/sync_project_remotes.ps1`。该脚本会：

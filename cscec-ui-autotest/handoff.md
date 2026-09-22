@@ -13,13 +13,7 @@ Production write cases remain separately controlled. Data-import writes may only
 
 ## 2. Current Verified Baseline
 
-- Full project collection: 513 tests.
-- Default production read-only gate: 115 tests.
-- Strict console Mandatory suite: 44 tests.
-- Console Conditional suite: 69 tests.
-- Machine-readable production console contracts: 113 total = 44 Mandatory + 69 Conditional.
-- UI asset registry: 183 assets.
-- Assets still marked `needs_stabilization`: 18, reduced from 34 after correcting 16 already-stable Batch G/H assets to `prod_regression/automated`.
+Use `docs/PROJECT_STATUS.md` as the generated source of truth for current collection, contract, asset, and stabilization counts. The default production nodes and console contracts are overlapping sets: the default gate includes non-console coverage, while some Conditional console contracts are explicit-only.
 
 Required commands:
 
@@ -30,6 +24,8 @@ python run_tests.py --env prod --prod-suite conditional
 ```
 
 ## 3. Latest Production Results
+
+The following is the last executed production snapshot from 2026-09-21. It is historical evidence, not a generated current count.
 
 ### Default 115-case production gate
 
@@ -101,13 +97,7 @@ The six visible ticket query controls now have request/response/UI closure: type
 
 ## 6. Code and Git State
 
-Latest project commits:
-
-- `f3d3db8 docs: close completed production probe stages`
-- `9a6deaf feat: complete ticket filter release gates`
-- `5ee87ac feat: add ticket urgency filter release gate`
-
-Both GitHub and the company DevOps repository were synchronized after `f3d3db8`.
+Do not rely on commit hashes copied into this handoff. Read the current project history with `git -C D:/Automation/cscec-ui-autotest log -5 --oneline` and verify remote synchronization when needed.
 
 Important repository topology:
 
@@ -139,13 +129,7 @@ Run all of the following:
 .venv\Scripts\python.exe tools/generate_progress_doc.py
 ```
 
-Current expected verification values:
-
-- Registry valid, 183 assets.
-- Production contracts valid, 113 cases.
-- Contract classifications: Conditional 69, Mandatory 44.
-- UAT dry-run collection: 513 tests.
-- Generated project status: production collected 115/513, needs stabilization 18.
+Do not maintain expected counts manually in this file. Read the generated values from `docs/PROJECT_STATUS.md`; the validators must still exit successfully.
 
 ## 8. Remaining Work
 
@@ -153,7 +137,7 @@ There is no unfinished implementable phase in the current production interaction
 
 1. After the data-source cross-domain SSO defect is fixed, rerun `C-P0-CONSOLE-WB-008` first, then the complete Conditional suite.
 2. When unread messages or actionable edit/evaluate/terminate order samples appear, rerun `M3-04` and `M2-09/M2-10/M2-11`; successful real execution may justify promotion review.
-3. The remaining 18 `needs_stabilization` assets are blocked by unexposed entries, controlled-write scope, an unreleased UAT backend rule, or supplementary probe status. Review individually; do not bulk-promote them.
+3. Review the generated blocked-asset and candidate-observation sections individually; do not bulk-promote either group.
 4. Preserve the production defect evidence and report it to the owning SSO/data-platform team.
 
 ## 9. Recommended First Action in the New Chat

@@ -3,6 +3,7 @@
 
 import argparse
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -50,6 +51,14 @@ def _run(cmd: list[str]) -> int:
     return subprocess.run(cmd, cwd=PROJECT_DIR).returncode
 
 
+def _prepare_allure_results(*, keep_existing: bool) -> None:
+    """Start a run with a bounded Allure result set unless history is requested."""
+    results_dir = PROJECT_DIR / "reports" / "allure-results"
+    if results_dir.exists() and not keep_existing:
+        shutil.rmtree(results_dir)
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+
 def main() -> None:
     _load_env_file()
 
@@ -75,6 +84,11 @@ Examples:
     parser.add_argument("--headed", dest="headless", action="store_false", help="Run browser headed")
     parser.set_defaults(headless=None)
     parser.add_argument("--report", action="store_true", help="Generate Allure report after a passing run")
+    parser.add_argument(
+        "--keep-allure-results",
+        action="store_true",
+        help="Keep existing reports/allure-results instead of cleaning it before the run",
+    )
     parser.add_argument("--no-html", action="store_true", help="Disable pytest-html defaults")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose pytest output")
     parser.add_argument("--env", choices=["uat", "pre", "prod"], help="Target environment")
@@ -138,6 +152,7 @@ Examples:
     if args.prod_suite:
         print(f"Production responsibility suite: {args.prod_suite}")
 
+    _prepare_allure_results(keep_existing=args.keep_allure_results)
     exit_code = _run(cmd)
 
     if args.report and exit_code == 0:

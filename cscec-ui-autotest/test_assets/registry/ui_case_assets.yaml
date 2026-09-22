@@ -3220,7 +3220,7 @@ assets:
     module: 控制台
     title: 生产控制台补充深层只读探活候选
     lifecycle: candidate
-    automation_status: needs_stabilization
+    automation_status: automated
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
@@ -3244,7 +3244,7 @@ assets:
     module: 订单管理
     title: 生产订单链路补充只读探活候选
     lifecycle: candidate
-    automation_status: needs_stabilization
+    automation_status: automated
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
@@ -3267,7 +3267,7 @@ assets:
     module: 资源管理
     title: 生产资源管理补充只读探活候选
     lifecycle: candidate
-    automation_status: needs_stabilization
+    automation_status: automated
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
@@ -3290,7 +3290,7 @@ assets:
     module: 审批待办
     title: 生产审批链路补充只读探活候选
     lifecycle: candidate
-    automation_status: needs_stabilization
+    automation_status: automated
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
@@ -3313,7 +3313,7 @@ assets:
     module: 工单中心
     title: 生产工单链路补充只读探活候选
     lifecycle: candidate
-    automation_status: needs_stabilization
+    automation_status: automated
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
@@ -3336,7 +3336,7 @@ assets:
     module: 文档中心
     title: 生产文档中心补充只读探活候选
     lifecycle: candidate
-    automation_status: needs_stabilization
+    automation_status: automated
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
@@ -3359,7 +3359,7 @@ assets:
     module: 移动端
     title: 生产移动端补充只读探活候选
     lifecycle: candidate
-    automation_status: needs_stabilization
+    automation_status: automated
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
@@ -3382,7 +3382,7 @@ assets:
     module: 门户
     title: 生产门户补充只读探活候选
     lifecycle: candidate
-    automation_status: needs_stabilization
+    automation_status: automated
     source:
       source_type: production_probe
       requirement: 生产补充只读深层探活
