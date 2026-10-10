@@ -6,12 +6,10 @@ via scratch_recon1~7. Read-only interactions only.
 
 from __future__ import annotations
 
-import json
 import re
 import time
-from pathlib import Path
 
-from playwright.sync_api import Page, Response, expect
+from playwright.sync_api import Page, Response, TimeoutError, expect
 
 from config.settings import settings
 
@@ -54,6 +52,11 @@ PARENT_HEADERS = (
     "序号", "租户编码", "租户名称", "资源名称", "资源编码",
     "服务模式", "资源发布方", "订阅数量", "操作",
 )
+# V1.2 unified page (deployed 2026-10-10): workbench 我的订阅-API订阅 and
+# 订阅中心-API列表 share this column set (no tenant columns, has 统计方式)
+PARENT_HEADERS_UNIFIED = (
+    "资源名称", "资源编码", "服务模式", "资源所属方", "订阅数量", "操作",
+)
 CHILD_HEADERS = (
     "资源名称", "服务模式", "订阅应用", "资源发布方", "生效时间",
     "截止时间", "可用状态", "总可调用额", "已调用额", "剩余调用额", "操作",
@@ -81,6 +84,8 @@ def _fill_cas_field(frame, sel: str, value: str) -> None:
 
 def cas_login(page: Page, root: str) -> None:
     """Login the given page via portal/console root. Reuses existing session."""
+    if settings.ENV != "pre":
+        raise ValueError("ENV_MISMATCH: PRE login is forbidden outside PRE")
     page.goto(root, wait_until="domcontentloaded", timeout=60000)
     time.sleep(2.5)
     if page.evaluate("() => !!window.localStorage.getItem('__login_info__')"):
@@ -173,12 +178,11 @@ def open_menu(page: Page, *titles: str) -> None:
 def open_api_subscription_workbench(page: Page) -> Response | None:
     """Workbench: 我的订阅 -> API订阅; returns aggregate API response if captured.
 
-    Always detours through about:blank first: navigating to the same hash URL
-    is a same-document no-op in Chromium and would inherit stale page state.
+    Pins the 中建云 tenant shape first (我的订阅 menu + original anchors);
+    detours through about:blank because same-hash goto is a no-op.
     """
-    page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
-    page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
-    time.sleep(2.5)
+    if not ensure_tenant(page, "zjy"):
+        raise AssertionError("无法确保中建云租户形态（我的订阅菜单）")
     response = None
     try:
         with page.expect_response(
@@ -186,15 +190,16 @@ def open_api_subscription_workbench(page: Page) -> Response | None:
         ) as resp_info:
             open_menu(page, "我的订阅", "API订阅")
         response = resp_info.value
-    except Exception:
+    except TimeoutError:
         # 页面可能复用已加载 chunk，aggregate 已发完；退化为等待表格渲染
         pass
-    wait_list_ready(page)
+    assert wait_list_ready(page), "工作台 API订阅表格未渲染"
     return response
 
 
 def open_api_list_console(page: Page) -> Response | None:
     """Console: 订阅服务 -> API列表; returns aggregateForConsole response."""
+    ensure_tenant(page, "zjy")
     page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
     page.goto(CONSOLE_URL, wait_until="domcontentloaded", timeout=60000)
     time.sleep(2.5)
@@ -205,41 +210,91 @@ def open_api_list_console(page: Page) -> Response | None:
         ) as resp_info:
             open_menu(page, "订阅服务", "API列表")
         response = resp_info.value
-    except Exception:
+    except TimeoutError:
         pass
-    wait_list_ready(page)
+    assert wait_list_ready(page), "控制台 API列表表格未渲染"
     return response
 
 
 def wait_list_ready(page: Page, timeout_s: int = 25) -> bool:
-    """Wait until the aggregate list table header renders (租户编码 present)."""
+    """Wait until the aggregate list table header renders.
+
+    V1.2 unified page (deployed 2026-10-10): header is 资源所属方 (no 租户编码);
+    legacy shape used 租户编码. Either marks readiness.
+    """
     deadline = time.time() + timeout_s
     while time.time() < deadline:
-        try:
-            if page.get_by_text("租户编码", exact=True).first.is_visible(timeout=800):
-                time.sleep(1.0)
-                return True
-        except Exception:
-            pass
+        for marker in ("租户编码", "资源所属方"):
+            try:
+                if page.get_by_text(marker, exact=True).first.is_visible(timeout=800):
+                    time.sleep(1.0)
+                    return True
+            except Exception:
+                pass
         time.sleep(0.5)
     return False
+
+
+def list_is_empty(page: Page) -> bool:
+    """Detect the unified page empty state (暂无数据)."""
+    try:
+        body = visible_texts(page)
+    except Exception:
+        return False
+    return "暂无数据" in body
 
 
 # ---------------------------------------------------------------------------
 # Assertions
 # ---------------------------------------------------------------------------
 def visible_texts(page: Page, selector: str = "body") -> str:
-    """Best-effort full text of the main document."""
-    try:
-        return page.locator(selector).inner_text(timeout=5000)
-    except Exception:
-        return ""
+    """Read rendered text; a read failure must not pass negative assertions."""
+    return page.locator(selector).inner_text(timeout=5000)
 
 
 def assert_headers_present(page: Page, headers: tuple[str, ...], ctx: str) -> None:
-    body = visible_texts(page)
-    missing = [h for h in headers if h not in body]
-    assert not missing, f"{ctx} 缺失表头/字段: {missing}; 实际文本片段: {body[:400]}"
+    table_with_headers(page, headers, ctx)
+
+
+def table_with_headers(page: Page, headers: tuple[str, ...], ctx: str):
+    """Find one visible table satisfying the field contract, not page text."""
+    actual = []
+    for table in page.locator("table").all():
+        if not table.is_visible():
+            continue
+        names = tuple(cell.inner_text().strip() for cell in table.locator("thead").first.locator("th").all())
+        actual.append(names)
+        if all(header in names for header in headers):
+            return table, names
+    raise AssertionError(f"{ctx} 缺失表头: {headers}; 实际表头: {actual}")
+
+
+def entitlement_rows(page: Page) -> list[dict[str, str]]:
+    return table_rows(page, CHILD_HEADERS, "权益账户子表")
+
+
+def table_rows(page: Page, required: tuple[str, ...], ctx: str) -> list[dict[str, str]]:
+    table, headers = table_with_headers(page, required, ctx)
+    rows = []
+    for row in table.locator("tbody").first.locator(":scope > tr").all():
+        cells = row.locator(":scope > td").all()
+        if row.is_visible() and len(cells) == len(headers):
+            rows.append(dict(zip(headers, (cell.inner_text().strip() for cell in cells))))
+    assert rows, f"{ctx}没有可核验的数据行"
+    return rows
+
+
+def assert_entitlement_toggle(page: Page, cycles: int = 3) -> None:
+    parent, _ = table_with_headers(page, PARENT_HEADERS_UNIFIED, "API父表")
+    row = parent.locator("tbody").first.locator(":scope > tr").first
+    action = row.get_by_text(re.compile(r"^(查看|收起)$")).first
+    for _ in range(cycles):
+        action.click()
+        expect(page.locator("thead").get_by_text("总可调用额", exact=True).last).to_be_visible()
+        child, _ = table_with_headers(page, CHILD_HEADERS, "权益账户子表")
+        expect(child).to_be_visible()
+        action.click()
+        expect(child).to_be_hidden()
 
 
 def expand_first_row(page: Page) -> bool:
@@ -260,6 +315,112 @@ def expand_first_row(page: Page) -> bool:
 def page_contains_any(page: Page, *kws: str) -> tuple[str, ...]:
     body = visible_texts(page)
     return tuple(kw for kw in kws if kw in body)
+
+
+# ---------------------------------------------------------------------------
+# Tenant context (same account, two tenant shapes)
+# ---------------------------------------------------------------------------
+# 中建云 tenant: workbench shows 我的订阅 menu (normal-member shape)
+# 中建数字科技有限公司 tenant: workbench shows 订阅中心 menu (tenant-admin shape)
+TENANT_ZJY = "中建云"
+TENANT_SZ = "中建数字科技有限公司"
+
+SWITCH_DIALOG_ANCHOR = "切换租户"
+
+
+def workbench_tenant_shape(page: Page) -> str | None:
+    """Detect current workbench menu shape: 'zjy' / 'sz' / None(unknown)."""
+    try:
+        body = visible_texts(page)
+    except Exception:
+        return None
+    if "订阅中心" in body:
+        return "sz"
+    if "我的订阅" in body:
+        return "zjy"
+    return None
+
+
+def _open_account_hover(page: Page) -> bool:
+    for cand in ("text=陈方达", "[class*='avatar']", "[class*='user']"):
+        try:
+            loc = page.locator(cand).first
+            if loc.is_visible(timeout=2500):
+                loc.hover(timeout=3000)
+                time.sleep(1.2)
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def switch_tenant(page: Page, tenant_name: str) -> bool:
+    """Switch tenant via hover window: 切换租户 -> tenant list click."""
+    page.goto(PORTAL_ROOT, wait_until="domcontentloaded", timeout=60000)
+    time.sleep(2.5)
+    if not _open_account_hover(page):
+        return False
+    if not click_when_visible(page, SWITCH_DIALOG_ANCHOR, timeout_ms=5000):
+        return False
+    time.sleep(1.5)
+    if not click_when_visible(page, tenant_name, timeout_ms=6000):
+        return False
+    time.sleep(4)
+    try:
+        page.wait_for_load_state("networkidle", timeout=15000)
+    except Exception:
+        pass
+    return True
+
+
+def ensure_tenant(page: Page, shape: str) -> bool:
+    """Ensure workbench is in the given tenant shape ('zjy' or 'sz').
+
+    Returns True when the target shape is active afterwards.
+    """
+    target_tenant = TENANT_SZ if shape == "sz" else TENANT_ZJY
+    page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
+    page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
+    time.sleep(2.5)
+    if workbench_tenant_shape(page) == shape:
+        return True
+    if not switch_tenant(page, target_tenant):
+        return False
+    page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
+    page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
+    time.sleep(2.5)
+    return workbench_tenant_shape(page) == shape
+
+
+def open_subscription_center(page: Page) -> Response | None:
+    """中建数字 tenant: 订阅中心 -> API列表 (M2 module entry)."""
+    if not ensure_tenant(page, "sz"):
+        raise AssertionError("无法切换到中建数字租户（订阅中心形态）")
+    response = None
+    try:
+        with page.expect_response(
+            lambda r: bool(AGGREGATE_WB_PAT.search(r.url)), timeout=20000
+        ) as resp_info:
+            open_menu(page, "订阅中心", "API列表")
+        response = resp_info.value
+    except Exception:
+        pass
+    wait_list_ready_sc(page)
+    return response
+
+
+def wait_list_ready_sc(page: Page, timeout_s: int = 25) -> bool:
+    """订阅中心列表渲染标志：资源所属方 表头出现（单租户视图无租户编码列）。"""
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            if page.get_by_text("资源所属方", exact=True).first.is_visible(timeout=800):
+                time.sleep(1.0)
+                return True
+        except Exception:
+            pass
+        time.sleep(0.5)
+    return False
 
 
 def gateway_error(page: Page) -> bool:

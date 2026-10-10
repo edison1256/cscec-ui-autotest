@@ -23,6 +23,7 @@ from tests.metering_subscription_260901.helpers import (
     gateway_error,
     open_api_list_console,
     visible_texts,
+    table_with_headers,
     wait_list_ready,
 )
 
@@ -53,12 +54,16 @@ class TestM7DefaultLoad:
         assert "架构管理部" in body or "建证一体化" in body, "未见多租户数据"
 
     def test_m7_1_2__parent_headers(self, cs_page):
-        """UI：列表列名与 PRD 一致（租户/资源/服务模式/订阅数量/操作）."""
+        """UI：列表列名与 PRD 一致（租户/资源/服务模式/订阅数量/操作）.
+
+        控制台保持旧形态（序号/租户编码/租户名称/资源发布方）；关键列存在性判定，
+        不再要求精确列序（避免子表/父表定位抖动误报）。
+        """
         _open(cs_page)
         assert_headers_present(
             cs_page,
             ("序号", "租户编码", "租户名称", "资源名称", "资源编码",
-             "服务模式", "资源发布方", "订阅数量", "操作"),
+             "资源发布方", "服务模式", "订阅数量", "操作"),
             "控制台 API列表父表",
         )
 
@@ -69,7 +74,7 @@ class TestM7DefaultLoad:
         legacy = [w for w in ("订阅ID", "订阅资源名称") if w in body]
         assert not legacy, f"列表仍出现历史字段: {legacy}（需与 PRD/原型核对字段终态）"
 
-    def test_m7_1_4__row_is_tenant_resource_mode_combo(self, cs_page):
+    def test_m7_1_4__row_is_tenant_resource_mode_combo(self):
         """数据：每行代表一个租户、资源、服务模式组合."""
         pytest.skip(
             "DATA_REQUIRED: 需同一资源多服务模式/多租户组合数据核验行唯一性"
@@ -83,19 +88,21 @@ class TestM7Query:
         """查询：租户编码筛选——实测查询区无租户编码输入."""
         _open(cs_page)
         if cs_page.get_by_placeholder("请输入租户编码").count() == 0:
-            pytest.skip(
+            pytest.fail(
                 "ENTRY_MISSING(实现差异): 查询区无“租户编码”筛选输入，"
                 "需求-实现差异待产品确认"
             )
+        pytest.skip("PENDING_IMPLEMENTATION: 租户编码输入出现后还需实现筛选结果断言")
 
     def test_m7_2_2__query_by_tenant_name(self, cs_page):
         """查询：租户名称筛选——实测查询区无租户名称输入."""
         _open(cs_page)
         if cs_page.get_by_placeholder("请输入租户名称").count() == 0:
-            pytest.skip(
+            pytest.fail(
                 "ENTRY_MISSING(实现差异): 查询区无“租户名称”筛选输入，"
                 "需求-实现差异待产品确认"
             )
+        pytest.skip("PENDING_IMPLEMENTATION: 租户名称输入出现后还需实现筛选结果断言")
 
     def test_m7_2_3__query_by_resource_name(self, cs_page):
         """查询：资源名称=WPS服务组件，仅返回匹配行（含组合/空结果补充覆盖）."""
@@ -112,7 +119,7 @@ class TestM7Query:
         body = visible_texts(cs_page)
         assert CS_ANCHOR_RESOURCE in body, "编码查询未返回锚点资源"
 
-    def test_m7_2_5__query_by_subscribe_time(self, cs_page):
+    def test_m7_2_5__query_by_subscribe_time(self):
         """查询：订阅时间区间只统计区间内成功订阅形成的权益账户."""
         pytest.skip(
             "手工协同：时间区间语义需已知订阅时间分布数据对照；"
@@ -139,21 +146,21 @@ class TestM7StatisticsMode:
         _open(cs_page)
         body = visible_texts(cs_page)
         if "统计方式" not in body and "汇总本租户" not in body:
-            pytest.skip(
+            pytest.fail(
                 "ENTRY_MISSING(实现差异): 控制台 API列表 无“统计方式”查询控件，"
                 "M7.3/M2.3 大纲用例不可执行，记录为需求-实现差异"
             )
-        assert "统计方式" in body
+        pytest.skip("PENDING_IMPLEMENTATION: 统计方式控件出现后还需实现范围切换及结果断言")
 
-    def test_m7_3_2__scope_only_self(self, cs_page):
+    def test_m7_3_2__scope_only_self(self):
         """数据范围：仅本租户统计."""
-        pytest.skip("ENTRY_MISSING(实现差异): 同 M7.3.1，无统计方式控件")
+        pytest.skip("PENDING_IMPLEMENTATION: 统计范围验证待实现，控件缺失由 M7.3.1 实时检测")
 
-    def test_m7_3_3__scope_change_consistency(self, cs_page):
+    def test_m7_3_3__scope_change_consistency(self):
         """一致性：统计方式变更后抽屉范围与父表订阅数量一致."""
-        pytest.skip("ENTRY_MISSING(实现差异): 同 M7.3.1，无统计方式控件")
+        pytest.skip("PENDING_IMPLEMENTATION: 父子表范围一致性待实现，控件缺失由 M7.3.1 实时检测")
 
-    def test_m7_3_4__unauthorized_tenant_hidden(self, cs_page):
+    def test_m7_3_4__unauthorized_tenant_hidden(self):
         """权限：平台运营无权限的租户数据不在列表和抽屉展示."""
         pytest.skip("ROLE_REQUIRED: 需限定租户可见范围的平台运营账号对照")
 
@@ -168,6 +175,7 @@ class TestM7EntitlementDrawer:
         time.sleep(2.5)
         body = visible_texts(cs_page)
         assert CS_ANCHOR_RESOURCE in body, "展开后子表未见锚点资源"
+        assert_headers_present(cs_page, CHILD_HEADERS, "控制台权益子表")
 
     def test_m7_4_2__drawer_title_identity(self, cs_page):
         """UI：抽屉标题含租户名称/资源名称/服务模式/统计方式（实测无独立标题区）."""
@@ -176,11 +184,12 @@ class TestM7EntitlementDrawer:
         time.sleep(2.5)
         body = visible_texts(cs_page)
         if "API订阅权益" not in body:
-            pytest.skip(
+            pytest.fail(
                 "ENTRY_MISSING(实现差异): 无“API订阅权益”抽屉标题区"
                 "（下钻为行内子表形态），与 PRD V1.2 右侧抽屉描述不一致，"
                 "以现实现记录"
             )
+        pytest.skip("PENDING_IMPLEMENTATION: 需限定抽屉标题并核对租户/资源/模式/统计范围身份")
 
     def test_m7_4_3__fields_match_workbench(self, cs_page):
         """UI：子表字段与工作台权益账户子表一致（锚点固定期限+不限量）."""
@@ -209,8 +218,9 @@ class TestM7EntitlementDrawer:
         body = visible_texts(cs_page)
         assert "租户编码" in body, "收起后父表未恢复"
         assert CS_ANCHOR_RESOURCE in body, "收起后锚点行丢失"
+        pytest.skip("PENDING_IMPLEMENTATION: 父表仍有文字不能证明查询/分页状态保持，待补完整状态对照")
 
-    def test_m7_4_5__subtable_scope(self, cs_page):
+    def test_m7_4_5__subtable_scope(self):
         """数据：子表仅展示当前父行资源/服务模式确定的权益账户."""
         pytest.skip(
             "DATA_REQUIRED: 需同资源多服务模式/多账户组合数据核验子表范围隔离"
@@ -242,7 +252,7 @@ class TestM7DrawerDrilldown:
         )
         time.sleep(2.5)
         body = visible_texts(cs_page)
-        assert "已调用额" in body or "用量" in body, "展开用量后未见相关内容"
+        assert_headers_present(cs_page, ("接口名称", "已调用额", "操作"), "控制台接口用量子表")
 
     def test_m7_5_3__daily_detail_dialog(self, cs_page):
         """交互：接口“查看明细”打开每日调用明细弹窗."""

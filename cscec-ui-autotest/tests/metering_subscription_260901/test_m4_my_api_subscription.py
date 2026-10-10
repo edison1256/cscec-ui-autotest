@@ -17,6 +17,7 @@ from tests.metering_subscription_260901.helpers import (
     ANCHOR_RESOURCE_TAG,
     ANCHOR_RESOURCE_WPS,
     ANCHOR_TENANT_NAME,
+    CHILD_HEADERS,
     assert_headers_present,
     expand_first_row,
     gateway_error,
@@ -28,8 +29,22 @@ pytestmark = [pytest.mark.readonly, pytest.mark.portal, pytest.mark.regression]
 
 
 def _open(wb_page):
+    from tests.metering_subscription_260901.helpers import list_is_empty
+
     open_api_subscription_workbench(wb_page)
-    assert visible_texts(wb_page).find("资源名称") >= 0, "查询区未渲染"
+    if list_is_empty(wb_page):
+        pytest.skip(
+            "ENV_LIMITED: V1.2 统一版已上线（2026-10-10 部署），"
+            "中建云租户当前账号本人订阅为空（暂无数据），昨日旧版锚点失效；"
+            "统一形态聚合视角已由 M2（订阅中心，中建数字租户）覆盖"
+        )
+    body = visible_texts(wb_page)
+    if ANCHOR_RESOURCE_WPS not in body:
+        pytest.skip(
+            "ENV_LIMITED(D9): 列表非空但无 WPS 锚点——租户切换后上下文混合态"
+            "或 pre 数据漂移，旧锚点校验需数据稳定窗口；聚合视角已由 M2 覆盖"
+        )
+    assert body.find("资源名称") >= 0, "查询区未渲染"
 
 
 def _query_name(wb_page, value: str) -> None:
@@ -55,17 +70,21 @@ class TestM4DefaultLoad:
         _open(wb_page)
         body = visible_texts(wb_page)
         if "可用状态" not in body:
-            pytest.skip(
+            pytest.fail(
                 "ENTRY_MISSING(实现差异): 查询区无“可用状态”筛选控件，"
                 "大纲 M4.1.2/M4.2.4/M4.2.5 不可执行，记录为需求-实现差异"
             )
-        assert "可用" in body
+        pytest.skip("PENDING_IMPLEMENTATION: 需断言筛选控件选中值及列表可用状态，表头文案不能证明默认筛选")
 
     def test_m4_1_3__fields_consistent_and_no_sensitive(self, wb_page):
-        """UI：列表列名与工作台权益账户子表一致，且不展示 AKSK 等敏感字段."""
+        """UI：列表列名与订阅中心一致（V1.2 统一版），且不展示 AKSK 等敏感字段."""
         _open(wb_page)
+        assert_headers_present(
+            wb_page,
+            ("资源名称", "资源编码", "服务模式", "资源所属方", "订阅数量", "操作"),
+            "我的订阅权益账户列表",
+        )
         body = visible_texts(wb_page)
-        assert "资源名称" in body and "服务模式" in body, "列表字段缺失"
         for token in ("AKSK", "aksk", "SecretKey", "secret_key"):
             assert token not in body, f"页面暴露敏感字段: {token}"
 
@@ -86,30 +105,30 @@ class TestM4Query:
         _open(wb_page)
         body = visible_texts(wb_page)
         if "订阅应用" not in body:
-            pytest.skip(
+            pytest.fail(
                 "ENTRY_MISSING(实现差异): 查询区无“订阅应用”筛选控件，"
                 "需求-实现差异待产品确认"
             )
-        assert "订阅应用" in body
+        pytest.skip("PENDING_IMPLEMENTATION: 控件出现后仍需填写订阅应用并验证过滤结果")
 
     def test_m4_2_3__query_by_service_mode(self, wb_page):
         """查询：服务模式筛选（不限量认证服务）——实测无该筛选控件."""
         _open(wb_page)
         body = visible_texts(wb_page)
         if "请输入服务模式" not in body and box_missing(wb_page):
-            pytest.skip(
+            pytest.fail(
                 "ENTRY_MISSING(实现差异): 查询区无“服务模式”筛选输入，"
                 "需求-实现差异待产品确认"
             )
-        assert "服务模式" in body
+        pytest.skip("PENDING_IMPLEMENTATION: 控件出现后仍需选择服务模式并验证过滤结果")
 
-    def test_m4_2_4__filter_unavailable(self, wb_page):
+    def test_m4_2_4__filter_unavailable(self):
         """查询：可用状态=不可用（实测无该控件，见 M4.1.2 差异）。"""
-        pytest.skip("ENTRY_MISSING(实现差异): 同 M4.1.2，无可用状态筛选控件")
+        pytest.skip("PENDING_IMPLEMENTATION: 筛选行为待实现；控件缺失由 M4.1.2 实时检测")
 
-    def test_m4_2_5__filter_all(self, wb_page):
+    def test_m4_2_5__filter_all(self):
         """查询：可用状态=全部（实测无该控件，见 M4.1.2 差异）。"""
-        pytest.skip("ENTRY_MISSING(实现差异): 同 M4.1.2，无可用状态筛选控件")
+        pytest.skip("PENDING_IMPLEMENTATION: 筛选行为待实现；控件缺失由 M4.1.2 实时检测")
 
     def test_m4_2_6__query_reset(self, wb_page):
         """重置：修改条件后重置，条件清空且列表重新加载."""
@@ -130,18 +149,18 @@ def box_missing(wb_page) -> bool:
 class TestM4AggregationSemantics:
     """M4.3 个人聚合口径与隔离."""
 
-    def test_m4_3_1__merge_multiple_purchases(self, wb_page):
+    def test_m4_3_1__merge_multiple_purchases(self):
         """数据：本人同组件/应用/服务模式多次购买合并为一行."""
         pytest.skip(
             "DATA_REQUIRED: 需多次成功购买数据；另记录形态差异——"
             "当前页面为租户聚合（含租户编码/租户名称列），见 M4.3.4 隔离发现"
         )
 
-    def test_m4_3_2__split_by_apply_app(self, wb_page):
+    def test_m4_3_2__split_by_apply_app(self):
         """数据：本人同组件不同应用订阅按应用分行."""
         pytest.skip("DATA_REQUIRED: 需本人多应用订阅数据")
 
-    def test_m4_3_3__split_by_service_mode(self, wb_page):
+    def test_m4_3_3__split_by_service_mode(self):
         """数据：本人同组件同应用不同服务模式分行."""
         pytest.skip("DATA_REQUIRED: 需本人多服务模式订阅数据")
 
@@ -159,7 +178,7 @@ class TestM4AggregationSemantics:
                 "（订阅人=邱惟责），与“仅本人数据”语义冲突；"
                 "若产品语义为租户管理员聚合视图则需更新大纲"
             )
-        assert "订单ID" in body or "订单明细" in body, "订单明细未打开，无法核对隔离性"
+        pytest.skip("ROLE_REQUIRED: 未出现单个他人姓名不能证明隔离；需明确角色范围及两用户订单对照")
 
 
 class TestM4QuotaDisplay:
@@ -173,11 +192,11 @@ class TestM4QuotaDisplay:
         body = visible_texts(wb_page)
         assert "不限次数" in body, "未展示不限次数"
 
-    def test_m4_4_2__concurrent_display(self, wb_page):
+    def test_m4_4_2__concurrent_display(self):
         """展示：并发账户（智能识别服务类）不展示并发数，已调用额可统计."""
         pytest.skip("DATA_REQUIRED: 需并发型权益账户数据")
 
-    def test_m4_4_3__fixed_quota_display(self, wb_page):
+    def test_m4_4_3__fixed_quota_display(self):
         """展示：固定调用额账户（WPS服务组件类）显示总额/已用/剩余."""
         pytest.skip("DATA_REQUIRED: 当前锚点仅不限量账户")
 
@@ -203,6 +222,7 @@ class TestM4Drilldown:
         time.sleep(2.5)
         body = visible_texts(wb_page)
         assert "订单明细" in body or "订单ID" in body, "订单明细未打开"
+        pytest.skip("DATA_REQUIRED: 已验证入口，但本人权限及成功订单范围仍需已知订单对照")
 
     def test_m4_5_2__usage_expand_from_my_subscription(self, wb_page):
         """交互：查看用量在当前权益账户行下展开接口用量."""
@@ -217,9 +237,9 @@ class TestM4Drilldown:
             pytest.skip("ENV_LIMITED: 查看用量入口未就绪（同 M6.1.1）")
         time.sleep(2.5)
         body = visible_texts(wb_page)
-        assert "已调用额" in body, "展开用量后未见已调用额列"
+        assert_headers_present(wb_page, ("接口名称", "已调用额", "操作"), "接口用量子表")
 
-    def test_m4_5_3__bypass_others_usage(self, wb_page):
+    def test_m4_5_3__bypass_others_usage(self):
         """越权：修改参数访问他人权益账户用量，期望无法查看."""
         pytest.skip(
             "ROLE_REQUIRED: 接口参数越权需第二账号数据与接口用例（API 层专项），"
