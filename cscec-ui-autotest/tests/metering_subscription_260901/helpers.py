@@ -37,13 +37,19 @@ AGGREGATE_CS_PAT = re.compile(
 SUBTABLE_PAT = re.compile(r"quota-instance/listByIds")
 ORDER_PAT = re.compile(r"quota-instance-order/findByOrderIds")
 
-# Anchor data verified on PRE (single-account tenant ZH_01_0000_0001_0001)
+# Anchor data verified on PRE.
+# 2026-10-12 current data set (我的订阅-API订阅, 11-col entitlement list):
+#   WPS服务组件 | 订阅服务 | IRP_中建云项目 | 技术与大数据平台项目组 |
+#   2026-06-01 11:29:57 ~ 2030-06-01 11:29:57 | 可用 | 不限次数 | 0 | 不限次数
+#   中建云0731组件 | 测试数字 | IRP_测试下发 | ... | 永久有效 | 可用 | 不限次数
 ANCHOR_RESOURCE_WPS = "WPS服务组件"
 ANCHOR_RESOURCE_TAG = "标签中心"
+ANCHOR_RESOURCE_PERMANENT = "中建云0731组件"  # 永久有效锚点 (2026-10-12)
 ANCHOR_TENANT_NAME = "技术与大数据平台项目组"
 ANCHOR_TENANT_NO = "ZH_01_0000_0001_0001"
 ANCHOR_ORDER_ID = "PO2025103015352000"
-ANCHOR_APPLY_APP = "一体化资源平台项目"
+ANCHOR_APPLY_APP = "IRP_中建云项目"  # 2026-10-12: 我的订阅子表订阅应用
+ANCHOR_APPLY_APP_LEGACY = "一体化资源平台项目"  # 旧版锚点，兼容保留
 CS_ANCHOR_RESOURCE = "实际控制人"
 CS_ANCHOR_APP = "国资委审计专用"
 
@@ -217,14 +223,17 @@ def open_api_list_console(page: Page) -> Response | None:
 
 
 def wait_list_ready(page: Page, timeout_s: int = 25) -> bool:
-    """Wait until the aggregate list table header renders.
+    """Wait until the aggregate list table renders.
 
-    V1.2 unified page (deployed 2026-10-10): header is 资源所属方 (no 租户编码);
-    legacy shape used 租户编码. Either marks readiness.
+    Header markers across PRE iterations:
+    - 2026-10-09 legacy: 租户编码
+    - 2026-10-10 unified: 资源所属方
+    - 2026-10-12 current: 资源发布方 (+ 11-col entitlement list for 我的订阅)
+    "资源名称" is present in every iteration → primary marker.
     """
     deadline = time.time() + timeout_s
     while time.time() < deadline:
-        for marker in ("租户编码", "资源所属方"):
+        for marker in ("资源名称", "资源所属方", "资源发布方", "租户编码"):
             try:
                 if page.get_by_text(marker, exact=True).first.is_visible(timeout=800):
                     time.sleep(1.0)
@@ -410,15 +419,16 @@ def open_subscription_center(page: Page) -> Response | None:
 
 
 def wait_list_ready_sc(page: Page, timeout_s: int = 25) -> bool:
-    """订阅中心列表渲染标志：资源所属方 表头出现（单租户视图无租户编码列）。"""
+    """订阅中心列表渲染标志：资源名称表头出现（跨版本通用，见 wait_list_ready）。"""
     deadline = time.time() + timeout_s
     while time.time() < deadline:
-        try:
-            if page.get_by_text("资源所属方", exact=True).first.is_visible(timeout=800):
-                time.sleep(1.0)
-                return True
-        except Exception:
-            pass
+        for marker in ("资源名称", "资源所属方", "资源发布方"):
+            try:
+                if page.get_by_text(marker, exact=True).first.is_visible(timeout=800):
+                    time.sleep(1.0)
+                    return True
+            except Exception:
+                pass
         time.sleep(0.5)
     return False
 

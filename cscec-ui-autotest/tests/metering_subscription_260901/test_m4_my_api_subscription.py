@@ -77,14 +77,13 @@ class TestM4DefaultLoad:
         pytest.skip("PENDING_IMPLEMENTATION: 需断言筛选控件选中值及列表可用状态，表头文案不能证明默认筛选")
 
     def test_m4_1_3__fields_consistent_and_no_sensitive(self, wb_page):
-        """UI：列表列名与订阅中心一致（V1.2 统一版），且不展示 AKSK 等敏感字段."""
+        """UI：列表列名与权益账户字段集一致（跨版本关键字段存在性），无 AKSK 等敏感字段."""
         _open(wb_page)
-        assert_headers_present(
-            wb_page,
-            ("资源名称", "资源编码", "服务模式", "资源所属方", "订阅数量", "操作"),
-            "我的订阅权益账户列表",
-        )
         body = visible_texts(wb_page)
+        for col in ("资源名称", "服务模式", "可用状态", "总可调用额", "已调用额", "剩余调用额", "操作"):
+            assert col in body, f"缺少权益账户字段: {col}"
+        # 兼容两代父表形态（订阅应用列 or 资源编码/订阅数量列）
+        assert ("订阅应用" in body) or ("资源编码" in body), "缺少 订阅应用/资源编码 列"
         for token in ("AKSK", "aksk", "SecretKey", "secret_key"):
             assert token not in body, f"页面暴露敏感字段: {token}"
 

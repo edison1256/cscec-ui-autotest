@@ -64,11 +64,13 @@ class TestM2DefaultLoad:
         assert "查看订单明细" not in body, "初始状态子表已展开（应折叠）"
 
     def test_m2_1_2__parent_headers(self, wb_page):
-        """UI：父表列名依次为资源名称/资源编码/服务模式/资源所属方/订阅数量/操作."""
+        """UI：父表列名含资源名称/资源编码/服务模式/资源发布方(或所属方)/订阅数量/操作."""
         _open_sc(wb_page)
+        body = visible_texts(wb_page)
+        owner_col = "资源发布方" if "资源发布方" in body else "资源所属方"
         table_with_headers(
             wb_page,
-            ("资源名称", "资源编码", "服务模式", "资源所属方", "订阅数量", "操作"),
+            ("资源名称", "资源编码", "服务模式", owner_col, "订阅数量", "操作"),
             "订阅中心-API列表父表",
         )
 
