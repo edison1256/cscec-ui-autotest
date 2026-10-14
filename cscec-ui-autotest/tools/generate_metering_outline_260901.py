@@ -19,6 +19,7 @@ RESULTS = PROJECT_ROOT / "reports/metering260901/results.json"
 ID_TOKEN = re.compile(r"^([MF]\d{1,2}(?:\.\d{1,2})*)\b")
 SHELLS = {"M11.1": "M11.1.1", "M11.2": "M11.2.1", "M11.3": "M11.3.1"}
 CLASS_LABEL = {
+    "CONTRACT_DIFFERENCE": "需求契约待复核",
     "ENTRY_MISSING": "需求差异待复核",
     "ROLE_REQUIRED": "待角色/手工协同",
     "DATA_REQUIRED": "待数据/流程",
@@ -70,6 +71,10 @@ def annotate(root: dict, results: dict) -> tuple[dict, Counter, set[str]]:
         counts[status] += 1
         classification = record.get("classification") if record else None
         label = CLASS_LABEL.get(classification, STATUS_LABEL[status])
+        scope_note = record.get("scope_note") if record else None
+        if scope_note and status == "passed":
+            label = "限定范围通过"
+            counts["limited_scope"] += 1
         # Setup/auth failures and skips do not prove an automated assertion exists.
         phases = record.get("phases", {}) if record else {}
         implemented = phases.get("call", {}).get("status") in {"passed", "failed"}
@@ -77,6 +82,8 @@ def annotate(root: dict, results: dict) -> tuple[dict, Counter, set[str]]:
         node["title"] = f"[{case_id}][{auto}][{label}] {node.get('title', '')}"
         notes = ["执行说明：" + label]
         if record:
+            if scope_note:
+                notes.append("覆盖边界：" + scope_note)
             reason = record.get("error") or record.get("skip_reason") or ""
             if reason:
                 notes.append("结果摘要：" + str(reason)[:1200])
@@ -142,6 +149,7 @@ def generate(source: Path, target: Path, result_path: Path) -> dict:
                 f"退出码 {data.get('exitstatus', '无')}。"
                 f"大纲覆盖项 {stats['total']}，通过 {stats['passed']}，"
                 f"失败 {stats['failed']}，跳过 {stats['skipped']}，"
+                f"通过项中限定范围 {stats['limited_scope']}，"
                 f"未执行 {stats['not_run']}。收集/跳过不等于自动化覆盖。"
                 "本文件独立生成，保留原批注及资源；原始大纲未修改。"
             )

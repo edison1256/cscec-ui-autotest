@@ -1,14 +1,14 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-09-22 11:43。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-10-14 13:46。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：521
-- **生产默认收集（smoke + readonly）**：115 / 521
-- **被默认排除（write / destructive）**：406
+- **总用例数**：820
+- **生产默认收集（smoke + readonly）**：115 / 820
+- **未进入生产默认套件（含 PRE 专用、非冒烟、写入及工具测试）**：705
 
 - **控制台机器契约**：113
   - Mandatory：44
@@ -18,7 +18,7 @@
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：183
+- **登记资产总数**：185
 
 ### 按生命周期（lifecycle）
 
@@ -27,6 +27,7 @@
 | uat_automated | 96 |
 | prod_regression | 63 |
 | candidate | 24 |
+| new_requirement | 2 |
 
 ### 按自动化状态（automation_status）
 
@@ -34,6 +35,7 @@
 | --- | --- |
 | automated | 173 |
 | needs_stabilization | 10 |
+| candidate | 2 |
 
 ### 按模块（module）
 
@@ -60,6 +62,7 @@
 | 控制台工作台 | 2 |
 | 评价中心 | 2 |
 | 审批流程 | 2 |
+| 计量订阅260901 | 2 |
 
 ## 3. 外部阻塞与待稳定资产（needs_stabilization）
 

@@ -1,5 +1,5 @@
 registry_version: 1
-updated_at: "2026-09-14"
+updated_at: "2026-10-14"
 asset_lifecycle:
   - new_requirement
   - candidate
@@ -4025,3 +4025,24 @@ assets:
     markers: [console, readonly, smoke, prod_mandatory, regression, domain_split]
     env_policy: {uat: true, pre: true, prod_default: true, prod_explicit: true}
     notes: "从真实菜单进入流程监控，动态绑定首条实例并打开待办任务历史；不点击导出或任务流转动作。"
+
+  - asset_id: UI-METERING-260901-COVERAGE
+    module: 计量订阅260901
+    title: PRE计量订阅大纲覆盖候选套件（含待验证项）
+    lifecycle: new_requirement
+    automation_status: candidate
+    test_path: tests/metering_subscription_260901
+    markers: [metering_subscription_260901, readonly, regression]
+    env_policy: {uat: false, pre: true, prod_default: false, prod_explicit: false}
+    notes: "194为收集/大纲覆盖项数量，不是自动化通过数；待数据、待角色、待实现与需求差异分别记录。使用与限制见docs/metering-subscription-260901.md，未经PRE复核不晋级发布门禁。"
+
+  - asset_id: UI-METERING-260901-BLACKBOX-VERIFIED
+    module: 计量订阅260901
+    title: PRE已执行黑盒场景自动化候选套件
+    lifecycle: new_requirement
+    automation_status: candidate
+    test_path: tests/metering_subscription_260901/verified/test_verified_workflows.py
+    markers: [metering_blackbox_verified, readonly, regression]
+    env_policy: {uat: false, pre: true, prod_default: false, prod_explicit: false}
+    source: {source_type: blackbox_execution, requirement: 计量订阅260901黑盒复测20261013}
+    notes: "原62项通过记录映射39个独立流程，59项具备执行逻辑（含明确范围限定项），3项保留契约/数据阻塞；仅PRE，所有数量/累计/日期从本轮读取，导出需显式开启。来源及证据映射见test_assets/metering_subscription_260901/blackbox_verified.json，运行见docs/metering-subscription-260901-blackbox-automation.md。"

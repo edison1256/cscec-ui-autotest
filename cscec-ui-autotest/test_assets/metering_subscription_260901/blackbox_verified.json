@@ -1,0 +1,914 @@
+{
+  "version": 1,
+  "source_thread": "01a123b8-0c73-7cd3-9099-eec70da75286",
+  "source_run": "blackbox-20261013-retest",
+  "source_outline_sha256": "c751e810cc1fac4b9fcfe508072307f85bc7eaa4fa731e6f6908bff1665bd8b1",
+  "source_record_sha256": "44acdeb3cb04945ad1d06a177fb87ad9a4309dab7e8aa6874e97d2a279929def",
+  "historical_passed": 62,
+  "scenarios": [
+    {
+      "key": "wb_entry",
+      "case_ids": [
+        "M1.2.1"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "cs_entry",
+      "case_ids": [
+        "M1.1.2",
+        "M1.3.1",
+        "M7.1.1"
+      ],
+      "domains": [
+        "cs"
+      ]
+    },
+    {
+      "key": "cs_readonly",
+      "case_ids": [
+        "M1.3.3",
+        "M7.5.4"
+      ],
+      "domains": [
+        "cs"
+      ]
+    },
+    {
+      "key": "wb_component",
+      "case_ids": [
+        "M1.4.1"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "cs_component",
+      "case_ids": [
+        "M1.4.2"
+      ],
+      "domains": [
+        "cs"
+      ]
+    },
+    {
+      "key": "wb_default",
+      "case_ids": [
+        "M2.1.1"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_columns",
+      "case_ids": ["M2.1.2"],
+      "domains": ["wb"]
+    },
+    {
+      "key": "wb_modes",
+      "case_ids": [
+        "M2.1.3",
+        "M2.4.3"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_code",
+      "case_ids": [
+        "M2.2.1"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_name",
+      "case_ids": [
+        "M2.2.2"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_combo",
+      "case_ids": [
+        "M2.2.3"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_reset",
+      "case_ids": [
+        "M2.2.4"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_empty",
+      "case_ids": [
+        "M2.2.5"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "scan",
+      "case_ids": [
+        "M2.4.2",
+        "M3.1.1",
+        "M3.1.2",
+        "M3.1.3",
+        "M3.2.1",
+        "M7.1.4",
+        "M7.4.3"
+      ],
+      "domains": [
+        "wb",
+        "cs"
+      ]
+    },
+    {
+      "key": "multi_api",
+      "case_ids": [
+        "M2.4.4"
+      ],
+      "domains": [
+        "wb",
+        "personal"
+      ]
+    },
+    {
+      "key": "wb_toggle",
+      "case_ids": [
+        "M2.5.1",
+        "M2.5.2"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_orders",
+      "case_ids": [
+        "M3.5.1"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_order_columns",
+      "case_ids": [
+        "M5.2.1"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "wb_usage",
+      "case_ids": [
+        "M3.5.2",
+        "M3.5.3",
+        "M6.1.1",
+        "M6.1.2",
+        "M6.1.3",
+        "M6.1.4"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "unlimited",
+      "case_ids": [
+        "M6.2.3"
+      ],
+      "domains": [
+        "wb"
+      ],
+      "hold_reason": "DATA_REQUIRED: 需独立确认不限量规格；totalQuota=0或不限次数显示不能单独证明规格类型"
+    },
+    {
+      "key": "personal_default",
+      "case_ids": [
+        "M4.1.2",
+        "M4.1.3"
+      ],
+      "domains": [
+        "personal",
+        "ordinary"
+      ]
+    },
+    {
+      "key": "personal_owners",
+      "case_ids": [
+        "M1.1.1",
+        "M4.1.1",
+        "M4.5.1"
+      ],
+      "domains": [
+        "wb",
+        "personal"
+      ]
+    },
+    {
+      "key": "personal_isolation",
+      "case_ids": [
+        "M4.3.4"
+      ],
+      "domains": [
+        "personal"
+      ],
+      "hold_reason": "DATA_REQUIRED: 需同资源同应用的他人订阅反例；原反例是不同资源，不能证明该分支"
+    },
+    {
+      "key": "personal_merge",
+      "case_ids": [
+        "M4.3.1"
+      ],
+      "domains": [
+        "personal"
+      ]
+    },
+    {
+      "key": "personal_permanent",
+      "case_ids": [
+        "M4.4.4"
+      ],
+      "domains": [
+        "personal"
+      ]
+    },
+    {
+      "key": "cs_orders",
+      "case_ids": [
+        "M5.1.2",
+        "M5.3.2"
+      ],
+      "domains": [
+        "cs",
+        "ordinary"
+      ]
+    },
+    {
+      "key": "daily",
+      "case_ids": [
+        "M6.3.1",
+        "M6.3.3",
+        "M6.3.4",
+        "M6.3.5"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "daily_pagination",
+      "case_ids": ["M6.3.6"],
+      "domains": ["wb"]
+    },
+    {
+      "key": "cs_columns",
+      "case_ids": [
+        "M7.1.2"
+      ],
+      "domains": [
+        "cs"
+      ],
+      "hold_reason": "CONTRACT_DIFFERENCE: 人工记录列顺序与原大纲不一致，需确认最终列顺序；不沿用历史通过"
+    },
+    {
+      "key": "cs_legacy",
+      "case_ids": [
+        "M7.1.3"
+      ],
+      "domains": [
+        "cs"
+      ]
+    },
+    {
+      "key": "cs_name",
+      "case_ids": [
+        "M7.2.3"
+      ],
+      "domains": [
+        "cs"
+      ]
+    },
+    {
+      "key": "cs_code",
+      "case_ids": [
+        "M7.2.4"
+      ],
+      "domains": [
+        "cs"
+      ]
+    },
+    {
+      "key": "cs_dates",
+      "case_ids": [
+        "M7.2.5"
+      ],
+      "domains": [
+        "cs"
+      ]
+    },
+    {
+      "key": "cs_reset",
+      "case_ids": [
+        "M7.2.6"
+      ],
+      "domains": [
+        "cs"
+      ]
+    },
+    {
+      "key": "delivery",
+      "case_ids": [
+        "M11.4.2"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "rapid_parent",
+      "case_ids": [
+        "M12.2.1"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "rapid_usage",
+      "case_ids": [
+        "M12.2.2"
+      ],
+      "domains": [
+        "wb"
+      ]
+    },
+    {
+      "key": "repeat_export",
+      "case_ids": [
+        "M12.2.3"
+      ],
+      "domains": [
+        "cs"
+      ],
+      "requires_export": true
+    },
+    {
+      "key": "sensitive",
+      "case_ids": [
+        "M12.3.1"
+      ],
+      "domains": [
+        "wb",
+        "cs",
+        "personal"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "M1.1.1",
+      "title": "“工作台”，期望进入应用中心并展示订阅中心（API列表）、我的订阅（API订阅）菜单以及列表页面",
+      "evidence": [
+        "03_工作台本轮默认列表.png",
+        "B02_数字科技个人页稳定加载完成.png",
+        "本人接口用量补查.json"
+      ]
+    },
+    {
+      "case_id": "M1.1.2",
+      "title": "“控制台”，期望进入平台运营视角并展示订阅服务（API列表）菜单以及列表页面",
+      "evidence": [
+        "控制台本轮独立登录.png",
+        "控制台本轮默认列表.png"
+      ]
+    },
+    {
+      "case_id": "M1.2.1",
+      "title": "权限：租户管理员/租户运营访问“订阅中心 - API列表”，期望菜单可见且页面可打开",
+      "evidence": [
+        "02_数字科技租户首页.png",
+        "03_工作台本轮默认列表.png"
+      ]
+    },
+    {
+      "case_id": "M1.3.1",
+      "title": "权限：平台运营人员访问控制台“订阅服务 - API列表”，期望菜单可见且展示列表",
+      "evidence": [
+        "控制台本轮独立登录.png",
+        "控制台本轮默认列表.png"
+      ]
+    },
+    {
+      "case_id": "M1.3.3",
+      "title": "只读：控制台 API 列表和权益抽屉中检查操作列，期望仅存在查看类操作，不出现续订、变配、增购、购买、编辑、删除入口",
+      "evidence": [
+        "控制台全部父行账户核对.json",
+        "控制台本轮账户接口用量.png",
+        "控制台每日明细导出后.png"
+      ]
+    },
+    {
+      "case_id": "M1.4.1",
+      "title": "回归：工作台“订阅中心 - 组件资源/组件订阅”仍作为通用组件订阅页面，期望不展示 API 权益账户专属额度字段",
+      "evidence": [
+        "工作台通用组件列表本轮回归.png"
+      ]
+    },
+    {
+      "case_id": "M1.4.2",
+      "title": "回归：控制台“订阅服务 - 组件列表”仍作为通用组件订阅查询，期望不被 API 列表字段替换",
+      "evidence": [
+        "控制台通用组件列表本轮回归.png"
+      ]
+    },
+    {
+      "case_id": "M2.1.1",
+      "title": "主流程：租户管理员进入“工作台 - 订阅中心 - API列表”，期望默认展示 API 类组件聚合列表且父子表初始折叠",
+      "evidence": [
+        "M2.1.1_本轮通过.png",
+        "M2.1.1_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M2.1.2",
+      "title": "UI：检查父表列名，期望依次包含资源名称、资源编码、服务模式、资源所属方、订阅数量、操作",
+      "evidence": [
+        "M2.1.2_本轮通过.png",
+        "M2.1.2_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M2.1.3",
+      "title": "数据：WPS数据加载列表，期望 WPS 服务组件按不同服务模式分别成行",
+      "evidence": [
+        "M2.2.2_本轮通过.png"
+      ]
+    },
+    {
+      "case_id": "M2.2.1",
+      "title": "查询：输入存在的资源编码后点击查询，期望仅返回该资源编码对应的 API 聚合行",
+      "evidence": [
+        "M2.2.1_本轮通过.png",
+        "M2.2.1_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M2.2.2",
+      "title": "查询：输入存在的资源名称：WPS服务组件 后点击查询，期望仅返回匹配资源名称的 API 聚合行",
+      "evidence": [
+        "M2.2.2_本轮通过.png",
+        "M2.2.2_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M2.2.3",
+      "title": "查询：资源编码与资源名称组合查询，期望两项条件同时生效且不返回不匹配数据",
+      "evidence": [
+        "M2.2.3_本轮通过.png",
+        "M2.2.3_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M2.2.4",
+      "scope_note": "源黑盒执行明确取消统计方式断言；本流程仅验证资源名称/编码重置，原大纲统计方式分支未验证。",
+      "title": "重置：修改资源编码、资源名称、统计方式后点击重置，期望查询条件恢复默认且列表重新加载",
+      "evidence": [
+        "M2.2.4_本轮通过.png",
+        "M2.2.4_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M2.2.5",
+      "title": "空结果：输入不存在的资源编码查询，期望列表为空",
+      "evidence": [
+        "M2.2.5_本轮通过.png",
+        "M2.2.5_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M2.4.2",
+      "title": "数据：同一租户、组件、不同应用订阅同一服务模式，期望订阅数量按不同应用权益账户分别计数",
+      "evidence": [
+        "工作台全部父行账户核对.json"
+      ]
+    },
+    {
+      "case_id": "M2.4.3",
+      "title": "数据：同一资源名称存在多个服务模式，期望每个服务模式独立展示订阅数量",
+      "evidence": [
+        "M2.2.2_本轮通过.png"
+      ]
+    },
+    {
+      "case_id": "M2.4.4",
+      "title": "数据：同一权益账户包含多个 API，期望父表订阅数量仍计为 1 个权益账户",
+      "evidence": [
+        "本人数据所有者复核.json",
+        "工作台全部父行账户核对.json"
+      ]
+    },
+    {
+      "case_id": "M2.5.1",
+      "title": "交互：点击父表第一行“查看”，期望仅当前行下方展开权益账户子表且按钮变为“收起”",
+      "evidence": [
+        "单父行展开.png"
+      ]
+    },
+    {
+      "case_id": "M2.5.2",
+      "title": "交互：再次点击“收起”，期望权益账户子表关闭且按钮恢复“查看”",
+      "evidence": [
+        "单父行收起.png"
+      ]
+    },
+    {
+      "case_id": "M3.1.1",
+      "title": "主流程：父行下展开权益账户，期望仅展示该资源、该服务模式、当前统计方式范围内权益账户",
+      "evidence": [
+        "工作台全部父行账户核对.json"
+      ]
+    },
+    {
+      "case_id": "M3.1.2",
+      "title": "数据：当前账户的，展示当前账户关联权益账户",
+      "evidence": [
+        "现有样本边界盘点.json",
+        "工作台全部父行账户核对.json",
+        "控制台全部父行账户核对.json"
+      ]
+    },
+    {
+      "case_id": "M3.1.3",
+      "title": "数据：其他资源或其他服务模式的权益账户不应出现在当前父行子表",
+      "evidence": [
+        "工作台全部父行账户核对.json"
+      ]
+    },
+    {
+      "case_id": "M3.2.1",
+      "title": "UI：检查权益账户列名，期望包含资源名称、服务模式、订阅应用、资源发布方、生效时间、截止时间、可用状态、总可调用额、已调用额、剩余调用额、操作",
+      "evidence": [
+        "工作台全部父行账户核对.json"
+      ]
+    },
+    {
+      "case_id": "M3.5.1",
+      "title": "交互：点击权益账户“查看订单明细”，期望进入或打开 F04 订阅明细页面并携带当前权益账户上下文",
+      "evidence": [
+        "B07_实际控制人订单明细.png"
+      ]
+    },
+    {
+      "case_id": "M3.5.2",
+      "title": "交互：点击权益账户“查看用量”，期望在当前权益账户行下展开接口用量",
+      "evidence": [
+        "B08_当前账户及接口累计.png",
+        "B08_收起重开复核.png"
+      ]
+    },
+    {
+      "case_id": "M3.5.3",
+      "title": "交互：再次点击“收起用量”，期望接口用量子表关闭",
+      "evidence": [
+        "B08_当前账户及接口累计.png",
+        "B08_收起重开复核.png"
+      ]
+    },
+    {
+      "case_id": "M4.1.1",
+      "scope_note": "本轮回放已核验管理员账号的本人列表及逐笔订单；普通租户仅验证默认状态，缺普通用户本人正向权益，不据此宣称该角色正向订单通过。",
+      "title": "主流程：普通用户进入“工作台 - 我的订阅 - API订阅”，期望打开本人 API 权益账户列表",
+      "evidence": [
+        "B02_数字科技个人页稳定加载完成.png",
+        "本人数据所有者复核.json",
+        "普通成员个人页已知他人资源排除.png",
+        "数字科技个人页已知他人资源排除.png",
+        "B04_普通成员管理路由权益下钻.png"
+      ]
+    },
+    {
+      "case_id": "M4.1.2",
+      "title": "默认筛选：首次进入页面，期望可用状态默认选中“可用”",
+      "evidence": [
+        "B02_数字科技个人页稳定加载完成.png",
+        "普通成员个人页稳定加载完成.png"
+      ]
+    },
+    {
+      "case_id": "M4.1.3",
+      "title": "UI：列表列名与工作台权益账户子表一致，期望页面不展示内部凭证：AKsk、SecretKey 等敏感字段",
+      "evidence": [
+        "B02_数字科技个人页稳定加载完成.png",
+        "普通成员个人页稳定加载完成.png"
+      ]
+    },
+    {
+      "case_id": "M4.3.1",
+      "title": "数据：本人同一服务组件、应用、服务模式存在多次成功购买，期望合并为一行权益账户",
+      "evidence": [
+        "本人数据所有者复核.json"
+      ]
+    },
+    {
+      "case_id": "M4.3.4",
+      "title": "隔离：其他用户订阅同一服务组件和应用，期望不出现在当前用户“我的订阅”列表",
+      "evidence": [
+        "B02_数字科技个人页稳定加载完成.png",
+        "本人数据所有者复核.json",
+        "普通成员个人页已知他人资源排除.png",
+        "数字科技个人页已知他人资源排除.png",
+        "B04_普通成员管理路由权益下钻.png"
+      ]
+    },
+    {
+      "case_id": "M4.4.4",
+      "title": "展示：截止时间为永久有效时，期望显示“永久有效”",
+      "evidence": [
+        "本人数据所有者复核.json",
+        "B02_数字科技个人页稳定加载完成.png"
+      ]
+    },
+    {
+      "case_id": "M4.5.1",
+      "title": "交互：从“我的订阅 - API订阅”点击“查看订单明细”，期望只展示本人有权查看的成功订阅记录",
+      "evidence": [
+        "B02_数字科技个人页稳定加载完成.png",
+        "本人数据所有者复核.json",
+        "普通成员个人页已知他人资源排除.png",
+        "数字科技个人页已知他人资源排除.png",
+        "B04_普通成员管理路由权益下钻.png"
+      ]
+    },
+    {
+      "case_id": "M5.1.2",
+      "scope_note": "现页面从行内权益子表进入订单明细并核对全部成功订单；不据此宣称权益账户抽屉形态已通过。",
+      "title": "主流程：从控制台权益账户抽屉点击“查看订单明细”，期望展示当前权益账户关联的全部成功订阅记录",
+      "evidence": [
+        "控制台当前订单明细.png",
+        "控制台既有订单详情.png",
+        "控制台订单核对.json"
+      ]
+    },
+    {
+      "case_id": "M5.2.1",
+      "title": "UI：检查订单明细表字段，期望包含订单 ID、订阅人、订阅人所在组织、生效时间、操作",
+      "evidence": [
+        "B07_实际控制人订单明细.png"
+      ]
+    },
+    {
+      "case_id": "M5.3.2",
+      "title": "权限：中建云租户人员从控制台入口查看订单明细，期望正常打开订阅详情",
+      "evidence": [
+        "控制台当前订单明细.png",
+        "控制台既有订单详情.png",
+        "控制台订单核对.json"
+      ]
+    },
+    {
+      "case_id": "M6.1.1",
+      "title": "主流程：点击权益账户“查看用量”，期望在当前账户行下展开接口用量子表",
+      "evidence": [
+        "B08_当前账户及接口累计.png",
+        "B08_收起重开复核.png"
+      ]
+    },
+    {
+      "case_id": "M6.1.2",
+      "title": "UI：接口用量子表列名为接口名称、已调用额、操作",
+      "evidence": [
+        "B08_当前账户及接口累计.png",
+        "B08_收起重开复核.png"
+      ]
+    },
+    {
+      "case_id": "M6.1.3",
+      "title": "展示：接口已调用额只显示数值，不在单元格中展示单位",
+      "evidence": [
+        "B08_当前账户及接口累计.png",
+        "B08_收起重开复核.png"
+      ]
+    },
+    {
+      "case_id": "M6.1.4",
+      "title": "规则：接口行不展示独立剩余额度，期望余额只在权益账户共享池展示",
+      "evidence": [
+        "B08_当前账户及接口累计.png",
+        "B08_收起重开复核.png"
+      ]
+    },
+    {
+      "case_id": "M6.2.3",
+      "title": "数据：不限量账户有调用事实时，期望接口已调用额累计展示，剩余调用额仍为“不限次数”",
+      "evidence": [
+        "B08_当前账户及接口累计.png",
+        "B08_收起重开复核.png"
+      ]
+    },
+    {
+      "case_id": "M6.3.1",
+      "title": "主流程：点击接口行“查看明细”，期望打开每日 API 调用明细弹窗",
+      "evidence": [
+        "每日明细本轮默认.png",
+        "每日明细全分页核对.json"
+      ]
+    },
+    {
+      "case_id": "M6.3.3",
+      "title": "UI：明细表列名为日期、已调用次数、已调用额",
+      "evidence": [
+        "每日明细本轮默认.png",
+        "每日明细全分页核对.json"
+      ]
+    },
+    {
+      "case_id": "M6.3.4",
+      "title": "排序：存在多天数据时，期望按日期倒序展示",
+      "evidence": [
+        "每日明细本轮默认.png",
+        "每日明细全分页核对.json"
+      ]
+    },
+    {
+      "case_id": "M6.3.5",
+      "title": "数据：每日明细合计值与当前接口已调用额一致",
+      "evidence": [
+        "每日明细全分页核对.json"
+      ]
+    },
+    {
+      "case_id": "M6.3.6",
+      "title": "分页",
+      "evidence": [
+        "每日明细本轮默认.png",
+        "每日明细全分页核对.json"
+      ]
+    },
+    {
+      "case_id": "M7.1.1",
+      "title": "主流程：平台运营人员进入“控制台 - 订阅服务 - API列表”，期望展示全租户 API 订阅聚合列表",
+      "evidence": [
+        "控制台本轮独立登录.png",
+        "控制台本轮默认列表.png"
+      ]
+    },
+    {
+      "case_id": "M7.1.2",
+      "title": "UI：列表列名为序号、租户编码、租户名称、资源名称、资源编码、资源发布方、服务模式、订阅数量、操作",
+      "evidence": [
+        "M7.1.2_本轮通过.png",
+        "M7.1.2_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M7.1.3",
+      "title": "UI：历史字段：订阅ID、订阅资源名称、订阅人 等升级后，期望最终字段与 PRD/原型一致",
+      "evidence": [
+        "M7.1.2_本轮通过.png"
+      ]
+    },
+    {
+      "case_id": "M7.1.4",
+      "title": "数据：每行代表一个租户、资源、服务模式组合",
+      "evidence": [
+        "控制台全部父行账户核对.json",
+        "控制台组合标识核对.json"
+      ]
+    },
+    {
+      "case_id": "M7.2.3",
+      "title": "查询：输入资源名称：WPS服务组件，期望仅返回匹配资源行",
+      "evidence": [
+        "M7.2.3_本轮通过.png",
+        "M7.2.3_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M7.2.4",
+      "title": "查询：输入资源编码，期望仅返回匹配资源编码行",
+      "evidence": [
+        "M7.2.4_本轮通过.png",
+        "M7.2.4_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M7.2.5",
+      "title": "查询：选择订阅时间起止日期，期望只统计区间内成功订阅形成的权益账户",
+      "evidence": [
+        "控制台日期筛选核对.json",
+        "控制台日期筛选_2025-11-27.png",
+        "实际控制人订单组织对照.json"
+      ]
+    },
+    {
+      "case_id": "M7.2.6",
+      "title": "重置：修改查询条件后点击重置，期望恢复默认条件并重新加载列表",
+      "evidence": [
+        "M7.2.6_本轮通过.png",
+        "M7.2.6_本轮通过.txt",
+        "业务响应.json"
+      ]
+    },
+    {
+      "case_id": "M7.4.3",
+      "scope_note": "仅回放控制台行内权益子表与工作台子表的字段一致性；未实现的权益账户抽屉形态不纳入通过范围。",
+      "title": "UI：抽屉内字段与工作台权益账户子表一致",
+      "evidence": [
+        "控制台全部父行账户核对.json"
+      ]
+    },
+    {
+      "case_id": "M7.5.4",
+      "title": "权限：控制台页面为只读，所有下钻均不得提供修改权益、额度、API 范围的入口",
+      "evidence": [
+        "控制台全部父行账户核对.json",
+        "控制台本轮账户接口用量.png",
+        "控制台每日明细导出后.png"
+      ]
+    },
+    {
+      "case_id": "M11.4.2",
+      "title": "回归：服务组件列表交付方式 API/SDK 字段仍可展示",
+      "evidence": [
+        "资源中心组件API字段本轮回归.png",
+        "API_SDK筛选选项本轮.png",
+        "SDK资源目录本轮查询.png"
+      ]
+    },
+    {
+      "case_id": "M12.2.1",
+      "title": "并发：连续快速点击父行“查看/收起”，期望状态稳定",
+      "evidence": [
+        "父行连续十次收起展开.png"
+      ]
+    },
+    {
+      "case_id": "M12.2.2",
+      "title": "并发：连续快速点击“查看用量/收起用量”，期望接口用量不重复插入",
+      "evidence": [
+        "接口连续十次展开.png"
+      ]
+    },
+    {
+      "case_id": "M12.2.3",
+      "title": "并发：导出按钮连续点击，期望不生成重复异常文件或导致页面不可用",
+      "evidence": [
+        "连续导出实际结果.json",
+        "连续导出后页面.png"
+      ]
+    },
+    {
+      "case_id": "M12.3.1",
+      "title": "脱敏：工作台和控制台 API 权益页面不展示内部凭证、AKSK、SecretKey 等敏感字段",
+      "evidence": [
+        "现有样本边界盘点.json",
+        "工作台全部父行账户核对.json",
+        "控制台全部父行账户核对.json",
+        "本人接口用量补查.json"
+      ]
+    }
+  ],
+  "default_profile": {
+    "username": "20431644",
+    "display_name": "陈方达",
+    "admin_tenant": "中建数字科技有限公司",
+    "ordinary_tenant": "中建云",
+    "query_resource": "WPS服务组件",
+    "personal_subscription_path": "/udpweb/portal/index.html?#/sub/resource/subscription/apiResource?suitKey=1899427585366003727&routeName=resource&appTitle=API%E8%AE%A2%E9%98%85&mc=1899427585366003727&mn=%E5%B7%A5%E4%BD%9C%E5%8F%B0&mt=module&menuCode=1925485794498359318",
+    "viewport": {
+      "width": 1920,
+      "height": 1440
+    },
+    "resource_catalog_path": "/udpweb/portal/index.html?#/sub/resource/resource/comp?suitKey=1899427585366003727&routeName=resource&appTitle=%E7%BB%84%E4%BB%B6%E5%88%97%E8%A1%A8&mc=1899427585366003727&mn=%E5%B7%A5%E4%BD%9C%E5%8F%B0&mt=module&menuCode=1925485794498359301"
+  }
+}

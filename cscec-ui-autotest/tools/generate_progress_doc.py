@@ -42,7 +42,7 @@ def collect_prod_stats() -> dict:
     py = str(venv_py) if venv_py.exists() else sys.executable
     try:
         proc = subprocess.run(
-            [py, "run_tests.py", "--env", "prod", "--dry-run"],
+            [py, "run_tests.py", "--env", "prod", "--dry-run", "--keep-allure-results"],
             cwd=str(PROJECT_ROOT),
             capture_output=True,
             text=True,
@@ -125,7 +125,7 @@ def render(registry: dict, stats: dict, contract_stats: dict, summary: dict) -> 
         if total is not None:
             lines.append(f"- **总用例数**：{total}")
             lines.append(f"- **生产默认收集（smoke + readonly）**：{collected} / {total}")
-            lines.append(f"- **被默认排除（write / destructive）**：{deselected}")
+            lines.append(f"- **未进入生产默认套件（含 PRE 专用、非冒烟、写入及工具测试）**：{deselected}")
         else:
             lines.append(f"- **生产默认收集（smoke + readonly）**：{collected}")
     lines.append("")
