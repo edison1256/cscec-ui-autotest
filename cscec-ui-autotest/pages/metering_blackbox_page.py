@@ -76,6 +76,12 @@ def metering_route(page, root, profile, name, fragment):
     return target
 
 
+def component_list_response(response):
+    return response.request.method == "POST" and urlparse(response.url).path.endswith(
+        ("/component-portal/list", "/component-portal/my/list")
+    )
+
+
 def management_workbench_entry(page):
     entry = page.locator(".ant-popover.switch_propver").get_by_text("工作台", exact=True).filter(visible=True)
     expect(entry).to_have_count(1)

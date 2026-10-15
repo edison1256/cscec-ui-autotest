@@ -16,7 +16,7 @@ from core.metering_blackbox_contract import (
     ACCOUNT_HEADERS, CS_HEADERS, ORDER_HEADERS, USAGE_HEADERS, WB_HEADERS, MissingMeteringData,
     amount, assert_daily, assert_export, load_manifest, require_data,
 )
-from pages.metering_blackbox_page import metering_route, response_data, ui_rows, ui_table, visible, watch_downloads
+from pages.metering_blackbox_page import component_list_response, metering_route, response_data, ui_rows, ui_table, visible, watch_downloads
 
 MANIFEST = load_manifest()
 pytestmark = [pytest.mark.metering_blackbox_verified, pytest.mark.regression]
@@ -305,7 +305,7 @@ def run_workflow(provider, key):
                              "resource_catalog_path", "/resource/comp")
         model.page.goto(url, wait_until="domcontentloaded")
         expect(model.page.get_by_text("交付方式", exact=True).filter(visible=True).first).to_be_visible(timeout=20000)
-        with model.page.expect_response(lambda r: urlparse(r.url).path.endswith("/component-portal/list")) as info:
+        with model.page.expect_response(component_list_response) as info:
             visible(model.page.get_by_role("button", name="查 询", exact=True)).click()
         before = response_data(info.value)["list"]
         require_data(any(row["typeName"] == "API" for row in before), "缺少API交付方式正向资源")
@@ -315,7 +315,7 @@ def run_workflow(provider, key):
         selection.get_by_role("combobox").click()
         option = model.page.locator(".ant-select-item-option").filter(has_text=re.compile("^SDK$"))
         visible(option).click()
-        with model.page.expect_response(lambda r: urlparse(r.url).path.endswith("/component-portal/list")) as info:
+        with model.page.expect_response(component_list_response) as info:
             visible(model.page.get_by_role("button", name="查 询", exact=True)).click()
         after = response_data(info.value)["list"]
         require_data(bool(after), "缺少SDK资源正向样本")

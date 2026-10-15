@@ -11,7 +11,7 @@ import pytest
 import run_tests
 from core.metering_blackbox_contract import allowed_request, assert_metering_environment, load_manifest, optional_telemetry
 from core.metering_trace import MeteringTraces
-from pages.metering_blackbox_page import management_workbench_entry, metering_route
+from pages.metering_blackbox_page import component_list_response, management_workbench_entry, metering_route
 
 
 @pytest.mark.parametrize("env,host", [("pre", "cloud-pre.cscec.com"), ("prod", "cloud.cscec.com"), ("prod", "irp.cscec.com")])
@@ -243,6 +243,20 @@ def test_production_route_uses_current_dom_and_rejects_pre_links(local_browser):
     with pytest.raises(ValueError, match="ENV_MISMATCH"):
         metering_route(page, "https://cloud.cscec.com/", profile, "personal_subscription_path", fragment)
     context.close()
+
+
+@pytest.mark.parametrize("path,method,expected", [
+    ("/irp-api/irp-portal-workbench/component-portal/list", "POST", True),
+    ("/irp-api/irp-portal-workbench/component-portal/my/list", "POST", True),
+    ("/irp-api/irp-portal-workbench/component-portal/my/list", "GET", False),
+    ("/irp-api/irp-portal-workbench/component-portal/list", "DELETE", False),
+    ("/irp-api/irp-portal-workbench/component-portal/archive/list", "POST", False),
+    ("/irp-api/irp-portal-workbench/component-portal/my/listDetails", "POST", False),
+    ("/irp-api/irp-portal-workbench/quota-instance/list", "POST", False),
+])
+def test_component_list_response_only_matches_observed_read_queries(path, method, expected):
+    response = SimpleNamespace(url="https://cloud.cscec.com" + path, request=SimpleNamespace(method=method))
+    assert component_list_response(response) is expected
 
 
 def test_workbench_entry_is_scoped_to_visible_management_popover(local_browser):
