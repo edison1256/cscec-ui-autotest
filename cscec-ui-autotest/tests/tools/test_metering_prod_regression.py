@@ -11,7 +11,7 @@ import pytest
 import run_tests
 from core.metering_blackbox_contract import allowed_request, assert_metering_environment, load_manifest, optional_telemetry
 from core.metering_trace import MeteringTraces
-from pages.metering_blackbox_page import metering_route
+from pages.metering_blackbox_page import management_workbench_entry, metering_route
 
 
 @pytest.mark.parametrize("env,host", [("pre", "cloud-pre.cscec.com"), ("prod", "cloud.cscec.com"), ("prod", "irp.cscec.com")])
@@ -242,6 +242,22 @@ def test_production_route_uses_current_dom_and_rejects_pre_links(local_browser):
     page.set_content('<a href="https://cloud-pre.cscec.com/#/subscription/apiResource">API</a>')
     with pytest.raises(ValueError, match="ENV_MISMATCH"):
         metering_route(page, "https://cloud.cscec.com/", profile, "personal_subscription_path", fragment)
+    context.close()
+
+
+def test_workbench_entry_is_scoped_to_visible_management_popover(local_browser):
+    context = local_browser.new_context()
+    page = context.new_page()
+    page.set_content('''
+        <div onclick="document.body.dataset.selected='ordinary'">工作台</div>
+        <div class="ant-popover other"><span>工作台</span></div>
+        <div class="ant-popover switch_propver" style="display:none"><span>工作台</span></div>
+        <div class="ant-popover switch_propver">
+          <span onclick="document.body.dataset.selected='management'">工作台</span>
+        </div>
+    ''')
+    management_workbench_entry(page).click()
+    assert page.locator("body").get_attribute("data-selected") == "management"
     context.close()
 
 

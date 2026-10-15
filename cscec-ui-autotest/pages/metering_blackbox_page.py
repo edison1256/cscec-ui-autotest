@@ -76,6 +76,12 @@ def metering_route(page, root, profile, name, fragment):
     return target
 
 
+def management_workbench_entry(page):
+    entry = page.locator(".ant-popover.switch_propver").get_by_text("工作台", exact=True).filter(visible=True)
+    expect(entry).to_have_count(1)
+    return entry
+
+
 class MeteringBlackboxPage:
     def __init__(self, page, domain: str, profile: dict):
         self.page = page
@@ -128,8 +134,9 @@ class MeteringBlackboxPage:
                 self.page.goto(url, wait_until="domcontentloaded")
             else:
                 visible(self.page.get_by_text("管理后台", exact=True)).hover()
+                entry = management_workbench_entry(self.page)
                 with self.page.context.expect_page() as popup:
-                    visible(self.page.get_by_text("工作台", exact=True)).click()
+                    entry.click()
                 self.page = popup.value
                 self.page.on("response", lambda r: self.responses.append(r) if "/quota-" in r.url else None)
         group, leaf = ("订阅服务", "API列表") if self.domain == "cs" else (
