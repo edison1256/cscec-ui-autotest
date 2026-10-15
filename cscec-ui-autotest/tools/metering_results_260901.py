@@ -1,4 +1,4 @@
-"""Current-run, phase-aware results for the PRE metering suite."""
+"""Current-run, phase-aware results for metering regression."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from uuid import uuid4
 CASE_PATTERN = re.compile(r"test_([mf])(\d+)(?:_(\d+)_(\d+)[a-z]?)?__", re.I)
 CLASS_PATTERN = re.compile(
     r"ENV_MISMATCH|ENTRY_MISSING|ROLE_REQUIRED|DATA_REQUIRED|"
-    r"PENDING_IMPLEMENTATION|OUT_OF_SCOPE|NOT_AUTOMATABLE|ENV_LIMITED|CONTRACT_DIFFERENCE"
+    r"PENDING_IMPLEMENTATION|OUT_OF_SCOPE|NOT_AUTOMATABLE|ENV_LIMITED|CONTRACT_DIFFERENCE|WRITE_BLOCKED"
 )
 SUITE_PATH = "tests/metering_subscription_260901/"
 
@@ -67,7 +67,8 @@ class ResultRecorder:
             phase["error"] = reason if len(reason) <= 2400 else reason[:600] + "\n...[truncated]...\n" + reason[-1800:]
         elif report.skipped:
             phase["skip_reason"] = reason[-800:]
-        match = CLASS_PATTERN.search(reason)
+        crash = getattr(report.longrepr, "reprcrash", None)
+        match = CLASS_PATTERN.search(getattr(crash, "message", reason))
         if match:
             phase["classification"] = match.group()
         entry["phases"][report.when] = phase
@@ -83,6 +84,9 @@ class ResultRecorder:
         scope_notes = json.loads(properties.get("metering_scope_notes", "{}"))
         if "metering_artifacts" in properties:
             entry["artifacts"] = properties["metering_artifacts"]
+        for property_name in ("metering_traces", "metering_trace_errors"):
+            if property_name in properties:
+                entry[property_name] = json.loads(properties[property_name])
         for case_id in case_ids:
             self.case_nodes.setdefault(case_id, set()).add(report.nodeid)
             variants = [self.nodes[node] for node in sorted(self.case_nodes[case_id])]

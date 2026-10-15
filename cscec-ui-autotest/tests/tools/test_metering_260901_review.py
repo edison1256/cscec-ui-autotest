@@ -65,6 +65,16 @@ def test_passed_teardown_does_not_hide_call_failure(tmp_path):
     assert recorder.results["M3.1.1"]["status"] == "failed"
 
 
+def test_final_exception_classification_ignores_traceback_source(tmp_path):
+    recorder = ResultRecorder(tmp_path / "results.json", "pre")
+    class Traceback:
+        reprcrash = SimpleNamespace(message="AssertionError: WRITE_BLOCKED/ENV_MISMATCH: blocked request")
+        def __str__(self):
+            return 'source: raise MissingData("ROLE_REQUIRED")\n' + self.reprcrash.message
+    recorder.consume(report(when="setup", outcome="failed", reason=Traceback()))
+    assert recorder.results["M3.1.1"]["classification"] == "WRITE_BLOCKED"
+
+
 def test_variants_preserve_worst_outcome_and_f12(tmp_path):
     recorder = ResultRecorder(tmp_path / "results.json", "pre")
     recorder.consume(report(name="test_m4_2_1a__query[a]", outcome="failed", reason="bad"))
@@ -152,7 +162,8 @@ def test_environment_guard_runs_before_fixtures(monkeypatch, env):
     from tests.metering_subscription_260901 import conftest as plugin
 
     monkeypatch.setattr(plugin, "settings", SimpleNamespace(ENV=env))
-    item = SimpleNamespace(nodeid=PREFIX + "test_f12__removed", markers=[])
+    item = SimpleNamespace(nodeid=PREFIX + "test_f12__removed", markers=[],
+                           config=SimpleNamespace(getoption=lambda option: False))
     item.add_marker = item.markers.append
     plugin.pytest_collection_modifyitems(None, [item])
     assert any(mark.name == "skip" for mark in item.markers)

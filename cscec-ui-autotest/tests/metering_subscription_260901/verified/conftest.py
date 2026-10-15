@@ -1,4 +1,4 @@
-"""Independent PRE sessions, explicit export opt-in, and per-run evidence."""
+"""Isolated PRE/PROD sessions, production read guards, and per-run evidence."""
 
 from __future__ import annotations
 
@@ -12,13 +12,16 @@ import pytest
 from playwright.sync_api import expect
 
 from config.settings import settings
-from core.metering_blackbox_contract import MissingMeteringData, allowed_request, assert_pre, load_manifest, optional_telemetry
+from core.metering_blackbox_contract import MissingMeteringData, allowed_request, assert_metering_environment, load_manifest, optional_telemetry
+from core.metering_trace import MeteringTraces
 from pages.metering_blackbox_page import MeteringBlackboxPage, visible
 
 logger = logging.getLogger(__name__)
 
 
 def pytest_addoption(parser):
+    parser.addoption("--metering-readonly-preflight", action="store_true", default=False,
+                     help="Exercise production readonly request policy against PRE only")
     parser.addoption("--metering-allow-export", action="store_true", default=False,
                      help="Allow CSV export tasks, not subscription/order mutations")
     parser.addoption("--metering-profile", default=None, help="Non-secret tenant/account profile JSON")
@@ -47,37 +50,51 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(pytest.mark.slow)
         if scenario.get("hold_reason"):
             item.add_marker(pytest.mark.skip(reason=scenario["hold_reason"]))
-        if scenario.get("requires_export") and not config.getoption("--metering-allow-export"):
-            item.add_marker(pytest.mark.skip(reason="ENV_LIMITED: CSV export requires --metering-allow-export"))
+        if scenario.get("requires_export"):
+            if settings.ENV == "prod":
+                item.add_marker(pytest.mark.skip(reason="WRITE_BLOCKED: export creates tasks and is excluded from PROD readonly regression"))
+            elif not config.getoption("--metering-allow-export"):
+                item.add_marker(pytest.mark.skip(reason="ENV_LIMITED: CSV export requires --metering-allow-export"))
 
 
 @pytest.fixture(scope="session")
 def verified_profile(request):
     profile = load_manifest()["default_profile"].copy()
+    if settings.ENV == "prod":
+        # PRE menu identifiers and a PRE resource name are not production fixtures.
+        profile.update(personal_subscription_path=None, resource_catalog_path=None, query_resource=None)
     path = request.config.getoption("--metering-profile")
     if path:
-        profile.update(json.loads(Path(path).read_text(encoding="utf-8")))
-    assert_pre(settings.ENV, settings.PORTAL_BASE_URL, settings.CONSOLE_BASE_URL)
+        supplied = json.loads(Path(path).read_text(encoding="utf-8"))
+        if settings.ENV == "prod" and supplied.get("environment") != "prod":
+            raise ValueError("ENV_MISMATCH: production profile must explicitly declare environment=prod")
+        profile.update(supplied)
+    if profile.get("environment", settings.ENV) != settings.ENV:
+        raise ValueError("ENV_MISMATCH: profile belongs to another environment")
+    profile["environment"] = settings.ENV
+    profile["readonly_requests"] = settings.ENV == "prod" or request.config.getoption("--metering-readonly-preflight")
+    assert_metering_environment(settings.ENV, settings.PORTAL_BASE_URL, settings.CONSOLE_BASE_URL)
     if settings.USERNAME != profile["username"]:
         pytest.skip("ROLE_REQUIRED: 当前账号与已声明租户角色画像不同，请配置 --metering-profile")
-    if not settings.PRE_PASSWORD:
-        pytest.skip("ROLE_REQUIRED: 缺少PRE_PASSWORD，不回退使用UAT或生产密码")
+    if not getattr(settings, settings.ENV.upper() + "_PASSWORD"):
+        pytest.skip(f"ROLE_REQUIRED: 缺少{settings.ENV.upper()}_PASSWORD，不回退使用其他环境密码")
     return profile
 
 
-def guard_context(context, blocked):
+def guard_context(context, blocked, readonly=False):
     def route_guard(route):
         request = route.request
-        if allowed_request(request.url, request.resource_type, request.method):
+        if allowed_request(request.url, request.resource_type, request.method, env=settings.ENV, readonly=readonly):
             route.continue_()
-        elif optional_telemetry(request.url):
-            # Suppress the observed shared tracker; it is not a PRE business failure.
+        elif optional_telemetry(request.url, env=settings.ENV):
+            # Navigation tracking is blocked too, but is not a business-test failure.
+            logger.debug("[metering] optional navigation tracking suppressed")
             route.abort("blockedbyclient")
         else:
             from urllib.parse import urlparse
 
             parsed = urlparse(request.url)
-            blocked.append(f"{parsed.scheme}://{parsed.netloc}{parsed.path}")
+            blocked.append(f"{request.method} {parsed.scheme}://{parsed.netloc}{parsed.path}")
             route.abort("blockedbyclient")
     context.route("**/*", route_guard)
 
@@ -95,18 +112,22 @@ def verified_browser(playwright, verified_profile):
 def verified_auth(verified_browser, verified_profile, request):
     states = {}
     failures = {}
+    password = getattr(settings, settings.ENV.upper() + "_PASSWORD")
 
     def authenticate(root, domain):
         role = "ordinary" if domain == "ordinary" else "cs" if domain == "cs" else "admin"
         key = (root, role)
         if key in failures:
-            raise RuntimeError("该PRE域/租户登录已失败，本轮不重复尝试账号登录") from failures[key]
+            raise RuntimeError("该环境/租户登录已失败，本轮不重复尝试账号登录") from failures[key]
         if key in states:
             return states[key]
-        logger.info("[metering] authenticate PRE origin=%s role=%s", root, role)
+        logger.info("[metering] authenticate env=%s origin=%s role=%s", settings.ENV, root, role)
         context = verified_browser.new_context(viewport=verified_profile["viewport"], timezone_id="Asia/Shanghai")
         blocked = []
-        guard_context(context, blocked)
+        script_urls = set()
+        context.on("response", lambda response: script_urls.add(response.url)
+                   if response.request.resource_type == "script" else None)
+        guard_context(context, blocked, readonly=verified_profile["readonly_requests"])
         try:
             page = context.new_page()
             page.set_default_timeout(25000)
@@ -122,7 +143,7 @@ def verified_auth(verified_browser, verified_profile, request):
                 page.locator("#qrcont").wait_for(state="visible")
                 frame = page.frame_locator("#qrcont")
                 frame.locator("#usernameIn").fill(settings.USERNAME)
-                frame.locator("#pwdIn").fill(settings.PRE_PASSWORD)
+                frame.locator("#pwdIn").fill(password)
                 frame.locator("#pwdLoginButton").click()
             logger.info("[metering] waiting for authenticated portal")
             page.wait_for_url(root + "**", timeout=45000)
@@ -138,11 +159,15 @@ def verified_auth(verified_browser, verified_profile, request):
             from urllib.parse import urlparse
 
             host = urlparse(root).hostname
+            assets = sorted({urlparse(url)._replace(query="", fragment="").geturl() for url in script_urls})
+            (directory / f"{host}-{role}-assets.json").write_text(json.dumps(assets, indent=2), encoding="utf-8")
             try:
                 page.screenshot(path=str(directory / f"{host}-{role}.png"), full_page=True)
-                (directory / f"{host}-{role}.txt").write_text(page.locator("body").inner_text().replace(settings.PRE_PASSWORD, "[REDACTED]"), encoding="utf-8")
+                (directory / f"{host}-{role}.txt").write_text(page.locator("body").inner_text().replace(password, "[REDACTED]"), encoding="utf-8")
             except Exception:
                 pass
+            if blocked:
+                raise AssertionError(f"WRITE_BLOCKED/ENV_MISMATCH: 登录阶段请求被拦截: {blocked}") from exc
             raise
         finally:
             context.close()
@@ -167,22 +192,31 @@ class BlackboxPages:
             return self.domains[domain]
         root = settings.CONSOLE_BASE_URL if domain == "cs" else settings.PORTAL_BASE_URL
         root = root.rstrip("/") + "/"
-        assert_pre(settings.ENV, root)
+        assert_metering_environment(settings.ENV, root)
         state = self.authenticate(root, domain)
         context = self.browser.new_context(viewport=self.profile["viewport"], storage_state=state, accept_downloads=True, timezone_id="Asia/Shanghai")
         self.contexts.append(context)
-        guard_context(context, self.blocked)
+        self.traces.start(context, self.output_dir / f"{domain}-trace.zip")
+        guard_context(context, self.blocked, readonly=self.profile["readonly_requests"])
         page = context.new_page()
         page.set_default_timeout(20000)
         page.set_default_navigation_timeout(45000)
         model = MeteringBlackboxPage(page, domain, self.profile)
         self.domains[domain] = model
-        model.open(root, remember_portal=lambda state: self.remember(root, domain, state))
+        try:
+            model.open(root, remember_portal=lambda state: self.remember(root, domain, state))
+        except Exception as exc:
+            if self.blocked:
+                raise AssertionError(f"WRITE_BLOCKED/ENV_MISMATCH: 页面初始化请求被拦截: {self.blocked}") from exc
+            raise
         return model
 
     def close(self):
         for context in self.contexts:
-            context.close()
+            try:
+                self.traces.stop(context)
+            finally:
+                context.close()
 
 
 @pytest.fixture
@@ -191,6 +225,7 @@ def blackbox_pages(verified_browser, verified_auth, verified_profile, request):
     request.node._metering_provider = provider
     worker = getattr(request.config, "workerinput", {}).get("workerid", "controller")
     provider.output_dir = request.config._verified_run_dir / worker / request.node.callspec.params["scenario"]["key"]
+    provider.traces = MeteringTraces(request.config.getoption("tracing", default="off"))
     request.addfinalizer(provider.close)
     try:
         for domain in request.node.callspec.params["scenario"]["domains"]:
@@ -198,7 +233,7 @@ def blackbox_pages(verified_browser, verified_auth, verified_profile, request):
     except MissingMeteringData as exc:
         pytest.skip(str(exc) if str(exc).startswith("ROLE_REQUIRED:") else f"DATA_REQUIRED: {exc}")
     yield provider
-    assert not provider.blocked, f"ENV_MISMATCH: 被拦截的跨环境请求: {provider.blocked}"
+    assert not provider.blocked, f"WRITE_BLOCKED/ENV_MISMATCH: 被拦截的非只读或跨环境请求: {provider.blocked}"
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -206,6 +241,12 @@ def pytest_runtest_makereport(item, call):
     result = yield
     report = result.get_result()
     provider = item.funcargs.get("blackbox_pages") or getattr(item, "_metering_provider", None)
+    if provider is not None:
+        provider.traces.failed |= report.failed
+        if report.when == "teardown":
+            paths = provider.traces.finalize()
+            report.user_properties.append(("metering_traces", json.dumps(paths)))
+            report.user_properties.append(("metering_trace_errors", json.dumps(provider.traces.errors)))
     if provider is None or (report.when != "call" and not report.failed and not report.skipped):
         return
     scenario = item.callspec.params["scenario"]

@@ -96,11 +96,13 @@ Examples:
     parser.add_argument("--env", choices=["uat", "pre", "prod"], help="Target environment")
     parser.add_argument(
         "--prod-suite",
-        choices=["mandatory", "conditional", "probe", "controlled-write"],
+        choices=["mandatory", "conditional", "probe", "controlled-write", "metering"],
         help="Select one production execution-responsibility suite",
     )
     parser.add_argument("--dry-run", action="store_true", help="Collect tests without executing them")
     parser.add_argument("--refresh-auth", action="store_true", help="Force login and rewrite auth_states/<env>.json")
+    parser.add_argument("--tracing", choices=["on", "off", "retain-on-failure"], default=None,
+                        help="Playwright trace retention (metering PROD defaults to retain-on-failure)")
     parser.add_argument(
         "--pytest-args",
         nargs=argparse.REMAINDER,
@@ -120,16 +122,20 @@ Examples:
         parser.error("--prod-suite can only be used with --env prod")
     if args.prod_suite and args.mark:
         parser.error("--prod-suite and --mark cannot be used together")
+    if args.prod_suite == "metering" and args.path:
+        parser.error("--prod-suite metering selects its audited test path automatically")
 
     explicit_selection = bool(args.mark or args.path or args.keyword or args.prod_suite)
 
-    cmd = [_project_python(), "-m", "pytest", _normalize_test_path(args.path)]
+    selected_path = "metering_subscription_260901/verified" if args.prod_suite == "metering" else args.path
+    cmd = [_project_python(), "-m", "pytest", _normalize_test_path(selected_path)]
 
     prod_suite_marks = {
         "mandatory": "prod_mandatory and readonly",
         "conditional": "prod_conditional and readonly",
         "probe": "prod_probe and readonly",
         "controlled-write": "controlled_write and (write or destructive)",
+        "metering": "metering_blackbox_verified and readonly and not write and not destructive",
     }
     if args.prod_suite:
         cmd.extend(["-m", prod_suite_marks[args.prod_suite]])
@@ -156,6 +162,11 @@ Examples:
         cmd.append("--collect-only")
     if args.refresh_auth:
         cmd.append("--refresh-auth")
+    if args.prod_suite == "metering":
+        cmd.append("--metering-prod-ready")
+    tracing = args.tracing or ("retain-on-failure" if args.prod_suite == "metering" else None)
+    if tracing:
+        cmd.extend(["--tracing", tracing])
     cmd.extend(args.pytest_args)
 
     print(f"ENV={target_env}")

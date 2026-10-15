@@ -1,4 +1,4 @@
-"""Evidence contracts for PRE black-box regression; no historical pass reuse."""
+"""Environment and evidence contracts for metering black-box regression."""
 
 from __future__ import annotations
 
@@ -9,16 +9,51 @@ import re
 from collections import Counter, defaultdict, deque
 from decimal import Decimal
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 MANIFEST = Path(__file__).resolve().parents[1] / "test_assets/metering_subscription_260901/blackbox_verified.json"
 PRE_HOSTS = {"cloud-pre.cscec.com", "irp-pre.cscec.com"}
+BUSINESS_HOSTS = {"pre": PRE_HOSTS, "prod": {"cloud.cscec.com", "irp.cscec.com"}}
 AUTH_HOSTS = {"iam-pre.cscec.com", "iam.cscec.com", "iamuat.cscec.com"}
+READ_POST_ACTIONS = {
+    "aggregate", "aggregateForConsole", "list", "listByIds", "listSummary",
+    "findByOrderIds", "detail", "query", "page", "get", "getInfo",
+    "getUserInfo", "getMenu", "getMenus", "getTree", "tree", "count",
+    "findAll", "findById", "findList", "pageList", "queryList", "queryPage",
+}
+METERING_READ_ACTIONS = {
+    "quota-instance": {"aggregate", "aggregateForConsole", "list", "listByIds"},
+    "quota-instance-order": {"findByOrderIds"},
+    "quota-daily": {"listSummary", "detail"},
+}
+BOOTSTRAP_READ_POST_PATHS = {
+    "/irp-api/irp-portal-public/banner/listForPortalNoAuth",
+    "/portal/loginConfig/getLoginConfigForLogin",
+    "/portal/loginConfig/getCheckUrl",
+    "/integration-portal/subSystem/v2/getSubSystemApplicationInfo",
+    # Read-only homepage consumers verified against PRE assets; see production guide.
+    "/integration-portal/individuation/getSystemName",
+    "/irp-api/irp-portal-public/knowledge-center/queryNoAuth",
+    "/irp-api/irp-portal-console/knowledge-center/queryNoAuth",
+    "/irp-api/irp-portal-workbench/developer-community-post-portal/postPortalWorkbench",
+    # The actual control-mode consumer reads AD_CONSOLE and community lists only.
+    "/irp-api/irp-portal-console/developer-community-post-portal/postPortalConsole",
+    # User confirmed this exact endpoint has no data writes on 2026-10-15.
+    "/irp-api/irp-portal-console/link/checkNoAuth",
+    "/basedata/api/tenant/getUserJobByUserCodeAndDataSource",
+    "/irp-api/irp-portal-public/tenant/viewBatch",
+    "/engine/metadata/getMenuPageName",
+    "/auth/resolve/getNoGrantButtons",
+}
+AUTHENTICATION_POST_PATHS = {
+    "/portal/login/v2/loginByIamCode", "/portal/login/checkToken",
+    "/portal/login/changeOrgByNo",
+}
 WB_HEADERS = ("资源名称", "资源编码", "服务模式", "资源发布方", "订阅数量", "操作")
 CS_HEADERS = ("序号", "租户编码", "租户名称", "资源名称", "资源编码", "服务模式", "资源发布方", "订阅数量", "操作")
 ACCOUNT_HEADERS = ("资源名称", "服务模式", "订阅应用", "资源发布方", "生效时间", "截止时间", "可用状态", "总可调用额", "已调用额", "剩余调用额", "操作")
 USAGE_HEADERS = ("接口名称", "已调用额", "操作")
-ORDER_HEADERS = ("订单ID", "订阅人", "订阅人所在组织", "生效时间", "操作")
+ORDER_HEADERS = ("订单ID", "订阅人", "订阅人所在租户", "生效时间", "操作")
 DAILY_HEADERS = ("日期", "已调用次数", "已调用额")
 
 
@@ -49,22 +84,65 @@ def assert_pre(env: str, *urls: str) -> None:
             raise ValueError("ENV_MISMATCH: non-PRE business origin rejected")
 
 
-def allowed_request(url: str, resource_type: str, method: str = "GET") -> bool:
+def assert_metering_environment(env: str, *urls: str) -> None:
+    if env not in BUSINESS_HOSTS:
+        raise ValueError("ENV_MISMATCH: metering supports PRE or explicitly selected PROD")
+    for url in urls:
+        parsed = urlparse(url)
+        if (parsed.scheme != "https" or parsed.hostname not in BUSINESS_HOSTS[env]
+                or parsed.port not in (None, 443) or parsed.username or parsed.password):
+            raise ValueError(f"ENV_MISMATCH: business origin does not belong to {env}")
+
+
+def readonly_business_request(path: str, method: str) -> bool:
+    parts = unquote(path).rstrip("/").split("/")
+    if any(part in {".", ".."} or "\\" in part for part in parts):
+        return False
+    action = parts[-1]
+    for namespace, actions in METERING_READ_ACTIONS.items():
+        if namespace in parts:
+            return (parts.index(namespace) == len(parts) - 2 and action in actions
+                    and method in {"GET", "POST", "HEAD", "OPTIONS"})
+    if re.search(r"(?:export|downloadTask|createTask)", path, re.I):
+        return False
+    if method == "POST" and path in BOOTSTRAP_READ_POST_PATHS | AUTHENTICATION_POST_PATHS:
+        return True
+    if method in {"GET", "HEAD", "OPTIONS"}:
+        return not re.search(r"/(?:save|update|delete|remove|create|submit|approve|buy)(?:/|$)", path, re.I)
+    return method == "POST" and action in READ_POST_ACTIONS
+
+
+def allowed_request(url: str, resource_type: str, method: str = "GET", env: str = "pre", readonly: bool = False) -> bool:
+    if env not in BUSINESS_HOSTS:
+        return False
     parsed = urlparse(url)
+    if (env == "prod" or readonly) and parsed.hostname in BUSINESS_HOSTS[env]:
+        if not readonly_business_request(parsed.path, method):
+            return False
     if parsed.scheme in {"data", "blob", "about"}:
         return True
     if parsed.scheme == "https" and parsed.hostname == "at.alicdn.com" and method == "GET" and re.fullmatch(r"/t/c/font_[A-Za-z0-9_]+\.js", parsed.path):
         return True
     if parsed.path.startswith("/irp-api/"):
-        return parsed.scheme == "https" and parsed.hostname in PRE_HOSTS
+        return (parsed.scheme == "https" and parsed.port in (None, 443)
+                and parsed.hostname in BUSINESS_HOSTS[env]
+                and (not (env == "prod" or readonly) or readonly_business_request(parsed.path, method)))
     if resource_type in {"document", "xhr", "fetch"}:
-        return parsed.scheme == "https" and parsed.hostname in PRE_HOSTS | AUTH_HOSTS
+        if parsed.scheme != "https" or parsed.port not in (None, 443):
+            return False
+        if parsed.hostname in AUTH_HOSTS:
+            return True
+        return (parsed.hostname in BUSINESS_HOSTS[env]
+                and (not (env == "prod" or readonly) or readonly_business_request(parsed.path, method)))
     return True
 
 
-def optional_telemetry(url: str) -> bool:
+def optional_telemetry(url: str, env: str | None = None) -> bool:
     parsed = urlparse(url)
-    return parsed.hostname == "data-track-api.cscec.com" and parsed.path == "/apipool"
+    return ((parsed.hostname == "data-track-api.cscec.com" and parsed.path == "/apipool")
+            or (parsed.scheme == "https" and parsed.port in (None, 443)
+                and parsed.hostname in BUSINESS_HOSTS.get(env, set())
+                and parsed.path in {"/udp-monitor/logging", "/integration-portal/recentUseMenu/useMenu"}))
 
 
 def amount(value: str) -> Decimal:

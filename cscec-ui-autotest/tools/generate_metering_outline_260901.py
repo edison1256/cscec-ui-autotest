@@ -19,6 +19,7 @@ RESULTS = PROJECT_ROOT / "reports/metering260901/results.json"
 ID_TOKEN = re.compile(r"^([MF]\d{1,2}(?:\.\d{1,2})*)\b")
 SHELLS = {"M11.1": "M11.1.1", "M11.2": "M11.2.1", "M11.3": "M11.3.1"}
 CLASS_LABEL = {
+    "WRITE_BLOCKED": "生产只读范围排除/请求被拦截",
     "CONTRACT_DIFFERENCE": "需求契约待复核",
     "ENTRY_MISSING": "需求差异待复核",
     "ROLE_REQUIRED": "待角色/手工协同",

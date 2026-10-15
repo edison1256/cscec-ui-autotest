@@ -89,6 +89,7 @@ python run_tests.py --env uat --refresh-auth -m smoke
 - `python run_tests.py --env prod --dry-run` 只收集 `smoke and readonly`。
 - `python run_tests.py --env prod --prod-suite mandatory` 运行当前 44 条控制台严格发布门禁。
 - `python run_tests.py --env prod --prod-suite conditional` 当前运行 69 条控制台条件用例；前置条件不满足时单独统计 `NOT_APPLICABLE`。
+- `python run_tests.py --env prod --prod-suite metering --headless` 在计量部署确认后执行 38 个专项只读流程，默认保留失败 Trace；不含导出任务，详见 [计量生产回归](docs/metering-subscription-260901-prod-regression.md)。
 - `--prod-suite probe/controlled-write` 分别选择探查和受控写入责任套件；迁移完成前可能尚未收集全部契约用例。
 - 如果显式传入 `-m`、`-p` 或 `-k`，按用户指定执行，不额外阻断写操作。
 

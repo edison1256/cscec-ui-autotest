@@ -25,6 +25,15 @@ _result_path = RESULTS_DIR / "results.json"
 
 def pytest_addoption(parser):
     parser.addoption("--metering-results", default=None, help="Current-run metering JSON output path")
+    parser.addoption("--metering-prod-ready", action="store_true", default=False,
+                     help="Confirm metering release is deployed before explicit PROD regression")
+
+
+def environment_enabled(config, nodeid):
+    verified = "/verified/" in nodeid.replace("\\", "/")
+    return settings.ENV == "pre" or (
+        settings.ENV == "prod" and verified and config.getoption("--metering-prod-ready")
+    )
 
 
 def pytest_configure(config):
@@ -34,7 +43,7 @@ def pytest_configure(config):
     _worker = hasattr(config, "workerinput")
     _recorder = None
     path = config.getoption("--metering-results")
-    _result_path = Path(path) if path else RESULTS_DIR / "results.json"
+    _result_path = Path(path) if path else RESULTS_DIR / ("prod-results.json" if settings.ENV == "prod" else "results.json")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -42,14 +51,14 @@ def pytest_collection_modifyitems(config, items):
         if not is_metering_node(item.nodeid):
             continue
         item.add_marker(pytest.mark.metering_subscription_260901)
-        if settings.ENV != "pre":
-            item.add_marker(pytest.mark.skip(reason="ENV_MISMATCH: metering260901 only supports PRE"))
+        if not environment_enabled(config, item.nodeid):
+            item.add_marker(pytest.mark.skip(reason="ENV_MISMATCH: PRE or explicit verified PROD suite required; legacy scripts remain PRE-only"))
 
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_setup(item):
-    if is_metering_node(item.nodeid) and settings.ENV != "pre":
-        pytest.skip("ENV_MISMATCH: metering260901 only supports PRE")
+    if is_metering_node(item.nodeid) and not environment_enabled(item.config, item.nodeid):
+        pytest.skip("ENV_MISMATCH: PRE or explicit verified PROD suite required; legacy scripts remain PRE-only")
 
 
 @pytest.fixture(scope="module")

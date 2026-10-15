@@ -6,13 +6,13 @@ import re
 import json
 import logging
 from datetime import datetime, timedelta, timezone
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urljoin, urlparse
 
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError, expect
 
 from core.metering_blackbox_contract import (
     ACCOUNT_HEADERS, CS_HEADERS, DAILY_HEADERS, ORDER_HEADERS, USAGE_HEADERS,
-    WB_HEADERS, align_records, amount, assert_children, assert_daily_response, assert_pre, require_data,
+    WB_HEADERS, align_records, amount, assert_children, assert_daily_response, assert_metering_environment, require_data,
 )
 
 logger = logging.getLogger(__name__)
@@ -63,6 +63,19 @@ def watch_downloads(context):
     return downloads
 
 
+def metering_route(page, root, profile, name, fragment):
+    path = profile.get(name)
+    if path:
+        target = urljoin(root, path)
+    else:
+        links = page.locator("a[href]").evaluate_all("es => es.map(e => e.href)")
+        matches = {link for link in links if fragment in link}
+        require_data(len(matches) == 1, f"ROLE_REQUIRED: 当前页面无唯一生产路由，请在画像配置 {name}")
+        target = matches.pop()
+    assert_metering_environment(profile.get("environment", "pre"), target)
+    return target
+
+
 class MeteringBlackboxPage:
     def __init__(self, page, domain: str, profile: dict):
         self.page = page
@@ -85,6 +98,7 @@ class MeteringBlackboxPage:
 
     def open(self, root: str, remember_portal=None):
         logger.info("[metering] open domain=%s", self.domain)
+        assert_metering_environment(self.profile.get("environment", "pre"), root)
         self.page.goto(root, wait_until="domcontentloaded")
         if self.domain != "cs":
             name = self.profile["ordinary_tenant" if self.domain == "ordinary" else "admin_tenant"]
@@ -110,8 +124,7 @@ class MeteringBlackboxPage:
             if remember_portal is not None:
                 remember_portal(self.page.context.storage_state())
             if self.domain == "ordinary":
-                url = root.rstrip("/") + self.profile["personal_subscription_path"]
-                assert_pre("pre", url)
+                url = metering_route(self.page, root, self.profile, "personal_subscription_path", "/subscription/apiResource")
                 self.page.goto(url, wait_until="domcontentloaded")
             else:
                 visible(self.page.get_by_text("管理后台", exact=True)).hover()

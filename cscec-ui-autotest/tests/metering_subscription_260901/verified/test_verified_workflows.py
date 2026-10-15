@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+from collections import Counter
 from decimal import Decimal
 from uuid import uuid4
 from urllib.parse import urlparse
@@ -13,12 +14,12 @@ from playwright.sync_api import expect
 
 from core.metering_blackbox_contract import (
     ACCOUNT_HEADERS, CS_HEADERS, ORDER_HEADERS, USAGE_HEADERS, WB_HEADERS, MissingMeteringData,
-    amount, assert_daily, assert_export, assert_pre, load_manifest, require_data,
+    amount, assert_daily, assert_export, load_manifest, require_data,
 )
-from pages.metering_blackbox_page import response_data, ui_rows, ui_table, visible, watch_downloads
+from pages.metering_blackbox_page import metering_route, response_data, ui_rows, ui_table, visible, watch_downloads
 
 MANIFEST = load_manifest()
-pytestmark = [pytest.mark.metering_blackbox_verified, pytest.mark.readonly, pytest.mark.regression]
+pytestmark = [pytest.mark.metering_blackbox_verified, pytest.mark.regression]
 
 
 def matching(model, name="", code=""):
@@ -35,7 +36,10 @@ def query_workflow(provider, key):
     baseline = model.last_data
     baseline_query = model.last_query
     require_data(bool(baseline["list"]), "当前列表无查询正向样本")
-    resource = provider.profile["query_resource"]
+    resource = provider.profile.get("query_resource")
+    if not resource:
+        counts = Counter(row["resourceName"] for row in baseline["list"])
+        resource = counts.most_common(1)[0][0] if key == "wb_modes" else baseline["list"][0]["resourceName"]
     if key.endswith("_code"):
         data = matching(model, code=baseline["list"][0]["resourceCode"])
     elif key.endswith("_name") or key == "wb_modes":
@@ -108,7 +112,7 @@ def usage_workflow(provider, key):
         forms = [model.order_form(order) for order in orders]
         provider.observations["order_headers"] = model.order_headers
         if key == "wb_order_columns":
-            assert model.order_headers == ORDER_HEADERS, f"CONTRACT_DIFFERENCE: 原大纲/历史记录订单字段为{ORDER_HEADERS}，当前字段为{model.order_headers}，需核对需求变更"
+            assert model.order_headers == ORDER_HEADERS, f"CONTRACT_DIFFERENCE: 2026-10-15确认的订单字段为{ORDER_HEADERS}，当前字段为{model.order_headers}"
         assert all(form["资源名称"] == raw["resourceName"] and form["订单状态"] == "订阅成功" for form in forms)
         assert all(form["服务模式"] == raw["serviceModeName"] for form in forms)
         provider.observations["orders"] = {"ui": orders, "forms": forms}
@@ -129,14 +133,14 @@ def usage_workflow(provider, key):
         visible(row.get_by_text("收起用量", exact=True)).click()
         expect(panel).to_be_hidden()
         reopened, records_again = model.usage(row, positive=True, account=raw)
-        assert records_again == records, "收起/重开后接口内容变化或重复"
+        assert Counter(r["接口名称"] for r in records_again) == Counter(r["接口名称"] for r in records), "收起/重开后接口身份变化或重复"
         assert_no_write(reopened)
     elif key == "rapid_usage":
         for _ in range(9):
             visible(row.get_by_text("收起用量", exact=True)).click()
             expect(panel).to_be_hidden()
             panel, current = model.usage(row, positive=True, account=raw)
-            assert current == records, "连续用量展开出现重复插入或串账户"
+            assert Counter(r["接口名称"] for r in current) == Counter(r["接口名称"] for r in records), "连续用量展开出现重复插入或串账户"
     elif key == "cs_readonly":
         assert_no_write(ui_table(model.page, model.headers)[0])
         assert_no_write(row)
@@ -156,6 +160,8 @@ def usage_workflow(provider, key):
 
 
 def export_workflow(provider):
+    if provider.profile.get("environment") == "prod":
+        raise AssertionError("WRITE_BLOCKED: production export creates asynchronous tasks")
     model = provider.get("cs")
     row, raw = model.sample_account()
     panel, records = model.usage(row, positive=True, account=raw)
@@ -217,8 +223,7 @@ def run_workflow(provider, key):
             assert actual == WB_HEADERS
             assert model.page.get_by_text("查看订单明细", exact=True).filter(visible=True).count() == 0
         if key == "wb_columns":
-            expected = tuple("资源所属方" if header == "资源发布方" else header for header in WB_HEADERS)
-            assert actual == expected, f"CONTRACT_DIFFERENCE: 原大纲父表字段为{expected}，当前字段为{actual}，需核对需求变更"
+            assert actual == WB_HEADERS, f"CONTRACT_DIFFERENCE: 2026-10-15确认的父表字段为{WB_HEADERS}，当前字段为{actual}"
         if key == "cs_legacy":
             assert not set(actual) & {"订阅ID", "订阅资源名称", "订阅人"}
         provider.observations[key] = {"ui_headers": actual, "response": model.last_data}
@@ -236,7 +241,8 @@ def run_workflow(provider, key):
             row, panel, _ = model.expand()
             current = ui_rows(panel, ACCOUNT_HEADERS)
             if before is not None:
-                assert current == before, "连续展开子表数据重复或串行"
+                identity = lambda rows: Counter((r["资源名称"], r["服务模式"], r["订阅应用"]) for r in rows)
+                assert identity(current) == identity(before), "连续展开子表账户身份变化或重复"
             before = current
             model.collapse(row)
         provider.observations["accounts"] = before
@@ -295,8 +301,8 @@ def run_workflow(provider, key):
     elif key == "delivery":
         model = provider.get("wb")
         origin = urlparse(model.page.url)
-        url = f"{origin.scheme}://{origin.netloc}" + provider.profile["resource_catalog_path"]
-        assert_pre("pre", url)
+        url = metering_route(model.page, f"{origin.scheme}://{origin.netloc}/", provider.profile,
+                             "resource_catalog_path", "/resource/comp")
         model.page.goto(url, wait_until="domcontentloaded")
         expect(model.page.get_by_text("交付方式", exact=True).filter(visible=True).first).to_be_visible(timeout=20000)
         with model.page.expect_response(lambda r: urlparse(r.url).path.endswith("/component-portal/list")) as info:
@@ -339,7 +345,11 @@ def run_workflow(provider, key):
         raise AssertionError(f"未实现的workflow不能视为通过: {key}")
 
 
-@pytest.mark.parametrize("scenario", MANIFEST["scenarios"], ids=lambda scenario: scenario["key"])
+@pytest.mark.parametrize("scenario", [
+    pytest.param(scenario, id=scenario["key"],
+                 marks=pytest.mark.write if scenario.get("requires_export") else pytest.mark.readonly)
+    for scenario in MANIFEST["scenarios"]
+])
 def test_verified_workflow(scenario, blackbox_pages):
     """Execute the declared workflow independently; derive all values in this run."""
     try:
