@@ -44,6 +44,7 @@ class Settings:
     DOC_CENTER_FALLBACK_URL: str = ""
     DATA_RESOURCE_ROUTE: str = ""
     LAYER_SETTINGS_ROUTE: str = ""
+    ADMIN_LOGIN_URL: str = ""
     DEEP_LINKS: dict = field(default_factory=dict)
 
     USERNAME: str = ""
@@ -51,6 +52,10 @@ class Settings:
     UAT_PASSWORD: str = ""
     PRE_PASSWORD: str = ""
     PROD_PASSWORD: str = ""
+
+    # 环境装配用管理员身份（仅运维脚本读取，业务用例不得使用）
+    ADMIN_USERNAME: str = ""
+    ADMIN_PASSWORD: str = ""
 
     HEADLESS: bool = True
     SLOW_MO: int = 0
@@ -122,11 +127,21 @@ class Settings:
                 env_preferred=True,
             ),
             DEEP_LINKS=env_urls.get("DEEP_LINKS", {}),
+            ADMIN_LOGIN_URL=_read_setting(
+                f"{env_prefix}_ADMIN_LOGIN_URL",
+                env_urls.get("ADMIN_LOGIN_URL", ""),
+                env_preferred=True,
+            ),
             USERNAME=_read_setting("USERNAME", ""),
             PASSWORD=_read_setting("PASSWORD", ""),
             UAT_PASSWORD=_read_setting("UAT_PASSWORD", ""),
             PRE_PASSWORD=_read_setting("PRE_PASSWORD", ""),
             PROD_PASSWORD=_read_setting("PROD_PASSWORD", ""),
+            ADMIN_USERNAME=_read_setting("ADMIN_USERNAME", ""),
+            ADMIN_PASSWORD=_read_setting(
+                f"ADMIN_{env_prefix}_PASSWORD",
+                _read_setting("ADMIN_PASSWORD", ""),
+            ),
             HEADLESS=_read_bool("HEADLESS"),
             SLOW_MO=int(_read_setting("SLOW_MO", "0", env_preferred=True)),
             BROWSER_CHANNEL=_read_setting("BROWSER_CHANNEL", "chrome", env_preferred=True),
@@ -162,6 +177,11 @@ class Settings:
     @property
     def auth_state_file(self) -> Path:
         return self.AUTH_STATES_DIR / f"{self.ENV}.json"
+
+    @property
+    def admin_auth_state_file(self) -> Path:
+        """管理员后门登录态文件，与业务账号登录态分文件存放，避免互相覆盖。"""
+        return self.AUTH_STATES_DIR / f"admin-{self.ENV}.json"
 
     def url_for(self, base_url: str, path: str = "") -> str:
         """Build an absolute URL from an environment-specific base URL."""

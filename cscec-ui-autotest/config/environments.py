@@ -7,6 +7,10 @@
 - PROD（irp.cscec.com / cloud.cscec.com）：生产环境
 """
 
+# 控制台后门直登路由（账号密码直登，绕过 4A/SSO）。
+# 仅用于环境装配类运维操作，不得用于业务用例断言。
+ADMIN_LOGIN_ROUTE = "/udpweb/portal/index.html#/login"
+
 # 直链兜底路由：当菜单入口在某环境未暴露时，可在此填入真实 SPA 路由作为
 # 导航兜底。键名约定：service_supply / my_documents / manual_inspection。
 # 未填写（空字典）时，弹性导航将直接降级为安全跳过，避免假失败。
@@ -69,6 +73,7 @@ ENVIRONMENTS = {
         "DOC_CENTER_FALLBACK_URL": "https://irp.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
         "DATA_RESOURCE_ROUTE": DATA_RESOURCE_ROUTE,
         "LAYER_SETTINGS_ROUTE": LAYER_SETTINGS_ROUTE_BY_ENV["prod"],
+        "ADMIN_LOGIN_URL": "https://irp.cscec.com" + ADMIN_LOGIN_ROUTE,
         "DEEP_LINKS": DEEP_LINKS["prod"],
     },
     "pre": {
@@ -81,6 +86,7 @@ ENVIRONMENTS = {
         "DOC_CENTER_FALLBACK_URL": "https://cloud-pre.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
         "DATA_RESOURCE_ROUTE": DATA_RESOURCE_ROUTE,
         "LAYER_SETTINGS_ROUTE": LAYER_SETTINGS_ROUTE_BY_ENV["pre"],
+        "ADMIN_LOGIN_URL": "https://irp-pre.cscec.com" + ADMIN_LOGIN_ROUTE,
         "DEEP_LINKS": DEEP_LINKS["pre"],
     },
     "uat": {
@@ -93,6 +99,7 @@ ENVIRONMENTS = {
         "DOC_CENTER_FALLBACK_URL": "https://cloud-uat.cscec.com" + DOC_CENTER_WORKBENCH_ROUTE,
         "DATA_RESOURCE_ROUTE": DATA_RESOURCE_ROUTE,
         "LAYER_SETTINGS_ROUTE": LAYER_SETTINGS_ROUTE_BY_ENV["uat"],
+        "ADMIN_LOGIN_URL": "https://irp-uat.cscec.com" + ADMIN_LOGIN_ROUTE,
         "DEEP_LINKS": DEEP_LINKS["uat"],
     },
 }
