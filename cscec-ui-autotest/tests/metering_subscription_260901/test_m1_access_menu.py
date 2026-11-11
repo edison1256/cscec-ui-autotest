@@ -21,6 +21,7 @@ from tests.metering_subscription_260901.helpers import (
     click_when_visible,
     open_api_list_console,
     open_api_subscription_workbench,
+    open_workbench_menu,
     visible_texts,
     table_rows,
     wait_list_ready,
@@ -35,10 +36,7 @@ class TestM1WorkbenchEntry:
     @pytest.mark.portal
     def test_m1_1_1__workbench_entry(self, wb_page):
         """工作台入口可达：登录后可打开工作台并展示我的订阅菜单组."""
-        wb_page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
-        wb_page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
-        wb_page.wait_for_load_state("networkidle", timeout=20000)
-        assert click_when_visible(wb_page, "我的订阅", timeout_ms=15000), (
+        assert open_workbench_menu(wb_page, "我的订阅"), (
             "工作台左侧菜单未出现“我的订阅”"
         )
         assert click_when_visible(wb_page, "API订阅", timeout_ms=6000), (
@@ -191,10 +189,7 @@ class TestM1PageSplitRegression:
     @pytest.mark.portal
     def test_m1_4_1__component_subscription_no_quota_fields(self, wb_page):
         """回归：工作台“组件订阅”页面不展示 API 权益专属额度字段."""
-        wb_page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
-        wb_page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
-        wb_page.wait_for_load_state("networkidle", timeout=20000)
-        assert click_when_visible(wb_page, "我的订阅", timeout_ms=15000)
+        assert open_workbench_menu(wb_page, "我的订阅")
         assert click_when_visible(wb_page, "组件订阅", timeout_ms=6000), (
             "组件订阅菜单不可点"
         )

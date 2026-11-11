@@ -15,6 +15,7 @@ from tests.metering_subscription_260901.helpers import (
     gateway_error,
     open_api_list_console,
     open_api_subscription_workbench,
+    open_workbench_menu,
     visible_texts,
     wait_list_ready,
 )
@@ -70,10 +71,7 @@ class TestM11Regression:
     @pytest.mark.portal
     def test_m11_1_1__workbench_component_subscription_general(self, wb_page):
         """回归（M11.1 代表面）：工作台我的订阅-组件订阅 通用页面仍正常."""
-        wb_page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
-        wb_page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
-        wb_page.wait_for_load_state("networkidle", timeout=20000)
-        assert click_when_visible(wb_page, "我的订阅", timeout_ms=10000)
+        assert open_workbench_menu(wb_page, "我的订阅", timeout_ms=10000)
         assert click_when_visible(wb_page, "组件订阅", timeout_ms=6000)
         wb_page.wait_for_load_state("networkidle", timeout=15000)
         time.sleep(2)

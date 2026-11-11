@@ -415,6 +415,16 @@ def _goto_workbench(page: Page) -> None:
     _open_app_subscription(page)
 
 
+def open_workbench_menu(page: Page, label: str, timeout_ms: int = 15000) -> bool:
+    """打开工作台 -> 应用订阅 -> 点击目标菜单（我的订阅 / 组件订阅 …）。
+
+    替代测试里「goto(WORKBENCH_URL) 后直接 click(我的订阅)」的写法：
+    工作台首页是应用中心，只有磁贴，不含这些菜单，直接点必然失败。
+    """
+    _goto_workbench(page)
+    return click_when_visible(page, label, timeout_ms=timeout_ms)
+
+
 def ensure_tenant(page: Page, shape: str) -> bool:
     """Ensure workbench is in the given tenant shape ('zjy' or 'sz').
 
