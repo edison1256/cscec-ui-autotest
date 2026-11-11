@@ -11,6 +11,59 @@
 # 仅用于环境装配类运维操作，不得用于业务用例断言。
 ADMIN_LOGIN_ROUTE = "/udpweb/portal/index.html#/login"
 
+# 计量订阅套件使用的租户映射（按环境）。
+#
+# 背景：`ensure_tenant(page, shape)` 靠工作台菜单形态判定当前租户是否就绪——
+# "zjy" 需要出现「我的订阅」，"sz" 需要出现「订阅中心」。实测发现**同一个租户名
+# 在不同环境给出不同形态**，因此不能写死成全局常量。
+#
+# 实测来源（2026-11-11，账号 20431644 / 陈方达）：
+#   PRE：技术与大数据平台项目组=我的订阅；中建数字科技有限公司=订阅中心；
+#        测试专用租户=订阅中心；域名拆分测试=我的订阅
+#   UAT：技术与大数据平台项目组=我的订阅；中建数字科技有限公司=我的订阅；
+#        测试租户1234=订阅中心；0417测试租户=订阅中心
+#   证据：reports/identity-matrix/_pre_tenant_shapes.json / _uat_app_subscription.json
+#
+# 注意：判断形态必须走「工作台 ?suitKey=portal -> 点『应用订阅』」这条路径，
+# 只看营销门户或工作台首页文本会误判为 none。
+#
+# prod 保持改动前的原值（未经实测，不擅自改生产行为）。
+METERING_TENANTS = {
+    "prod": {
+        "zjy": "中建云",
+        "sz": "中建数字科技有限公司",
+    },
+    "pre": {
+        "zjy": "技术与大数据平台项目组",
+        "sz": "中建数字科技有限公司",
+    },
+    "uat": {
+        "zjy": "技术与大数据平台项目组",
+        "sz": "测试租户1234",
+    },
+}
+
+# 计量订阅套件用于触发账号 hover 面板的显示名（工作台右上角）。
+# 实测该面板由显示名文本触发，用 avatar/user class 匹配不稳定。
+METERING_DISPLAY_NAME = {
+    "prod": "陈方达",
+    "pre": "陈方达",
+    "uat": "陈方达",
+}
+
+# 工作台 / 控制台 SPA 的 suitKey（按环境实测，不能跨环境复用）。
+#   pre.console = 1899427585366003726（登录落地 URL 实测）
+#   uat.console = 1895404747812683790（登录落地 URL 实测）
+#   prod.console = 1899427585366003724（沿用 environments 内既有常量）
+# workbench 统一用 "portal"（PRE 与 UAT 均实测可用）。
+METERING_SUIT_KEYS = {
+    "prod": {"workbench": "portal", "console": "1899427585366003724"},
+    "pre": {"workbench": "portal", "console": "1899427585366003726"},
+    "uat": {"workbench": "portal", "console": "1895404747812683790"},
+}
+
+
+
 # 直链兜底路由：当菜单入口在某环境未暴露时，可在此填入真实 SPA 路由作为
 # 导航兜底。键名约定：service_supply / my_documents / manual_inspection。
 # 未填写（空字典）时，弹性导航将直接降级为安全跳过，避免假失败。

@@ -14,19 +14,26 @@ from playwright.sync_api import Page, Response, TimeoutError, expect
 from config.settings import settings
 
 # ---------------------------------------------------------------------------
-# Environment constants (PRE)
+# Environment constants
 # ---------------------------------------------------------------------------
-PORTAL_ROOT = "https://cloud-pre.cscec.com/"
-CONSOLE_ROOT = "https://irp-pre.cscec.com/"
+# 2026-11-11 修正：原先写死 cloud-pre / irp-pre，导致 UAT 运行会打到 PRE 域名。
+# 改为按 settings.ENV 派生，PRE 取值与改动前完全一致。
+from config.environments import METERING_SUIT_KEYS  # noqa: E402
+
+_SUIT = METERING_SUIT_KEYS.get(settings.ENV, METERING_SUIT_KEYS["prod"])
+PORTAL_ROOT = settings.PORTAL_BASE_URL
+CONSOLE_ROOT = settings.CONSOLE_BASE_URL
 WORKBENCH_URL = (
-    "https://cloud-pre.cscec.com/udpweb/portal/index.html"
-    "?#/portal/home/workbench?suitKey=1899427585366003727"
-    "&mc=1899427585366003727&mn=%E5%B7%A5%E4%BD%9C%E5%8F%B0&mt=module&appTitle=%E5%B7%A5%E4%BD%9C%E5%8F%B0"
+    f"{PORTAL_ROOT.rstrip('/')}/udpweb/portal/index.html"
+    f"?#/portal/home/workbench?suitKey={_SUIT['workbench']}"
+    f"&mc={_SUIT['workbench']}&mn=%E5%B7%A5%E4%BD%9C%E5%8F%B0&mt=module"
+    f"&appTitle=%E5%B7%A5%E4%BD%9C%E5%8F%B0"
 )
 CONSOLE_URL = (
-    "https://irp-pre.cscec.com/udpweb/portal/index.html"
-    "?#/portal/home/workbench?suitKey=1899427585366003726"
-    "&mc=1899427585366003726&mn=%E6%8E%A7%E5%88%B6%E5%8F%B0&mt=module&appTitle=%E6%8E%A7%E5%88%B6%E5%8F%B0"
+    f"{CONSOLE_ROOT.rstrip('/')}/udpweb/portal/index.html"
+    f"?#/portal/home/workbench?suitKey={_SUIT['console']}"
+    f"&mc={_SUIT['console']}&mn=%E6%8E%A7%E5%88%B6%E5%8F%B0&mt=module"
+    f"&appTitle=%E6%8E%A7%E5%88%B6%E5%8F%B0"
 )
 
 # API patterns verified in recon
@@ -89,34 +96,24 @@ def _fill_cas_field(frame, sel: str, value: str) -> None:
 
 
 def cas_login(page: Page, root: str) -> None:
-    """Login the given page via portal/console root. Reuses existing session."""
+    """Login the given page via portal/console root. Reuses existing session.
+
+    2026-11-11 修正：认证平台改版后，旧 `#qrcont` iframe 链路已失效
+    （PRE 上会跳到 idaas-pre 的 passport 页并卡住）。这里改为复用统一的
+    `LoginPage`，由它处理 IDaaS -> 「其它登录方式」-> `img[alt='4A']` -> CAS，
+    以及「密码登录」tab 切换与延迟渲染。
+    """
     if settings.ENV != "pre":
         raise ValueError("ENV_MISMATCH: PRE login is forbidden outside PRE")
+
+    from pages.portal.login_page import LoginPage  # 局部导入，避免导入期副作用
+
     page.goto(root, wait_until="domcontentloaded", timeout=60000)
     time.sleep(2.5)
     if page.evaluate("() => !!window.localStorage.getItem('__login_info__')"):
         return
-    frame = page.frame(name="qrcont")
-    if frame is None:
-        for cand in (".login-btn", "a[href*='login']", "text=登录"):
-            try:
-                page.locator(cand).first.click(timeout=2500)
-                break
-            except Exception:
-                continue
-        page.wait_for_selector("#qrcont", timeout=15000)
-        frame = page.frame(name="qrcont")
-    assert frame is not None, f"CAS login iframe not found for {root}"
-    frame.wait_for_selector("#usernameIn", timeout=10000)
-    time.sleep(1.0)
-    _fill_cas_field(frame, "#usernameIn", settings.USERNAME)
-    _fill_cas_field(frame, "#pwdIn", settings.effective_password)
-    time.sleep(0.5)
-    frame.click("#pwdLoginButton")
-    page.wait_for_function(
-        "() => !!window.localStorage.getItem('__login_info__')", timeout=30000
-    )
-    time.sleep(1.5)
+
+    LoginPage(page).login(base_url=root)
 
 
 def safe_goto(page: Page, url: str, tries: int = 3) -> None:
@@ -329,10 +326,17 @@ def page_contains_any(page: Page, *kws: str) -> tuple[str, ...]:
 # ---------------------------------------------------------------------------
 # Tenant context (same account, two tenant shapes)
 # ---------------------------------------------------------------------------
-# 中建云 tenant: workbench shows 我的订阅 menu (normal-member shape)
-# 中建数字科技有限公司 tenant: workbench shows 订阅中心 menu (tenant-admin shape)
-TENANT_ZJY = "中建云"
-TENANT_SZ = "中建数字科技有限公司"
+# 形态判定依据：工作台里是否出现「订阅中心」(sz) 或「我的订阅」(zjy)。
+#
+# 2026-11-11 实测修正：原值 zjy="中建云" 已失效（账号已不在该租户）。
+# 实测同一租户名在 PRE / UAT 会给出**不同形态**，故改为按环境从
+# config.environments.METERING_TENANTS 读取，见该处注释与证据路径。
+from config.environments import METERING_DISPLAY_NAME, METERING_TENANTS  # noqa: E402
+
+_TENANT_MAP = METERING_TENANTS.get(settings.ENV, METERING_TENANTS["prod"])
+TENANT_ZJY = _TENANT_MAP["zjy"]
+TENANT_SZ = _TENANT_MAP["sz"]
+ACCOUNT_DISPLAY_NAME = METERING_DISPLAY_NAME.get(settings.ENV, "陈方达")
 
 SWITCH_DIALOG_ANCHOR = "切换租户"
 
@@ -351,7 +355,10 @@ def workbench_tenant_shape(page: Page) -> str | None:
 
 
 def _open_account_hover(page: Page) -> bool:
-    for cand in ("text=陈方达", "[class*='avatar']", "[class*='user']"):
+    # 优先用显示名文本触发（实测 hover 面板由显示名触发，class 匹配不稳定）
+    candidates = (f"text={ACCOUNT_DISPLAY_NAME}", "text=陈方达",
+                  "[class*='avatar']", "[class*='user']")
+    for cand in candidates:
         try:
             loc = page.locator(cand).first
             if loc.is_visible(timeout=2500):
@@ -382,22 +389,44 @@ def switch_tenant(page: Page, tenant_name: str) -> bool:
     return True
 
 
+def _open_app_subscription(page: Page) -> bool:
+    """在工作台首页点「应用订阅」磁贴。
+
+    2026-11-11 实测：工作台首页（应用中心）**不含**「我的订阅/订阅中心」，
+    只有磁贴；必须进入「应用订阅」二级页才会出现这两个菜单。
+    不点这一步，workbench_tenant_shape 会一直返回 None。
+    """
+    try:
+        tile = page.get_by_text("应用订阅", exact=True).first
+        if tile.count() and tile.is_visible(timeout=3000):
+            tile.click()
+            time.sleep(3.5)
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _goto_workbench(page: Page) -> None:
+    """打开工作台并进入「应用订阅」二级页。"""
+    page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
+    page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
+    time.sleep(2.5)
+    _open_app_subscription(page)
+
+
 def ensure_tenant(page: Page, shape: str) -> bool:
     """Ensure workbench is in the given tenant shape ('zjy' or 'sz').
 
     Returns True when the target shape is active afterwards.
     """
     target_tenant = TENANT_SZ if shape == "sz" else TENANT_ZJY
-    page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
-    page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
-    time.sleep(2.5)
+    _goto_workbench(page)
     if workbench_tenant_shape(page) == shape:
         return True
     if not switch_tenant(page, target_tenant):
         return False
-    page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
-    page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
-    time.sleep(2.5)
+    _goto_workbench(page)
     return workbench_tenant_shape(page) == shape
 
 
