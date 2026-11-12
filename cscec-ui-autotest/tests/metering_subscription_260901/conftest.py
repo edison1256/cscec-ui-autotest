@@ -16,6 +16,7 @@ from tests.metering_subscription_260901.helpers import (
     PORTAL_ROOT,
     RESULTS_DIR,
     cas_login,
+    personal_login,
 )
 
 _recorder: ResultRecorder | None = None
@@ -86,6 +87,28 @@ def cs_page(browser) -> Page:
         context.set_default_timeout(15000)
         page = context.new_page()
         cas_login(page, CONSOLE_ROOT)
+        yield page
+    finally:
+        context.close()
+
+
+@pytest.fixture(scope="module")
+def wb_page_personal(browser) -> Page:
+    """个人视角工作台（默认「我的订阅」有数据的账号）。
+
+    与 `wb_page` 分离的原因（2026-11-12 实测）：
+      - `wb_page` 用主账号 20431644，在「技术与大数据平台项目组」租户下
+        「我的订阅」为 0 条，只适合 M1/M2 的入口与租户形态验证；
+      - M3-M6 需要真实个人订阅数据，必须用独立账号槽位（METERING_USERNAME）。
+    账号是变量，换人只需改 .env，不动代码。
+    """
+    context = browser.new_context(
+        viewport={"width": 1920, "height": 1080}, ignore_https_errors=True
+    )
+    try:
+        context.set_default_timeout(15000)
+        page = context.new_page()
+        personal_login(page)
         yield page
     finally:
         context.close()

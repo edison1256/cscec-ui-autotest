@@ -62,6 +62,16 @@ METERING_SUIT_KEYS = {
     "uat": {"workbench": "portal", "console": "1895404747812683790"},
 }
 
+# 控制台域名下的工作台套件 key（与门户域的 "portal" 不是同一个值）。
+# 2026-11-12 实测 PRE：portal 域工作台用 suitKey=portal；
+# 而 irp 域点「应用订阅」后的真实路由是 suitKey=1899427585366003727。
+# 两者不可互换 —— 用 portal 去打开 irp 域工作台只会停在磁贴首页。
+METERING_SUIT_KEYS_ON_CONSOLE_DOMAIN = {
+    "prod": "1899427585366003725",
+    "pre": "1899427585366003727",
+    "uat": "",
+}
+
 
 
 # 直链兜底路由：当菜单入口在某环境未暴露时，可在此填入真实 SPA 路由作为

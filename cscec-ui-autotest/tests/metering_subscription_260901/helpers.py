@@ -21,6 +21,10 @@ from config.settings import settings
 from config.environments import METERING_SUIT_KEYS  # noqa: E402
 
 _SUIT = METERING_SUIT_KEYS.get(settings.ENV, METERING_SUIT_KEYS["prod"])
+# 注：METERING_SUIT_KEYS_ON_CONSOLE_DOMAIN 记录了一个重要事实 ——
+# 控制台域名下的工作台套件 key 与门户域的 "portal" 不是同一个值。
+# 但**不要用它去拼 URL 直达业务页**：那样会进入该账号本不该有的套件，
+# 看到越权数据。正确做法始终是「导航到工作台首页 → 点击磁贴」。
 PORTAL_ROOT = settings.PORTAL_BASE_URL
 CONSOLE_ROOT = settings.CONSOLE_BASE_URL
 WORKBENCH_URL = (
@@ -34,6 +38,17 @@ CONSOLE_URL = (
     f"?#/portal/home/workbench?suitKey={_SUIT['console']}"
     f"&mc={_SUIT['console']}&mn=%E6%8E%A7%E5%88%B6%E5%8F%B0&mt=module"
     f"&appTitle=%E6%8E%A7%E5%88%B6%E5%8F%B0"
+)
+
+# 个人视角账号的工作台首页（控制台域名 + 个人工作台套件）。
+#
+# 只到「工作台首页」，**绝不直接拼二级页路由**：黑盒测试必须模拟真实用户，
+# 通过点击磁贴/菜单进入目标页。曾经用 `#/sub/resource/subscription/app/appInfo`
+# 直链绕过点击，结果进到一个该账号本不该有的套件（suitKey=1899...727），
+# 看到的是其他租户的数据 —— 那是越权视图，不是该账号的真实业务视图。
+PERSONAL_WORKBENCH_URL = (
+    f"{CONSOLE_ROOT.rstrip('/')}/udpweb/portal/index.html"
+    f"#/portal/home/workbench?suitKey={_SUIT['workbench']}"
 )
 
 # API patterns verified in recon
@@ -116,6 +131,82 @@ def cas_login(page: Page, root: str) -> None:
     LoginPage(page).login(base_url=root)
 
 
+# ---------------------------------------------------------------------------
+# 个人视角业务账号（可替换槽位）
+# ---------------------------------------------------------------------------
+def personal_login(page: Page) -> None:
+    """以「个人视角业务账号」登录工作台。
+
+    账号来自 `.env` 的 `METERING_USERNAME` / `METERING_PASSWORD`
+    （支持 `METERING_<ENV>_USERNAME` 等按环境覆盖），不硬编码，便于换人。
+
+    两条路径：
+      - 未配置独立槽位 -> 沿用主账号 4A 登录（既有行为不变）
+      - 配置了独立槽位 -> 后门登录。该账号在 4A 不可用（CAS 提交后停在登录页），
+        且后门会话只在中建云控制台域名下有效。
+    """
+    if not settings.uses_metering_account:
+        from pages.portal.login_page import LoginPage
+
+        LoginPage(page).login_portal()
+        return
+
+    from pages.portal.backdoor_login_page import BackdoorLoginPage
+
+    BackdoorLoginPage(page).open().login(
+        settings.metering_username, settings.metering_password
+    )
+    time.sleep(2.5)
+    # 登录后必弹「公告」弹窗，会遮挡磁贴与菜单点击。
+    # 实测 `.ant-modal-close` 在 DOM 里存在但点不到，只有 Escape 有效。
+    for _ in range(2):
+        page.keyboard.press("Escape")
+        time.sleep(0.9)
+
+
+def uses_personal_account() -> bool:
+    """当前是否启用个人视角业务账号（决定工作台入口走 irp 还是 cloud）。"""
+    return settings.uses_metering_account
+
+
+def open_personal_workbench(page: Page, timeout_s: int = 40) -> str | None:
+    """打开个人视角工作台并返回形态（'zjy' / 'sz' / None）。
+
+    黑盒路径：导航到工作台首页 → 点击页面上可见的「应用订阅」磁贴 → 读左侧菜单。
+    不拼接二级页路由，不绕过点击 —— 直链会跳到该账号本不该有的套件，
+    看到的可能是其他租户数据（越权视图），不能作为业务断言依据。
+
+    返回 None 表示「该账号的工作台没有订阅菜单」，属真实环境结论，
+    调用方应据此 skip 而不是断言失败。
+    """
+    try:
+        page.goto("about:blank", wait_until="domcontentloaded", timeout=20000)
+        page.goto(PERSONAL_WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
+        time.sleep(3.0)
+    except Exception as exc:  # noqa: BLE001
+        import logging
+
+        logging.getLogger(__name__).warning(f"[personal] 打开工作台失败: {exc}"[:200])
+        return None
+
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        shape = workbench_tenant_shape(page)
+        if shape:
+            return shape
+        # 只在页面上找可见磁贴并点击（真实用户动作）
+        try:
+            tile = page.get_by_text("应用订阅", exact=True).filter(visible=True).first
+            if tile.count():
+                tile.click()
+                time.sleep(2.5)
+                continue
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(1.5)
+    return None
+
+
 def safe_goto(page: Page, url: str, tries: int = 3) -> None:
     for i in range(tries):
         try:
@@ -181,9 +272,16 @@ def open_menu(page: Page, *titles: str) -> None:
 def open_api_subscription_workbench(page: Page) -> Response | None:
     """Workbench: 我的订阅 -> API订阅; returns aggregate API response if captured.
 
-    Pins the 中建云 tenant shape first (我的订阅 menu + original anchors);
-    detours through about:blank because same-hash goto is a no-op.
+    双路径：
+      - 主账号（4A）：先钉住 zjy 租户形态，再 goto 门户工作台首页点磁贴；
+      - 个人账号（后门）：直接 goto 控制台域的「我的订阅」二级页路由，
+        因为后门会话只在控制台 origin 有效，goto 门户域会掉登录。
+
+    两条路径的终态一致：左侧有「我的订阅」，点「API订阅」后表格就绪。
     """
+    if uses_personal_account():
+        return _open_api_sub_personal(page)
+
     if not ensure_tenant(page, "zjy"):
         raise AssertionError("无法确保中建云租户形态（我的订阅菜单）")
     response = None
@@ -197,6 +295,62 @@ def open_api_subscription_workbench(page: Page) -> Response | None:
         # 页面可能复用已加载 chunk，aggregate 已发完；退化为等待表格渲染
         pass
     assert wait_list_ready(page), "工作台 API订阅表格未渲染"
+    return response
+
+
+def _click_left_menu(page: Page, label: str, timeout_ms: int = 10000) -> bool:
+    """点左侧菜单叶子项，避开顶部 tab。
+
+    顶部会同时存在同名 tab（如「API订阅 ×」），按文本取 first 容易点错。
+    左侧菜单在 DOM 中位于内容区之后，故取 last，并优先用 menuitem 语义定位。
+    """
+    deadline = time.time() + timeout_ms / 1000
+    while time.time() < deadline:
+        for factory in (
+            lambda: page.get_by_role("menuitem", name=label, exact=True).last,
+            lambda: page.get_by_text(label, exact=True).last,
+        ):
+            try:
+                loc = factory()
+                if loc.count() and loc.is_visible(timeout=1500):
+                    loc.click()
+                    time.sleep(2.5)
+                    return True
+            except Exception:  # noqa: BLE001
+                continue
+        time.sleep(0.6)
+    return False
+
+
+def _open_api_sub_personal(page: Page) -> Response | None:
+    """个人账号路径：控制台域二级页 -> 我的订阅 -> API订阅。
+
+    注意必须先展开「我的订阅」父菜单：二级页默认停在「应用订阅」，
+    未展开时 DOM 里没有「API订阅」叶子，直接点会落到顶部 tab 或无效。
+    """
+    shape = open_personal_workbench(page)
+    if shape != "zjy":
+        raise AssertionError(
+            f"个人工作台未进入「我的订阅」形态（shape={shape}）；"
+            "请确认 METERING_USERNAME 对应账号在目标租户下可用"
+        )
+    # 展开父菜单（若已是展开态，点击不会产生副作用）
+    _click_left_menu(page, "我的订阅", timeout_ms=6000)
+    time.sleep(1.2)
+    response = None
+    clicked = False
+    try:
+        with page.expect_response(
+            lambda r: bool(AGGREGATE_WB_PAT.search(r.url)), timeout=15000
+        ) as resp_info:
+            clicked = _click_left_menu(page, "API订阅", timeout_ms=10000)
+        response = resp_info.value
+    except TimeoutError:
+        # 接口可能已在进入二级页时发完，此时只需确保菜单已切换
+        if not clicked:
+            _click_left_menu(page, "API订阅", timeout_ms=10000)
+    time.sleep(2.5)
+    assert wait_list_ready(page), "个人工作台 API订阅表格未渲染"
     return response
 
 

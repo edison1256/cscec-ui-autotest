@@ -57,6 +57,14 @@ class Settings:
     ADMIN_USERNAME: str = ""
     ADMIN_PASSWORD: str = ""
 
+    # 个人视角业务用例执行账号（"我的订阅"数据归属账号）。
+    # PRE 实测：20431644 在该租户下无任何个人订阅，导致 M3-M6 共 35 条只能
+    # ENV_LIMITED；60050080 在「中建云」租户下有 520 条应用订阅 / 59 条 API订阅，
+    # 且锚点资源齐全。该账号 4A 不可用，只能走后门登录（约定见 AGENTS.md）。
+    # 凭据只从 .env 读取，未配置时退回主账号。
+    METERING_USERNAME: str = ""
+    METERING_PASSWORD: str = ""
+
     HEADLESS: bool = True
     SLOW_MO: int = 0
     VIEWPORT: dict = field(default_factory=lambda: {"width": 1920, "height": 1080})
@@ -142,6 +150,14 @@ class Settings:
                 f"ADMIN_{env_prefix}_PASSWORD",
                 _read_setting("ADMIN_PASSWORD", ""),
             ),
+            METERING_USERNAME=_read_setting(
+                f"METERING_{env_prefix}_USERNAME",
+                _read_setting("METERING_USERNAME", ""),
+            ),
+            METERING_PASSWORD=_read_setting(
+                f"METERING_{env_prefix}_PASSWORD",
+                _read_setting("METERING_PASSWORD", ""),
+            ),
             HEADLESS=_read_bool("HEADLESS"),
             SLOW_MO=int(_read_setting("SLOW_MO", "0", env_preferred=True)),
             BROWSER_CHANNEL=_read_setting("BROWSER_CHANNEL", "chrome", env_preferred=True),
@@ -173,6 +189,25 @@ class Settings:
             "prod": self.PROD_PASSWORD,
         }
         return env_passwords.get(self.ENV) or self.PASSWORD
+
+    # ------------------------------------------------------------------
+    # 个人视角业务用例账号（可替换，不硬编码）
+    # ------------------------------------------------------------------
+    # 设计意图：这个槽位是「谁来充当被验证的普通用户」，会随人员/环境变化。
+    # 因此只从 .env 读（支持 METERING_USERNAME 与 METERING_<ENV>_USERNAME 两级），
+    # 未配置时完全退回主账号，既有环境行为不变。
+    @property
+    def metering_username(self) -> str:
+        return self.METERING_USERNAME or self.USERNAME
+
+    @property
+    def metering_password(self) -> str:
+        return self.METERING_PASSWORD or self.effective_password
+
+    @property
+    def uses_metering_account(self) -> bool:
+        """是否启用了独立的业务账号槽位。启用则走「后门登录 + irp 工作台」。"""
+        return bool(self.METERING_USERNAME) and self.METERING_USERNAME != self.USERNAME
 
     @property
     def auth_state_file(self) -> Path:

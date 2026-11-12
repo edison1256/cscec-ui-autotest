@@ -1,5 +1,22 @@
 # AGENTS.md — CSCEC UI Automation Project Instructions
 
+## Backdoor Login Boundary
+
+`pages/portal/backdoor_login_page.py` 直连 `/udpweb/portal/index.html#/login`，
+绕过 4A/SSO。使用边界（2026-11-12 明确）：
+
+1. **允许** — 环境装配：准备账号、验证租户/权限、只读盘点。
+2. **允许** — **无法走 4A 的测试专用账号**执行只读业务用例。
+   典型场景：个人视角账号只有后门口令，在 4A 侧不存在或口令不同
+   （如 PRE 的 `METERING_USERNAME` 槽位账号）。
+   此时后门只承担「登录」职责：**所有断言仍必须基于真实 UI 与真实业务数据**，
+   不得因为走了后门就放宽断言、跳过校验或构造假数据。
+3. **禁止** — 用管理员后门账号替代业务账号跑业务断言。
+   权限溢出会让越权类用例得出虚假通过（例如「无权限账号应被拦截」）。
+4. 账号一律通过 `.env` 的 `METERING_USERNAME` / `METERING_PASSWORD`
+   （支持 `METERING_<ENV>_USERNAME` 按环境覆盖）配置，**不硬编码**。
+   换人只改配置，不改代码；未配置时自动回退主账号 + 4A 登录。
+
 ## Mandatory Production Release Walkthrough Suite
 - **Mandatory Suite**: All 115 PC + Mobile read-only smoke cases defined in `docs/prod-release-mandatory-walkthrough-suite.md` are mandatory on every release. This count grows when a production probe is stabilized and approved as a release gate.
 - **Production Execution**: `python run_tests.py --env prod` automatically executes the full 115-case mandatory suite with 0 write risk.
