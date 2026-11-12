@@ -90,9 +90,12 @@ class TestM7Query:
         """查询：租户编码筛选——实测查询区无租户编码输入."""
         _open(cs_page)
         if cs_page.get_by_placeholder("请输入租户编码").count() == 0:
-            pytest.fail(
-                "ENTRY_MISSING(实现差异): 查询区无“租户编码”筛选输入，"
-                "需求-实现差异待产品确认"
+            # 2026-11-12 与需求方确认：租户编码/租户名称/统计方式属客商需求，
+            # 客商管理在「控制台-权限管理」下，当前暂未开放。这不是实现缺陷，
+            # 故按待发布处理；开放后去掉本 skip，断言即可直接生效。
+            pytest.skip(
+                "PENDING_IMPLEMENTATION: 客商需求待发布，查询区暂无“租户编码”筛选输入；"
+                "开放后去掉本 skip 即生效"
             )
         pytest.skip("PENDING_IMPLEMENTATION: 租户编码输入出现后还需实现筛选结果断言")
 
@@ -100,9 +103,9 @@ class TestM7Query:
         """查询：租户名称筛选——实测查询区无租户名称输入."""
         _open(cs_page)
         if cs_page.get_by_placeholder("请输入租户名称").count() == 0:
-            pytest.fail(
-                "ENTRY_MISSING(实现差异): 查询区无“租户名称”筛选输入，"
-                "需求-实现差异待产品确认"
+            pytest.skip(
+                "PENDING_IMPLEMENTATION: 客商需求待发布，查询区暂无“租户名称”筛选输入；"
+                "开放后去掉本 skip 即生效"
             )
         pytest.skip("PENDING_IMPLEMENTATION: 租户名称输入出现后还需实现筛选结果断言")
 
@@ -148,9 +151,9 @@ class TestM7StatisticsMode:
         _open(cs_page)
         body = visible_texts(cs_page)
         if "统计方式" not in body and "汇总本租户" not in body:
-            pytest.fail(
-                "ENTRY_MISSING(实现差异): 控制台 API列表 无“统计方式”查询控件，"
-                "M7.3/M2.3 大纲用例不可执行，记录为需求-实现差异"
+            pytest.skip(
+                "PENDING_IMPLEMENTATION: 客商需求待发布，控制台 API列表 暂无“统计方式”控件；"
+                "开放后去掉本 skip 即生效"
             )
         pytest.skip("PENDING_IMPLEMENTATION: 统计方式控件出现后还需实现范围切换及结果断言")
 
@@ -180,18 +183,23 @@ class TestM7EntitlementDrawer:
         assert_headers_present(cs_page, CHILD_HEADERS, "控制台权益子表")
 
     def test_m7_4_2__drawer_title_identity(self, cs_page):
-        """UI：抽屉标题含租户名称/资源名称/服务模式/统计方式（实测无独立标题区）."""
+        """UI：下钻形态与身份上下文 —— 以现实现为准（行内子表，非 PRD 右侧抽屉）.
+
+        2026-11-12 需求方确认：PRE/UAT 现实现均为行内子表，PRD V1.2 的
+        「右侧抽屉」描述已作废，用例按现实现升级：断言不存在抽屉，
+        且子表带父行身份上下文（资源名称 / 服务模式 / 订阅应用）。
+        """
         _open(cs_page)
-        assert click_when_visible(cs_page, "查看", timeout_ms=8000)
-        time.sleep(2.5)
+        assert expand_row_containing(cs_page, CS_ANCHOR_RESOURCE), (
+            f"未找到锚点资源行: {CS_ANCHOR_RESOURCE}"
+        )
+        time.sleep(2.0)
+        assert not cs_page.locator(".ant-drawer-open").count(), "出现了未预期的右侧抽屉"
         body = visible_texts(cs_page)
-        if "API订阅权益" not in body:
-            pytest.fail(
-                "ENTRY_MISSING(实现差异): 无“API订阅权益”抽屉标题区"
-                "（下钻为行内子表形态），与 PRD V1.2 右侧抽屉描述不一致，"
-                "以现实现记录"
-            )
-        pytest.skip("PENDING_IMPLEMENTATION: 需限定抽屉标题并核对租户/资源/模式/统计范围身份")
+        assert_headers_present(cs_page, CHILD_HEADERS, "控制台权益子表")
+        assert CS_ANCHOR_RESOURCE in body, "子表缺少父行资源名称"
+        assert "组件申请" in body, "子表缺少父行服务模式"
+        assert CS_ANCHOR_APP in body, f"子表缺少订阅应用 {CS_ANCHOR_APP}"
 
     def test_m7_4_3__fields_match_workbench(self, cs_page):
         """UI：子表字段与工作台权益账户子表一致（锚点固定期限+不限量）."""
