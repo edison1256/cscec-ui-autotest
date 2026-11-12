@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 from collections import Counter
 from decimal import Decimal
@@ -16,6 +17,7 @@ from core.metering_blackbox_contract import (
     ACCOUNT_HEADERS, CS_HEADERS, ORDER_HEADERS, USAGE_HEADERS, WB_HEADERS, MissingMeteringData,
     amount, assert_daily, assert_export, load_manifest, require_data,
 )
+from config.settings import settings
 from pages.metering_blackbox_page import component_list_response, metering_route, response_data, ui_rows, ui_table, visible, watch_downloads
 
 MANIFEST = load_manifest()
@@ -125,7 +127,26 @@ def usage_workflow(provider, key):
         amount(record["已调用额"])
     used = amount(account_ui["已调用额"])
     assert used == amount(str(raw["usedQuota"])), "账户页面累计与当前业务响应不一致"
-    assert sum((amount(record["已调用额"]) for record in records), Decimal(0)) == used, "接口累计合计与当前账户累计不一致"
+    api_sum = sum((amount(record["已调用额"]) for record in records), Decimal(0))
+    if api_sum != used:
+        # 失败时自动落盘逐接口明细：该差额历史上恒为 215，且两日总量各 +50 后
+        # 差额不变，说明不是 T+1 时点问题而是有固定用量未落到接口行。
+        # 落盘后可直接定位是哪个接口/哪一天缺失，避免每次靠临时脚本反复探。
+        dump_dir = settings.REPORTS_DIR / "metering260901"
+        dump_dir.mkdir(parents=True, exist_ok=True)
+        (dump_dir / f"usage-mismatch-{key}.json").write_text(
+            json.dumps({
+                "scenario": key,
+                "account_used": str(used),
+                "api_sum": str(api_sum),
+                "diff": str(used - api_sum),
+                "account": {k: str(v) for k, v in raw.items()},
+                "account_ui": account_ui,
+                "records": records,
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    assert api_sum == used, "接口累计合计与当前账户累计不一致"
     provider.observations["account_ui"] = account_ui
     provider.observations["usage"] = records
     positive_index = max(range(len(records)), key=lambda index: amount(records[index]["已调用额"]))
