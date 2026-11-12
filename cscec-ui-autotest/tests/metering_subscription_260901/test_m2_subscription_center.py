@@ -30,6 +30,7 @@ from tests.metering_subscription_260901.helpers import (
     table_with_headers,
     visible_texts,
     wait_list_ready_sc,
+    wait_spin_gone,
 )
 
 pytestmark = [pytest.mark.readonly, pytest.mark.portal, pytest.mark.regression]
@@ -46,11 +47,22 @@ def _open_sc(wb_page):
 
 
 def _query(wb_page, placeholder: str, value: str) -> None:
-    box = wb_page.get_by_placeholder(placeholder)
-    assert box.count() > 0, f"查询输入框缺失: {placeholder}"
-    box.first.fill(value)
+    """在查询区填值并点查询，等到列表真正重渲染。
+
+    2026-11-12 修正：页面里同时存在多份同占位符的查询栏（含隐藏副本），
+    原先 `get_by_placeholder(...).first` 会命中隐藏副本，
+    报 `Locator.fill: Timeout ... element is not visible`。
+    因此改为只取可见实例，并在查询后等 loading 遮罩消失 + 表头重新就绪，
+    不再用固定 sleep。
+    """
+    box = wb_page.get_by_placeholder(placeholder).filter(visible=True)
+    assert box.count() > 0, f"查询输入框缺失或不可见: {placeholder}"
+    target = box.first
+    target.scroll_into_view_if_needed()
+    target.fill(value)
     wb_page.get_by_role("button", name="查 询", exact=True).click()
-    time.sleep(2.5)
+    wait_spin_gone(wb_page)
+    wait_list_ready_sc(wb_page, timeout_s=20)
 
 
 class TestM2DefaultLoad:
@@ -164,11 +176,14 @@ class TestM2Query:
         _open_sc(wb_page)
         _query(wb_page, "请输入资源名称", "不存在的资源XYZ")
         wb_page.get_by_role("button", name="重 置", exact=True).click()
-        time.sleep(2.5)
+        wait_spin_gone(wb_page)
+        wait_list_ready_sc(wb_page, timeout_s=20)
         body = visible_texts(wb_page)
         assert CS_ANCHOR_RESOURCE in body, "重置后锚点数据未恢复"
-        name_input = wb_page.get_by_placeholder("请输入资源名称")
-        assert name_input.input_value() == "", "重置后资源名称未清空"
+        # 页面存在多份同占位符的输入框，取可见实例，否则命中隐藏副本
+        name_input = wb_page.get_by_placeholder("请输入资源名称").filter(visible=True)
+        assert name_input.count() > 0, "重置后未找到可见的资源名称输入框"
+        assert name_input.first.input_value() == "", "重置后资源名称未清空"
 
     def test_m2_2_5__empty_result(self, wb_page):
         """空结果：输入不存在的资源编码查询列表为空."""

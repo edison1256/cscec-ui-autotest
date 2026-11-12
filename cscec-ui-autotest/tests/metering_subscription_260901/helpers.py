@@ -389,30 +389,53 @@ def switch_tenant(page: Page, tenant_name: str) -> bool:
     return True
 
 
-def _open_app_subscription(page: Page) -> bool:
-    """在工作台首页点「应用订阅」磁贴。
+def _open_app_subscription(page: Page, timeout_s: int = 25) -> bool:
+    """在工作台首页点「应用订阅」磁贴，直到二级页菜单出现。
 
-    2026-11-11 实测：工作台首页（应用中心）**不含**「我的订阅/订阅中心」，
-    只有磁贴；必须进入「应用订阅」二级页才会出现这两个菜单。
-    不点这一步，workbench_tenant_shape 会一直返回 None。
+    2026-11-12 加固：原实现只等固定 2.5s 后点一次磁贴，页面慢时磁贴还没渲染
+    就直接跳过，导致形态检测为 None，进而误报「无法切换租户」（实测在 M2.2.5
+    稳定复现）。改为轮询：磁贴出现就点，菜单出现就返回。
     """
-    try:
-        tile = page.get_by_text("应用订阅", exact=True).first
-        if tile.count() and tile.is_visible(timeout=3000):
-            tile.click()
-            time.sleep(3.5)
-            return True
-    except Exception:
-        pass
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            body = visible_texts(page)
+            if "我的订阅" in body or "订阅中心" in body:
+                return True
+        except Exception:
+            pass
+        try:
+            tile = page.get_by_text("应用订阅", exact=True).filter(visible=True).first
+            if tile.count():
+                tile.click()
+                time.sleep(2.0)
+                continue
+        except Exception:
+            pass
+        time.sleep(1.0)
     return False
 
 
-def _goto_workbench(page: Page) -> None:
-    """打开工作台并进入「应用订阅」二级页。"""
+def _goto_workbench(page: Page, timeout_s: int = 30) -> str | None:
+    """打开工作台并进入「应用订阅」二级页，返回检测到的形态（'zjy'/'sz'/None）。"""
     page.goto("about:blank", wait_until="domcontentloaded", timeout=30000)
     page.goto(WORKBENCH_URL, wait_until="domcontentloaded", timeout=60000)
-    time.sleep(2.5)
-    _open_app_subscription(page)
+    deadline = time.time() + timeout_s
+    detected = None
+    while time.time() < deadline:
+        detected = workbench_tenant_shape(page)
+        if detected:
+            return detected
+        # 菜单未出现时，尝试点一次「应用订阅」再判
+        try:
+            tile = page.get_by_text("应用订阅", exact=True).filter(visible=True).first
+            if tile.count():
+                tile.click()
+                time.sleep(2.0)
+        except Exception:
+            pass
+        time.sleep(1.5)
+    return detected
 
 
 def open_workbench_menu(page: Page, label: str, timeout_ms: int = 15000) -> bool:
@@ -431,13 +454,12 @@ def ensure_tenant(page: Page, shape: str) -> bool:
     Returns True when the target shape is active afterwards.
     """
     target_tenant = TENANT_SZ if shape == "sz" else TENANT_ZJY
-    _goto_workbench(page)
-    if workbench_tenant_shape(page) == shape:
+    # _goto_workbench 内部已轮询到菜单出现并返回形态，无需再重复检测
+    if _goto_workbench(page) == shape:
         return True
     if not switch_tenant(page, target_tenant):
         return False
-    _goto_workbench(page)
-    return workbench_tenant_shape(page) == shape
+    return _goto_workbench(page) == shape
 
 
 def open_subscription_center(page: Page) -> Response | None:
@@ -469,6 +491,25 @@ def wait_list_ready_sc(page: Page, timeout_s: int = 25) -> bool:
             except Exception:
                 pass
         time.sleep(0.5)
+    return False
+
+
+def wait_spin_gone(page: Page, timeout_s: int = 20) -> bool:
+    """等待 antd loading 遮罩消失。
+
+    2026-11-12 新增：查询/切换后页面会盖一层 `.ant-spin-spinning`，
+    遮罩期间输入框虽然能被定位到，但 Playwright 判定为不可交互，
+    `fill` 会一直重试到超时（实测报 `element is not visible`）。
+    """
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            if page.locator(".ant-spin-spinning").count() == 0:
+                return True
+            page.locator(".ant-spin-spinning").last.wait_for(state="hidden", timeout=3000)
+            return True
+        except Exception:
+            time.sleep(0.4)
     return False
 
 
