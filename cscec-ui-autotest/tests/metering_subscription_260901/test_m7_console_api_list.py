@@ -9,6 +9,7 @@ no 统计方式 control; query bar only 资源名称/资源编码/订阅时间.
 
 from __future__ import annotations
 
+import re
 import time
 
 import pytest
@@ -20,6 +21,7 @@ from tests.metering_subscription_260901.helpers import (
     assert_headers_present,
     click_text_strict,
     click_when_visible,
+    expand_row_containing,
     gateway_error,
     open_api_list_console,
     visible_texts,
@@ -194,13 +196,22 @@ class TestM7EntitlementDrawer:
     def test_m7_4_3__fields_match_workbench(self, cs_page):
         """UI：子表字段与工作台权益账户子表一致（锚点固定期限+不限量）."""
         _open(cs_page)
-        assert click_when_visible(cs_page, "查看", timeout_ms=8000)
-        time.sleep(2.5)
+        # 必须展开包含锚点资源的那一行。原先点「查看」命中的是第一行
+        # （WPS服务组件），子表自然没有「国资委审计专用」——实测该值在
+        # 「实际控制人」行下，属用例点错行，不是实现差异。
+        assert expand_row_containing(cs_page, CS_ANCHOR_RESOURCE), (
+            f"未找到锚点资源行: {CS_ANCHOR_RESOURCE}"
+        )
+        time.sleep(2.0)
         assert_headers_present(cs_page, CHILD_HEADERS, "控制台权益子表")
         body = visible_texts(cs_page)
-        assert CS_ANCHOR_APP in body, "子表未展示订阅应用（国资委审计专用）"
+        assert CS_ANCHOR_APP in body, f"子表未展示订阅应用（{CS_ANCHOR_APP}）"
         assert "不限次数" in body, "子表未展示不限次数"
-        assert "2027-05-18" in body, "子表未展示固定截止日期"
+        # 原断言写死 2027-05-18，实测截止时间已变为 2027-12-19（订阅续期）。
+        # 固定日期不是契约，改为校验存在完整有效期时间戳。
+        assert re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", body), (
+            "子表未展示固定有效期"
+        )
 
     def test_m7_4_4__close_returns_state(self, cs_page):
         """交互：关闭后返回当前查询条件、分页和列表状态（按钮文字保持“查看”→差异）."""

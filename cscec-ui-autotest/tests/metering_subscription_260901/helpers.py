@@ -494,6 +494,35 @@ def wait_list_ready_sc(page: Page, timeout_s: int = 25) -> bool:
     return False
 
 
+def expand_row_containing(page: Page, text: str, timeout_s: int = 20) -> bool:
+    """展开包含指定文本的那个父行（点该行内的「查看」）。
+
+    2026-11-12 新增：`click_when_visible(page, "查看")` 点的是**第一行**，
+    若锚点资源在后面的行，展开的就是别的资源，子表里自然找不到目标值
+    （实测 M7.4.3 因此误报「子表未展示订阅应用」）。
+    """
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            rows = page.locator("tr")
+            for i in range(min(rows.count(), 60)):
+                row = rows.nth(i)
+                try:
+                    if text not in row.inner_text():
+                        continue
+                    btn = row.get_by_text("查看", exact=True).first
+                    if btn.count() and btn.is_visible():
+                        btn.click()
+                        time.sleep(3.0)
+                        return True
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        time.sleep(1.0)
+    return False
+
+
 def wait_spin_gone(page: Page, timeout_s: int = 20) -> bool:
     """等待 antd loading 遮罩消失。
 
