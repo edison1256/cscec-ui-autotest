@@ -134,21 +134,37 @@ def verified_auth(verified_browser, verified_profile, request):
             page.set_default_navigation_timeout(45000)
             page.goto(root, wait_until="domcontentloaded")
             logger.info("[metering] authentication page loaded")
-            user = page.get_by_text(verified_profile["display_name"], exact=True)
-            gate = page.locator("#qrcont").or_(page.get_by_text("登录", exact=True)).or_(user)
-            visible(gate)
-            if not user.filter(visible=True).count():
-                if not page.locator("#qrcont").filter(visible=True).count():
-                    visible(page.get_by_text("登录", exact=True)).click()
-                page.locator("#qrcont").wait_for(state="visible")
-                frame = page.frame_locator("#qrcont")
-                frame.locator("#usernameIn").fill(settings.USERNAME)
-                frame.locator("#pwdIn").fill(password)
-                frame.locator("#pwdLoginButton").click()
+            def _logged_in() -> bool:
+                """登录态判定：优先看 localStorage，显示名作兜底。
+
+                注意：工作台右上角把头像首字与显示名拼在一起（实测文本为
+                「陈陈方达」），用 exact=True 精确匹配会永远等不到，故这里必须模糊匹配。
+                """
+                try:
+                    if page.evaluate("() => !!window.localStorage.getItem('__login_info__')"):
+                        return True
+                except Exception:
+                    pass
+                return page.get_by_text(verified_profile["display_name"]).filter(
+                    visible=True).count() > 0
+
+            if not _logged_in():
+                # 2026-11-11：旧 `#qrcont` iframe 登录链路已被 4A/IDaaS 取代。
+                # 实测登录链路为：门户 → IDaaS passport → 「其它登录方式」→
+                # img[alt='4A'] → CAS（必须切「密码登录」tab，且表单渲染约 6s 延迟）。
+                # 统一委托 pages/portal/login_page.py，避免此处与主流程两套实现漂移。
+                from pages.portal.login_page import LoginPage
+
+                logger.info("[metering] 使用 LoginPage 走 IDaaS + 4A 登录")
+                LoginPage(page).login(
+                    username=settings.USERNAME,
+                    password=password,
+                    base_url=root,
+                )
             logger.info("[metering] waiting for authenticated portal")
             page.wait_for_url(root + "**", timeout=45000)
-            expect(visible(page.get_by_text(verified_profile["display_name"], exact=True))).to_be_visible()
             assert not blocked, f"ENV_MISMATCH: 被拦截的跨环境请求: {blocked}"
+            assert _logged_in(), f"登录后未检测到登录态: {page.url}"
             states[key] = context.storage_state()
             logger.info("[metering] authentication completed")
             return states[key]

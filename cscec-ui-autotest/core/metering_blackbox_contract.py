@@ -15,6 +15,26 @@ MANIFEST = Path(__file__).resolve().parents[1] / "test_assets/metering_subscript
 PRE_HOSTS = {"cloud-pre.cscec.com", "irp-pre.cscec.com"}
 BUSINESS_HOSTS = {"pre": PRE_HOSTS, "prod": {"cloud.cscec.com", "irp.cscec.com"}}
 AUTH_HOSTS = {"iam-pre.cscec.com", "iam.cscec.com", "iamuat.cscec.com"}
+
+# IDaaS（统一身份认证）主机按环境区分。
+#
+# 2026-11-11 实测：认证平台改版后，登录链路变成
+#   cloud-*/irp-* → idaas-*/sso passport → 4A(CAS)
+# 这条授权跳转是 **document 级顶层导航**，主机不在 AUTH_HOSTS 里，
+# 会被 allowed_request 判为跨域请求并 abort，导致登录直接失败
+# （表现为 WRITE_BLOCKED / ENV_MISMATCH 或 #qrcont 等待超时）。
+#
+# 注意：不能把 idaas-pre 直接并进 AUTH_HOSTS —— 那个集合是环境无关的，
+# 会让 prod 运行也放行 pre 域。必须按 env 取。
+IDAAS_HOSTS = {
+    "pre": {"idaas-pre.cscec.com"},
+    "uat": {"idaas-uat.cscec.com"},
+    "prod": {"idaas.cscec.com"},
+}
+# 只放行 IDaaS 的认证命名空间（/sign/* 与 /sso/*），不放行整个域。
+# 实测需要覆盖：/sign/authz/oauth/v20/authorize（OAuth 授权）、
+#              /sign/login/get（登录配置）、/sso/index.html（passport 登录页）
+IDAAS_AUTH_PATH_RE = re.compile(r"^/(?:sign|sso)/")
 READ_POST_ACTIONS = {
     "aggregate", "aggregateForConsole", "list", "listByIds", "listSummary",
     "findByOrderIds", "detail", "query", "page", "get", "getInfo",
@@ -131,6 +151,10 @@ def allowed_request(url: str, resource_type: str, method: str = "GET", env: str 
         if parsed.scheme != "https" or parsed.port not in (None, 443):
             return False
         if parsed.hostname in AUTH_HOSTS:
+            return True
+        # IDaaS 授权/登录跳转：仅放行当前环境对应的主机与认证路径
+        if (parsed.hostname in IDAAS_HOSTS.get(env, set())
+                and IDAAS_AUTH_PATH_RE.match(parsed.path)):
             return True
         return (parsed.hostname in BUSINESS_HOSTS[env]
                 and (not (env == "prod" or readonly) or readonly_business_request(parsed.path, method)))
