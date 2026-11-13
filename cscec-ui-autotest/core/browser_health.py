@@ -19,6 +19,22 @@ from playwright.sync_api import (
 
 from config.settings import settings
 
+# 静态资源后缀：这类请求被浏览器主动取消（ERR_ABORTED）属正常现象，
+# 不应判为页面异常。典型场景：
+#   - 骨架屏图片在首屏内容渲染完成后被替换 → 请求被取消
+#   - 路由切换/组件卸载时取消尚未完成的资源加载
+# 业务接口（XHR/fetch，通常是 JSON/API 路径）**不在此列**，
+# 它们被 abort 仍必须暴露。
+_STATIC_ASSET_SUFFIXES = (
+    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico",
+    ".woff", ".woff2", ".ttf", ".eot", ".css",
+)
+
+
+def _is_static_asset(url: str) -> bool:
+    path = url.split("?", 1)[0].lower()
+    return path.endswith(_STATIC_ASSET_SUFFIXES)
+
 
 @dataclass(frozen=True)
 class BrowserHealthIssue:
@@ -157,6 +173,11 @@ class BrowserHealthMonitor:
 
     def _on_request_failed(self, request: Request) -> None:
         failure = request.failure or "unknown failure"
+        # ERR_ABORTED = 浏览器/页面主动取消，不是网络或服务端故障。
+        # 只对静态资源放行：实测生产工作台入口会因骨架屏
+        # image/skeleton-screen.png 被取消而误报「浏览器端异常」。
+        if "ERR_ABORTED" in failure and _is_static_asset(request.url):
+            return
         self._record("requestfailed", f"{request.method} {request.url}: {failure}")
 
     def _on_new_page(self, page: Page) -> None:
