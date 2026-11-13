@@ -18,6 +18,7 @@ from playwright.sync_api import (
 )
 
 from config.settings import settings
+from core.token_contract import is_present
 
 # 静态资源后缀：这类请求被浏览器主动取消（ERR_ABORTED）属正常现象，
 # 不应判为页面异常。典型场景：
@@ -28,6 +29,10 @@ from config.settings import settings
 _STATIC_ASSET_SUFFIXES = (
     ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico",
     ".woff", ".woff2", ".ttf", ".eot", ".css",
+    # .js / .mjs / .map：SPA 换页时浏览器会主动取消未完成的脚本加载，
+    # 实测 CAS 认证页跳转必现 jquery-1.12.4.min.js: net::ERR_ABORTED。
+    # 这不是网络或服务端故障，纳入豁免可消除一类长期误报。
+    ".js", ".mjs", ".map",
 )
 
 
@@ -52,6 +57,10 @@ class BusinessResponseRule:
     success_values: tuple[Any, ...] = (0, 200, "0", "200", True)
     code_fields: tuple[str, ...] = ("code", "status", "success")
     required_data_path: str | None = None
+    # 多候选数据路径：字段层级/命名变化时不至于误判为"接口没数据"
+    required_data_paths: tuple[str, ...] = ()
+    # token 类接口常为 OAuth2 风格（无 code 字段），需可关闭状态字段强校验
+    require_code_field: bool = True
 
 
 @dataclass(frozen=True)
@@ -125,6 +134,23 @@ class BrowserHealthMonitor:
             for current_page in self.context.pages:
                 self._attach_page(current_page)
             self._started = True
+        return self
+
+    def abandon(self) -> "BrowserHealthMonitor":
+        """Detach listeners and discard everything, without settling assertions.
+
+        用于「动作根本没发生」的场景：最典型的是前置条件不满足
+        （例如工作台没有目标卡片），此时声明过的 critical_api 必然不会被触发，
+        若照常清算就会记录 business_response_missing，把一次应当
+        NOT_APPLICABLE 的结果变成 FAILED。
+        """
+        if self._started:
+            self.context.remove_listener("page", self._on_new_page)
+            for current_page in tuple(self._pages):
+                self._detach_page(current_page)
+            self._started = False
+        self.issues.clear()
+        self._business_rule_hits.clear()
         return self
 
     def stop(self) -> "BrowserHealthMonitor":
@@ -226,26 +252,45 @@ class BrowserHealthMonitor:
             )
             return
 
-        code_field, code_value = self._first_payload_value(payload, rule.code_fields)
-        if code_field is None:
-            self._record(
-                "business_response",
-                f"关键接口缺少业务状态字段 {rule.code_fields}: {response.url}",
-            )
-            return
-        if not self._is_success_value(code_value, rule.success_values):
-            message = self._payload_message(payload)
-            self._record(
-                "business_response",
-                f"{response.url}: {code_field}={code_value!r}, message={message!r}",
-            )
-            return
+        if rule.require_code_field:
+            code_field, code_value = self._first_payload_value(payload, rule.code_fields)
+            if code_field is None:
+                self._record(
+                    "business_response",
+                    f"关键接口缺少业务状态字段 {rule.code_fields}: {response.url}",
+                )
+                return
+            if not self._is_success_value(code_value, rule.success_values):
+                message = self._payload_message(payload)
+                self._record(
+                    "business_response",
+                    f"{response.url}: {code_field}={code_value!r}, message={message!r}",
+                )
+                return
 
-        if rule.required_data_path and self._dotted_value(payload, rule.required_data_path) is None:
+        # 空串 / 空对象同样视为缺失：只判 `is None` 会让
+        # `"accessToken": ""` 这类契约破坏静默通过。
+        if rule.required_data_paths:
+            if not any(
+                is_present(self._dotted_value(payload, path))
+                for path in rule.required_data_paths
+            ):
+                self._record(
+                    "business_response",
+                    f"{response.url}: 未命中任一候选数据路径 {rule.required_data_paths}",
+                )
+        elif rule.required_data_path and not is_present(
+            self._dotted_value(payload, rule.required_data_path)
+        ):
             self._record(
                 "business_response",
-                f"{response.url}: 缺少有效数据路径 {rule.required_data_path}",
+                f"{response.url}: 数据路径缺失或为空 {rule.required_data_path}",
             )
+
+    @staticmethod
+    def _required_paths(rule: BusinessResponseRule) -> tuple[str, ...]:
+        single = (rule.required_data_path,) if rule.required_data_path else ()
+        return tuple(rule.required_data_paths) + single
 
     def _record(self, category: str, detail: str) -> None:
         for rule in self.ignore_rules:

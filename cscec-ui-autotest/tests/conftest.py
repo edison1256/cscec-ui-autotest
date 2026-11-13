@@ -126,8 +126,11 @@ def require_case_prerequisite() -> Callable[..., None]:
         try:
             result.require_for(contract)
         except ConditionalNotApplicable as exc:
+            # 前置条件不满足 = 目标动作根本没执行。
+            # 此时声明过的 critical_api 必然不会触发，不能据此判失败：
+            # 用 abandon() 丢弃全部未结算项，而不是 stop().assert_healthy()。
             if health_monitor is not None:
-                health_monitor.stop().assert_healthy()
+                health_monitor.abandon()
             pytest.skip(f"NOT_APPLICABLE[{case_id}][{exc}]")
 
     return require
