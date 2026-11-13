@@ -22,6 +22,10 @@ class SubscriptionLeaf:
     required_labels: tuple[str, ...] = ()
     detail_api_pattern: str | None = None
     visible_identity_field: str | None = None
+    # 用于在列表行中定位记录的唯一字段名（必须同时出现在接口返回与页面展示中）。
+    # 旧版各列表返回 id；API列表改为资源聚合视图后返回 resourceId（页面不展示）
+    # 与 resourceCode（页面展示「资源编码」列），故取后者。
+    record_id_field: str = "id"
 
     @property
     def supports_detail(self) -> bool:
@@ -42,7 +46,7 @@ SUBSCRIPTION_LEAVES = (
     SubscriptionLeaf(
         case_id="SUBSCRIPTION-APP-001",
         title="应用列表",
-        route_pattern=r"[#/]subscription/app/appInfo(?:[/?]|$)",
+        route_pattern=r"[#/]sub/resource/subscription/app/appInfo(?:[/?]|$)",
         list_api_pattern="/console/rsc/app/apply/history/list",
         required_labels=ORDER_DETAIL_LABELS,
         detail_api_pattern=r"/order/orderDetail[?]",
@@ -50,7 +54,7 @@ SUBSCRIPTION_LEAVES = (
     SubscriptionLeaf(
         case_id="SUBSCRIPTION-CLOUD-001",
         title="云产品列表",
-        route_pattern=r"[#/]subscription/cloud(?:[/?]|$)",
+        route_pattern=r"[#/]sub/resource/subscription/cloud(?:[/?]|$)",
         list_api_pattern="/cloud/applyList",
         required_labels=ORDER_DETAIL_LABELS,
         detail_api_pattern=r"/order/orderDetail[?]",
@@ -58,13 +62,18 @@ SUBSCRIPTION_LEAVES = (
     SubscriptionLeaf(
         case_id="SUBSCRIPTION-API-001",
         title="API列表",
-        route_pattern=r"[#/]subscription/apiResource(?:[/?]|$)",
-        list_api_pattern="/console/rsc/api/apply/history/list",
+        route_pattern=r"[#/]sub/resource/subscription/apiResource(?:[/?]|$)",
+        # 2026-11-13 生产实测：该页列 64 条数据来自
+        # POST /irp-api/irp-portal-console/quota-instance/aggregateForConsole，
+        # 旧值 /console/rsc/api/apply/history/list 已不再发出（其余四类资源仍用
+        # console/rsc/*/apply/history/list）。
+        list_api_pattern="quota-instance/aggregateForConsole",
+        record_id_field="resourceCode",
     ),
     SubscriptionLeaf(
         case_id="SUBSCRIPTION-COMPONENT-001",
         title="组件列表",
-        route_pattern=r"[#/]subscription/comp(?:[/?]|$)",
+        route_pattern=r"[#/]sub/resource/subscription/comp(?:[/?]|$)",
         list_api_pattern="/console/rsc/compt/apply/history/list",
         required_labels=("详情", "订单ID"),
         visible_identity_field="orderId",
@@ -72,7 +81,7 @@ SUBSCRIPTION_LEAVES = (
     SubscriptionLeaf(
         case_id="SUBSCRIPTION-DATA-ASSET-001",
         title="数据资产列表",
-        route_pattern=r"[#/]subscription/dataAssets(?:[/?]|$)",
+        route_pattern=r"[#/]sub/resource/subscription/dataAssets(?:[/?]|$)",
         list_api_pattern="/workbench/rsc/data/apply/history/list",
         required_labels=ORDER_DETAIL_LABELS + ("资产列表",),
         detail_api_pattern=r"/order/orderDetail[?]",
@@ -109,11 +118,17 @@ class SubscriptionServicePage(ConsoleMenuPage):
         assert snapshot.records, f"{leaf.title}列表接口没有可核验记录"
 
         record = snapshot.first_record
-        record_id = self._detail_reader._required_record_text(record, "id")
+        record_id = self._detail_reader._required_record_text(
+            record, leaf.record_id_field
+        )
         resource_name = self._detail_reader._record_resource_name(record)
-        row = self.page.locator(".table-row").filter(
-            has=self.page.get_by_text(record_id, exact=True)
-        ).first
+        # 行定位：不同时期表格组件类名不同（.table-row / .ant-table-row /
+        # 自定义 tr）。用「文本命中后回溯最近的行容器」更稳。
+        row = self.page.get_by_text(record_id, exact=True).first.locator(
+            "xpath=ancestor::*[contains(@class,'table-row')"
+            " or contains(@class,'ant-table-row')"
+            " or self::tr][1]"
+        )
         require_business_identity(row, record_id, f"{leaf.title}首条记录")
         require_business_identity(row, resource_name, f"{leaf.title}首条记录")
         expect(self.page.get_by_role("button", name="查 询", exact=True)).to_be_visible()
