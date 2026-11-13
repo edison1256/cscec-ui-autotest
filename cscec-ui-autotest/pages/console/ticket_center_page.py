@@ -366,10 +366,24 @@ class TicketCenterPage(BasePage):
         start = self.page.get_by_placeholder("开始时间", exact=True)
         end = self.page.get_by_placeholder("结束时间", exact=True)
         start.click()
+        # 日期面板是双月视图（实测 td[title] 共 84 个、唯一日期 53 个）：
+        # 跨月边界的同一天会在左右两个日历里各出现一次（例如 11-30 ~ 12-06），
+        # 因此不能断言 count == 1。只要至少一个可点即可，取第一个。
         day_cell = self.page.locator(f'td[title="{day}"]')
-        expect(day_cell).to_have_count(1)
-        day_cell.click()
-        self.page.locator(f'td[title="{day}"]').click()
+        if day_cell.count():
+            expect(day_cell.first).to_be_visible()
+            day_cell.first.click()  # 选开始日
+            day_cell.first.click()  # 同一天作为结束日，构成当日范围
+        else:
+            # 面板默认只渲染当前月与下月；当首条工单的创建日更早
+            # （实测首条为 2026-09-16）时该单元格根本不在 DOM 里。
+            # 退化为直接键入日期：仍然验证「按真实创建日筛选」的业务结果，
+            # 只是交互方式由点选改为输入。
+            start.fill(day)
+            start.press("Enter")
+            end.fill(day)
+            end.press("Enter")
+            self.page.keyboard.press("Escape")
 
         result, query = self._query_ticket_list("工单发起时间筛选")
         self._validate_creation_day_filter(query, result, day)

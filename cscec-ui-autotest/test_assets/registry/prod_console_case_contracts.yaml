@@ -217,9 +217,9 @@ cases:
     parameter_id: C-P0-CONSOLE-WB-004-api-subscription
     entry_type: UI
     max_depth: L1
-    expected_state: [API订阅页面可见]
+    expected_state: [API列表页面可见]
     critical_api_patterns:
-      - /irp-api/irp-portal-console/console/rsc/api/apply/history/list$
+      - /irp-api/irp-portal-console/quota-instance/aggregateForConsole$
 
   - <<: *conditional_role_defaults
     case_id: C-P0-CONSOLE-WB-005
@@ -247,7 +247,7 @@ cases:
     parameter_id: C-P0-CONSOLE-WB-007-api-resource
     entry_type: UI
     max_depth: L1
-    expected_state: [API资源页面可见]
+    expected_state: [API管理页面可见]
     critical_api_patterns:
       - /irp-api/irp-portal-console/app/list-businessArea-app$
 

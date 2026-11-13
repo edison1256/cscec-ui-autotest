@@ -44,9 +44,13 @@ WORKBENCH_MODULE_ENTRIES = [
         id="C-P0-CONSOLE-WB-003-data-asset-subscription",
     ),
     pytest.param(
+        # 2026-11-13 生产实测：卡片名仍是「API订阅」（工作台常用模块配置里存在），
+        # 但落地页标题为「API列表」，且已改为资源聚合视图：
+        # 列表数据来自 quota-instance/aggregateForConsole，
+        # 旧接口 console/rsc/api/apply/history/list 不再发出。
         "API订阅",
         "API列表",
-        r"/subscription/apiResource(?:[?]|$)",
+        r"/sub/resource/subscription/apiResource(?:[?]|$)",
         "C-P0-CONSOLE-WB-004",
         id="C-P0-CONSOLE-WB-004-api-subscription",
     ),
@@ -65,9 +69,11 @@ WORKBENCH_MODULE_ENTRIES = [
         id="C-P0-CONSOLE-WB-006-cloud-product-subscription",
     ),
     pytest.param(
-        "API资源",
-        "API资源",
-        r"/resource/apiResource(?:[?]|$)",
+        # 2026-11-13 生产实测：旧卡片名「API资源」已改名为「API管理」，
+        # 路由 /sub/resource/resource/apiResource，接口 /app/list-businessArea-app 不变。
+        "API管理",
+        "API管理",
+        r"/sub/resource/resource/apiResource(?:[?]|$)",
         "C-P0-CONSOLE-WB-007",
         id="C-P0-CONSOLE-WB-007-api-resource",
     ),
