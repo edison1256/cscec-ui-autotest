@@ -65,7 +65,13 @@ class LoginPage(BasePage):
     _idas_other_entry_labels = ("其它登录方式", "其他登录方式", "更多登录方式")
     _idas_4a_icon_selectors = (
         "img[alt='4A']",
+        "img[alt='4a']",
+        "img[alt*='4A']",
         "img[src*='social/zj']",
+        # 兜底：「其它登录方式」区域里的第一个可点图标
+        # （部分环境 alt/src 命名不同，但该区域结构稳定）
+        "[class*='social'] img",
+        "[class*='other'] img",
     )
 
     # ── 4A/CAS 登录 frame ──

@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 import pytest
 from playwright.sync_api import Browser, BrowserContext, Page
 
+from config.environments import EXTRA_AUTH_ENTRY_URLS
 from config.settings import settings
 from core.browser_health import BrowserHealthMonitor
 from core.execution_contract import PrerequisiteResult
@@ -304,7 +305,31 @@ def _looks_authenticated(browser: Browser, auth_file: Path) -> bool:
             page.get_by_text("登录", exact=True).first.wait_for(state="visible", timeout=1500)
             return False
         except Exception:
+            pass
+
+        # 门户域同样必须有效：跨域 SSO 不生效，门户首页、移动端
+        # （cloud-*/udpweb/mobile）与 data 子域都依赖独立的门户会话。
+        # 这里只判定「是否被重定向到登录页」这一明确失败信号，
+        # 避免因门户首页没有 __login_info__ 而误判。
+        portal = (settings.PORTAL_BASE_URL or "").strip()
+        if not portal:
             return True
+        try:
+            page.goto(portal, timeout=settings.NAVIGATION_TIMEOUT, wait_until="domcontentloaded")
+            try:
+                page.wait_for_load_state("networkidle", timeout=10000)
+            except Exception:
+                pass
+            portal_url = page.url.lower()
+            if _is_login_like_url(portal_url) or "idaas" in portal_url or "/cas/login" in portal_url:
+                logger.warning(
+                    f"[Auth] portal domain not authenticated, redirect={page.url[:140]}"
+                )
+                return False
+            return True
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"[Auth] portal state check failed: {exc}")
+            return False
     except Exception as exc:
         logger.warning(f"[Auth] state check failed: {exc}")
         return False
@@ -313,13 +338,53 @@ def _looks_authenticated(browser: Browser, auth_file: Path) -> bool:
 
 
 def _perform_login(browser: Browser, auth_file: Path) -> None:
+    """建立并保存登录态，覆盖控制台域与门户域。
+
+    为什么必须登录两个域（2026-11-13 生产实测）：
+      控制台（irp-*）与门户（cloud-*）的会话互相独立，跨域 SSO 不生效。
+      只登控制台时，`auth_states/<env>.json` 的 origins 只有 irp 域，
+      导致门户侧的移动端页面（cloud-*/udpweb/mobile）被重定向到
+      idaas 登录页，data 子域返回 code=1401 已退出登录。
+      生产回归因此有 6 条用例在「没进入产品」的状态下失败。
+
+    门户登录走与手工一致的黑盒路径（IDaaS -> 其它登录方式 -> 4A 认证图标 ->
+    CAS 密码登录），由 LoginPage.login_portal() 实现。
+    """
     auth_file.parent.mkdir(parents=True, exist_ok=True)
     context = browser.new_context(viewport=settings.VIEWPORT, ignore_https_errors=True)
     context.set_default_timeout(settings.DEFAULT_TIMEOUT)
     context.set_default_navigation_timeout(settings.NAVIGATION_TIMEOUT)
     page = context.new_page()
     try:
-        LoginPage(page).login(password=settings.effective_password).should_login_succeed()
+        login = LoginPage(page)
+
+        # 1) 控制台域（irp-*）：控制台类用例依赖
+        login.login(password=settings.effective_password).should_login_succeed()
+        logger.info("[Auth] console domain logged in")
+
+        # 2) 门户域（cloud-*）：门户/移动端/data 子域依赖。
+        #    失败不阻塞整体登录（控制台用例仍可跑），但会明确告警，
+        #    避免再次出现「用例失败但看不出是登录态缺失」的情况。
+        try:
+            login.login_portal()
+            logger.info("[Auth] portal domain logged in")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "[Auth] portal login failed; portal/mobile/data cases will be "
+                f"blocked by missing session: {type(exc).__name__}: {exc}"
+            )
+
+        # 3) 额外站点（独立 SSO 子域）：访问一次即完成会话建立。
+        #    实测 prod 的 data.cscec.com 会自动跳到自己域的工作台并写入
+        #    __login_info__；不访问则「数据源配置」入口的接口返回 code=1401。
+        for entry in EXTRA_AUTH_ENTRY_URLS.get(settings.ENV, []):
+            try:
+                page.goto(entry, wait_until="domcontentloaded", timeout=30000)
+                page.wait_for_timeout(1500)
+                logger.info(f"[Auth] extra entry warmed: {entry} -> {page.url[:100]}")
+            except Exception as exc:  # noqa: BLE001
+                logger.warning(f"[Auth] extra entry failed ({entry}): {exc}")
+
         context.storage_state(path=str(auth_file))
         logger.info(f"[Auth] wrote {auth_file}")
     finally:
@@ -327,6 +392,17 @@ def _perform_login(browser: Browser, auth_file: Path) -> None:
 
     if not _looks_authenticated(browser, auth_file):
         raise AssertionError(f"Login finished but auth state is not valid for {settings.ENV}: {auth_file}")
+
+
+@pytest.fixture(scope="session")
+def auth_state_path(browser: Browser, request: pytest.FixtureRequest) -> Path:
+    """统一的登录态文件路径（控制台域 + 门户域都已登录）。
+
+    任何需要「已登录上下文」的模块（含移动端）都应依赖本 fixture，
+    而不是直接读 settings.auth_state_file —— 否则 --refresh-auth 不会生效，
+    且可能拿到只含控制台域的旧登录态。
+    """
+    return _ensure_auth_state(browser, request)
 
 
 def _page_from_funcargs(funcargs: dict) -> Page | None:

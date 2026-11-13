@@ -11,10 +11,14 @@ from config.settings import settings
 
 
 @pytest.fixture(scope="function")
-def mobile_context(browser: Browser) -> BrowserContext:
-    """创建移动端仿真浏览器上下文（带登录态）。"""
-    auth_file = settings.auth_state_file
-    storage_state = str(auth_file) if auth_file.exists() else None
+def mobile_context(browser: Browser, auth_state_path: Path) -> BrowserContext:
+    """创建移动端仿真浏览器上下文（带登录态）。
+
+    登录态来自统一 fixture `auth_state_path`，因此 `--refresh-auth` 对移动端
+    同样生效。此前直接读 `settings.auth_state_file`，导致刷新被跳过、
+    且可能拿到只含控制台域的旧登录态 —— 移动端页面会停在 IDaaS 登录页。
+    """
+    storage_state = str(auth_state_path) if auth_state_path.exists() else None
 
     context = browser.new_context(
         viewport={"width": 390, "height": 844},

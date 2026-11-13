@@ -85,10 +85,15 @@ class TestMobileHomepageRegression:
             pytest.param({"width": 428, "height": 926}, id="iPhone-Pro-Max"),
         ],
     )
-    def test_m_p0_resp_001_multi_viewport_compatibility(self, browser: Browser, viewport_spec: dict):
-        """M-P0-RESP-001: 移动端多视口响应式兼容性校验。"""
-        auth_file = settings.auth_state_file
-        storage_state = str(auth_file) if auth_file.exists() else None
+    def test_m_p0_resp_001_multi_viewport_compatibility(
+        self, browser: Browser, auth_state_path, viewport_spec: dict
+    ):
+        """M-P0-RESP-001: 移动端多视口响应式兼容性校验。
+
+        登录态取统一 fixture `auth_state_path`（含门户域会话），
+        不再直接读 auth 文件 —— 否则 --refresh-auth 不生效。
+        """
+        storage_state = str(auth_state_path) if auth_state_path.exists() else None
 
         context = browser.new_context(
             viewport=viewport_spec,

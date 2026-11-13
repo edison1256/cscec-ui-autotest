@@ -72,6 +72,17 @@ METERING_SUIT_KEYS_ON_CONSOLE_DOMAIN = {
     "uat": "",
 }
 
+# 需要额外建立会话的站点（独立 SSO，访问一次即写入自己的 cookie/localStorage）。
+# 背景：控制台「数据源配置」入口会请求 data.cscec.com，该子域有自己的工作台，
+# 未被访问过时接口返回 code=1401「当前用户已经退出登录」。
+# 2026-11-13 实测 prod：登录门户后访问 https://data.cscec.com/ 会自动 SSO
+# 跳到 data 域工作台（suitKey=portal），localStorage 写入 __login_info__。
+EXTRA_AUTH_ENTRY_URLS = {
+    "prod": ["https://data.cscec.com/"],
+    "pre": [],
+    "uat": [],
+}
+
 
 
 # 直链兜底路由：当菜单入口在某环境未暴露时，可在此填入真实 SPA 路由作为
