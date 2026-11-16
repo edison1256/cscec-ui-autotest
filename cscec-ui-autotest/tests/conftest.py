@@ -397,6 +397,38 @@ def _perform_login(browser: Browser, auth_file: Path) -> None:
         raise AssertionError(f"Login finished but auth state is not valid for {settings.ENV}: {auth_file}")
 
 
+@pytest.fixture(scope="function")
+def admin_page(browser: Browser) -> Page:
+    """管理员身份页面（独立 storage_state，与业务账号完全隔离）。
+
+    用途：客商写入闭环中的「审批租户申请」「人工建/删租户」等动作，
+    必须由平台运营管理员执行，不能用业务账号代替。
+
+    登录态来自 `auth_states/admin-<env>.json`，由
+    `ENV=<env> python tools/refresh_admin_auth.py` 生成（后门直登）。
+    缺失时 skip 而不是就地登录：测试中途登录既慢又容易因弹窗/超时失败，
+    与 `_ensure_auth_state` 对业务账号的处理方式保持一致。
+    """
+    state_file = settings.admin_auth_state_file
+    if not state_file.exists() or state_file.stat().st_size < 100:
+        pytest.skip(
+            f"管理员登录态缺失: {state_file}。先运行 "
+            f"`ENV={settings.ENV} python tools/refresh_admin_auth.py`"
+        )
+    context = browser.new_context(
+        viewport=settings.VIEWPORT,
+        ignore_https_errors=True,
+        storage_state=str(state_file),
+    )
+    context.set_default_timeout(settings.DEFAULT_TIMEOUT)
+    context.set_default_navigation_timeout(settings.NAVIGATION_TIMEOUT)
+    page = context.new_page()
+    try:
+        yield page
+    finally:
+        context.close()
+
+
 @pytest.fixture(scope="session")
 def auth_state_path(browser: Browser, request: pytest.FixtureRequest) -> Path:
     """统一的登录态文件路径（控制台域 + 门户域都已登录）。

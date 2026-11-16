@@ -65,6 +65,11 @@ class Settings:
     METERING_USERNAME: str = ""
     METERING_PASSWORD: str = ""
 
+    # 客商接入专用申请人账号（关联「已认证未开通」企业，用于提交租户申请）。
+    # 与 METERING 槽位同构：环境级 KESHANG_<ENV>_* 优先，其次全局，最后回退主账号。
+    KESHANG_USERNAME: str = ""
+    KESHANG_PASSWORD: str = ""
+
     HEADLESS: bool = True
     SLOW_MO: int = 0
     VIEWPORT: dict = field(default_factory=lambda: {"width": 1920, "height": 1080})
@@ -158,6 +163,14 @@ class Settings:
                 f"METERING_{env_prefix}_PASSWORD",
                 _read_setting("METERING_PASSWORD", ""),
             ),
+            KESHANG_USERNAME=_read_setting(
+                f"KESHANG_{env_prefix}_USERNAME",
+                _read_setting("KESHANG_USERNAME", ""),
+            ),
+            KESHANG_PASSWORD=_read_setting(
+                f"KESHANG_{env_prefix}_PASSWORD",
+                _read_setting("KESHANG_PASSWORD", ""),
+            ),
             HEADLESS=_read_bool("HEADLESS"),
             SLOW_MO=int(_read_setting("SLOW_MO", "0", env_preferred=True)),
             BROWSER_CHANNEL=_read_setting("BROWSER_CHANNEL", "chrome", env_preferred=True),
@@ -208,6 +221,20 @@ class Settings:
     def uses_metering_account(self) -> bool:
         """是否启用了独立的业务账号槽位。启用则走「后门登录 + irp 工作台」。"""
         return bool(self.METERING_USERNAME) and self.METERING_USERNAME != self.USERNAME
+
+    # ---- 客商接入申请人槽位（未配置时完全回退主账号，既有环境行为不变）----
+    @property
+    def keshang_username(self) -> str:
+        return self.KESHANG_USERNAME or self.USERNAME
+
+    @property
+    def keshang_password(self) -> str:
+        return self.KESHANG_PASSWORD or self.effective_password
+
+    @property
+    def uses_keshang_account(self) -> bool:
+        """是否启用了客商申请人专用账号。"""
+        return bool(self.KESHANG_USERNAME) and self.KESHANG_USERNAME != self.USERNAME
 
     @property
     def auth_state_file(self) -> Path:
