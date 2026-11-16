@@ -53,22 +53,57 @@ class MessageCenterPage(BasePage):
     LIST_API = re.compile(r"/message/messageReceiver/page[?]")
     TAB_NAMES = ("审批", "任务", "通知")
 
+    def __init__(self, page: Page) -> None:
+        super().__init__(page)
+        # 打开控制台外壳时捕获的未读消息响应（见 open_console_home 说明）
+        self._list_response: Response | None = None
+
     def open_console_home(self) -> "MessageCenterPage":
-        """Open the real console shell before using its top-bar bell."""
-        ConsoleMenuPage(self.page).open_console_home()
+        """Open the console shell and capture the message list it loads.
+
+        2026-11-16 生产实测：未读消息 GET /message/messageReceiver/page?...
+        在**控制台外壳加载阶段**就已请求完成；之后点击铃铛只是展开面板，
+        不再发起任何新请求（实测点击前后请求总数完全一致，均为 161）。
+        因此必须在这里就开始捕获 —— 若沿用「expect_response 包裹 click」，
+        等待的是一个永远不会再出现的请求，必然 60s 超时。
+        """
+        captured: dict[str, Response] = {}
+
+        def _on_response(response: Response) -> None:
+            if self.LIST_API.search(response.url):
+                captured["response"] = response
+
+        self.page.on("response", _on_response)
+        try:
+            ConsoleMenuPage(self.page).open_console_home()
+        finally:
+            self.page.remove_listener("response", _on_response)
+        self._list_response = captured.get("response")
         return self
 
     def open_message_bell(self) -> MessageSnapshot:
         """Open the bell, validate its tabs, and capture unread messages."""
         bell = self.page.get_by_role("img", name="bell", exact=True)
         expect(bell).to_have_count(1)
-        with self.page.expect_response(
-            lambda response: bool(self.LIST_API.search(response.url)),
-            timeout=settings.NAVIGATION_TIMEOUT,
-        ) as captured:
-            bell.click()
 
-        snapshot = self._parse_message_response(captured.value)
+        # 优先用外壳加载阶段已捕获的响应；点击铃铛只负责展开面板。
+        # 兜底：若加载期未捕获（例如复用已渲染页面），再按旧方式等一次。
+        response = self._list_response
+        if response is not None:
+            bell.click()
+            expect(
+                self.page.get_by_role("tab", name=self.TAB_NAMES[0], exact=True)
+            ).to_be_visible(timeout=settings.ACTION_TIMEOUT)
+            self.page.wait_for_timeout(1200)
+        else:
+            with self.page.expect_response(
+                lambda item: bool(self.LIST_API.search(item.url)),
+                timeout=settings.NAVIGATION_TIMEOUT,
+            ) as captured:
+                bell.click()
+            response = captured.value
+
+        snapshot = self._parse_message_response(response)
         for name in self.TAB_NAMES:
             expect(self.page.get_by_role("tab", name=name, exact=True)).to_be_visible()
         approval_tab = self.page.get_by_role("tab", name="审批", exact=True)
