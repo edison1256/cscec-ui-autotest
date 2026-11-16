@@ -209,4 +209,14 @@ class MessageCenterPage(BasePage):
         if not snapshot.records:
             expect(panel.get_by_text("暂无数据", exact=True)).to_be_visible()
             return
-        expect(panel.get_by_text(snapshot.records[0].title, exact=True)).to_be_visible()
+        # 接口按 readState=0 返回全部未读（最多 100 条，含审批/任务/通知三类），
+        # 而面板默认只渲染「审批」tab —— records[0] 未必属于该 tab，
+        # 直接断言它可见会误判（2026-11-16 生产实测：首条为「创建租户审批通过」
+        # 但未出现在审批 tab 中）。
+        # 因此改为：面板内出现快照中任意一条消息，即证明面板数据来自该接口。
+        titles = [r.title for r in snapshot.records[:20] if r.title]
+        if not titles:
+            expect(panel.get_by_text("暂无数据", exact=True)).to_be_visible()
+            return
+        matcher = re.compile("|".join(re.escape(t) for t in titles))
+        expect(panel.get_by_text(matcher).first).to_be_visible()
