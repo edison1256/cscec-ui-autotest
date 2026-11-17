@@ -73,6 +73,48 @@ class PersonalWorkbenchPage(BasePage):
             return {}
         return info if isinstance(info, dict) else {}
 
+    def open_card(self, entry_label: str, wait_ms: int = 6000) -> "PersonalWorkbenchPage":
+        """点开「常用模块」里的卡片（纯 UI，不抓接口）。"""
+        self.open_home()
+        loc = self.page.get_by_text(entry_label, exact=True).last
+        assert loc.count(), f"个人工作台未找到入口「{entry_label}」"
+        loc.click()
+        self.page.wait_for_timeout(wait_ms)
+        return self
+
+    def read_list_total(self) -> int:
+        """从页面读取列表总条数（黑盒口径，不依赖接口）。
+
+        支持「共 13 条」「共13条」「总计 13 条」「13 条」等常见文案。
+        读不到返回 -1，由调用方决定如何处理。
+        """
+        import re
+
+        try:
+            body = self.page.locator("body").inner_text()
+        except Exception:
+            return -1
+        # 生产实测分页文案：「第 1-13 条/总共 13 条」。
+        # 「总共」必须排在「共」前面，且不能误取「15 条/页」。
+        for pattern in (
+            r"总共\s*(\d+)\s*条",
+            r"共\s*(\d+)\s*条",
+            r"总计\s*(\d+)\s*条",
+            r"合计\s*(\d+)\s*条",
+            r"共\s*(\d+)\s*项",
+        ):
+            m = re.search(pattern, body)
+            if m:
+                return int(m.group(1))
+        return -1
+
+    def count_visible_rows(self) -> int:
+        """统计当前页表格行数（用于与总条数交叉验证）。"""
+        try:
+            return self.page.locator("tbody tr.ant-table-row").count()
+        except Exception:
+            return 0
+
     def capture_list(
         self,
         entry_label: str,
@@ -119,8 +161,18 @@ class PersonalWorkbenchPage(BasePage):
                     f"页面可见短文本={cards}"
                 )
             loc.click()
+            # 点击后可能有多次同接口请求（初始空结果 → 带参数的正式查询），
+            # 必须等到 list 非空的那一次，否则会把空结果当成真实数据。
             waited = 0.0
-            while "response" not in captured and waited < timeout_s:
+            while waited < timeout_s:
+                resp = captured.get("response")
+                if resp is not None:
+                    try:
+                        d = resp.json().get("data") or {}
+                        if isinstance(d, dict) and d.get("list"):
+                            break
+                    except Exception:
+                        pass
                 self.page.wait_for_timeout(500)
                 waited += 0.5
         finally:
@@ -133,8 +185,16 @@ class PersonalWorkbenchPage(BasePage):
         )
         payload = response.json()
         data = payload.get("data") if isinstance(payload, dict) else None
-        assert isinstance(data, dict), f"「{entry_label}」返回结构异常（data 不是对象）"
+        if not isinstance(data, dict):
+            raise AssertionError(
+                f"「{entry_label}」返回结构异常：data 是 {type(data).__name__}；"
+                f"payload keys={list(payload)[:10] if isinstance(payload, dict) else '非字典'}"
+            )
         rows = data.get("list") or data.get("records") or data.get("rows")
-        assert isinstance(rows, list), f"「{entry_label}」未返回 list 字段"
+        if not isinstance(rows, list):
+            raise AssertionError(
+                f"「{entry_label}」未返回列表字段；data keys={list(data)[:15]}；"
+                f"url={response.url[:120]}"
+            )
         total = data.get("total")
         return rows, (int(total) if str(total).isdigit() else None)
