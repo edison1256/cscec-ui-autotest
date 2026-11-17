@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import pytest
 
-from core.data_scope import check_scope, tenant_signature
 from pages.console.personal_workbench_page import PersonalWorkbenchPage
 
 pytestmark = [
@@ -40,28 +39,6 @@ def workbench(logged_in_page) -> PersonalWorkbenchPage:
 def _tenant_scope(page: PersonalWorkbenchPage) -> tuple[str, ...]:
     info = page.login_info()
     return tenant_signature(info)
-
-
-def _assert_tenant_scoped(
-    page: PersonalWorkbenchPage,
-    *,
-    label: str,
-    entry_label: str,
-    api_hint: str,
-) -> None:
-    """按租户口径断言某个列表的归属。"""
-    rows, total = page.capture_list(entry_label, api_hint)
-    assert rows, f"{label}: 接口返回空列表（total={total}）"
-
-    expected = _tenant_scope(page)
-    assert expected, f"{label}: 登录态缺少 tenantNo，无法判断归属"
-
-    report = check_scope(rows, label=label, expected=expected, total=total)
-    print(f"\n[归属] {report.describe()}")
-
-    if report.leaked:
-        pytest.xfail(f"已知缺陷：{label} 返回跨租户数据。{report.describe()}")
-    assert not report.leaked, report.describe()
 
 
 class TestWorkbenchListScope:
@@ -109,79 +86,58 @@ class TestWorkbenchListScope:
                 "表格结构可能不同；总数口径已取到，不影响量级判定"
             )
 
-    @pytest.mark.skip(
-        reason=(
-            "接口待在工作台套件（suitKey=1899427585366003727）下重新确认。"
-            "此前记录的 cloud/applyList、workbench/rsc/data/apply/history/list、"
-            "order/page 都来自直链 suitKey=portal 的另一套件，不可沿用。"
-            "参照 DH-SCOPE-101 的做法：先抓全部响应反查真实接口，再做量级守门。"
-        )
-    )
     def test_dh_scope_102_cloud_subscription(
         self, workbench: PersonalWorkbenchPage
     ) -> None:
-        """DH-SCOPE-102：云产品订阅只应包含当前账号的数据。"""
-        _assert_tenant_scoped(
-            workbench,
-            label="云产品订阅",
-            entry_label="云产品订阅",
-            api_hint="cloud/applyList",  # 待在工作台套件下复核
+        """DH-SCOPE-102：云产品订阅的数据量必须落在本租户量级。
+
+        实测（2026-11-17，PROD，orgNo=ZH_01_0000_0028 中建云专属租户）：
+            页面 #/sub/resource/subscription/cloud
+            分页显示「总共 0 条」—— 该租户确实没有云产品订阅
+        错误套件（直链 suitKey=portal）下这里曾出现 554 条 / 8 租户，
+        同样是直链绕过视图选择的结果。
+        """
+        workbench.open_card("云产品订阅", wait_ms=8000)
+        total = workbench.read_list_total()
+        print(f"\n[量级] 云产品订阅 total={total}（基线 0，上限 200）")
+        assert total >= 0, "未能从页面读取总条数，可能列表未渲染或文案已变更"
+        assert total <= 200, (
+            f"云产品订阅显示 {total} 条，超出本租户量级（基线 0）。"
+            "疑似数据范围未收口或进入错误套件视图"
         )
 
-    @pytest.mark.skip(
-        reason=(
-            "接口待在工作台套件（suitKey=1899427585366003727）下重新确认。"
-            "此前记录的 cloud/applyList、workbench/rsc/data/apply/history/list、"
-            "order/page 都来自直链 suitKey=portal 的另一套件，不可沿用。"
-            "参照 DH-SCOPE-101 的做法：先抓全部响应反查真实接口，再做量级守门。"
-        )
-    )
     def test_dh_scope_103_data_asset_subscription(
         self, workbench: PersonalWorkbenchPage
     ) -> None:
-        """DH-SCOPE-103：数据资产订阅只应包含当前账号的数据。"""
-        _assert_tenant_scoped(
-            workbench,
-            label="数据资产订阅",
-            entry_label="数据资产订阅",
-            api_hint="workbench/rsc/data/apply/history/list",
+        """DH-SCOPE-103：数据资产订阅的数据量必须落在本租户量级。
+
+        实测：页面 #/sub/resource/subscription/dataAssets，分页「总共 0 条」。
+        错误套件下曾出现 16 条 / 2 租户 / 6 用户。
+        """
+        workbench.open_card("数据资产订阅", wait_ms=8000)
+        total = workbench.read_list_total()
+        print(f"\n[量级] 数据资产订阅 total={total}（基线 0，上限 200）")
+        assert total >= 0, "未能从页面读取总条数"
+        assert total <= 200, (
+            f"数据资产订阅显示 {total} 条，超出本租户量级（基线 0）"
         )
 
-    @pytest.mark.skip(
-        reason=(
-            "接口待在工作台套件（suitKey=1899427585366003727）下重新确认。"
-            "此前记录的 cloud/applyList、workbench/rsc/data/apply/history/list、"
-            "order/page 都来自直链 suitKey=portal 的另一套件，不可沿用。"
-            "参照 DH-SCOPE-101 的做法：先抓全部响应反查真实接口，再做量级守门。"
-        )
-    )
-    def test_dh_scope_104_my_orders_by_creator(
+    def test_dh_scope_104_my_orders(
         self, workbench: PersonalWorkbenchPage
     ) -> None:
-        """DH-SCOPE-104：「我的订单」按创建人判定，只应包含本人订单。
+        """DH-SCOPE-104：「我的订单」的数据量必须落在本租户量级。
 
-        该列表没有 tenantNo，只有 creator（用户账号），因此字段与期望都换成
-        创建人口径。
+        实测：页面 #/sub/resource/orderCenter/myOrders
+            接口 POST /irp-api/irp-portal-workbench/order/page，total=1
+            分页「总共 1 条」
+        错误套件下该页曾出现 2376 条、creator 去重 12 人
+        —— 那才是「我的订单里全是别人的单」的样子，且只由直链引发。
         """
-        rows, total = workbench.capture_list("订单管理", "order/page")
-        assert rows, f"我的订单: 接口返回空列表（total={total}）"
-
-        info = workbench.login_info()
-        user_no = str(info.get("userNo") or "").strip()
-        assert user_no, "登录态缺少 userNo，无法按创建人判断归属"
-
-        report = check_scope(
-            rows,
-            label="我的订单",
-            expected=user_no,
-            fields=("creator", "creatorId", "userNo"),
-            total=total,
+        workbench.open_card("订单管理", wait_ms=8000)
+        total = workbench.read_list_total()
+        print(f"\n[量级] 我的订单 total={total}（基线 1，上限 200）")
+        assert total >= 0, "未能从页面读取总条数"
+        assert total <= 200, (
+            f"我的订单显示 {total} 条，超出本租户量级（基线 1）。"
+            "疑似返回了全平台订单（直链 suitKey=portal 时曾为 2376 条 / 12 个创建人）"
         )
-        print(f"\n[归属] {report.describe()}")
-
-        if report.leaked:
-            pytest.xfail(
-                f"已知缺陷：我的订单返回他人订单。{report.describe()}；"
-                f"当前 userNo={user_no}"
-            )
-        assert not report.leaked, report.describe()
