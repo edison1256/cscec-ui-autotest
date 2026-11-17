@@ -64,8 +64,16 @@ def _assert_tenant_scoped(
     assert not report.leaked, report.describe()
 
 
+@pytest.mark.skip(
+    reason=(
+        "黑盒路径待打通：进控制台后落地页不是工作台，找不到「常用模块」卡片。"
+        "此前用 suitKey=portal 直链得出的越权结论已作废（绕过视图选择），"
+        "需先确认『门户→管理后台→控制台』或『直连 irp 后点工作台』的稳定路径，"
+        "再用 orgNo 作为归属基准重跑。"
+    )
+)
 class TestWorkbenchListScope:
-    """个人工作台各列表的归属范围。"""
+    """个人工作台各列表的归属范围（路径待通，结论待重验）。"""
 
     def test_dh_scope_101_subscribed_orders(
         self, workbench: PersonalWorkbenchPage

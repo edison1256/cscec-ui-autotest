@@ -156,7 +156,11 @@ def tenant_signature(login_info: Mapping[str, Any] | None) -> tuple[str, ...]:
     if not isinstance(login_info, Mapping):
         return ()
     values = []
-    for key in ("tenantNo", "tenantCode", "orgCode"):
+    # orgNo 才是用户实际归属的组织/空间标识（生产实测
+    # orgNo=ZH_01_0000_0000_000X / orgName=个人工作台）；
+    # tenantNo=ZH_01_0000 是**根节点**「中建云」，按设计不应存在用户，
+    # 直接拿它当期望范围会得出错误结论（2026-11-17 用户更正）。
+    for key in ("orgNo", "orgCode", "tenantNo", "tenantCode"):
         value = login_info.get(key)
         if isinstance(value, str) and value.strip():
             values.append(value.strip())

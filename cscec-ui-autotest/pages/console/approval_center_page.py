@@ -274,27 +274,24 @@ class ApprovalCenterPage(BasePage):
 
     def open_todo_list(self) -> "ApprovalCenterPage":
         """进入我的待办列表（M3-01）。"""
-        try:
-            self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/approval/todo"))
-            self.nav.wait_ready()
-            self.assertions.page_not_blank_or_error()
-        except Exception:
-            # 回退通过控制台菜单进入
-            from pages.portal.portal_home_page import PortalHomePage
-            portal = PortalHomePage(self.page)
-            console = portal.navigate_to_console()
-            console.open_all_menu_view()
-            self.elements.click_candidates(
-                [
-                    ("text", "审批流程"),
-                    ("text", "待办"),
-                    ("text", "我的待办"),
-                    ("text", "待办任务"),
-                    ("text", "流程"),
-                ],
-                description="审批流程待办菜单项",
-            )
-            self.nav.wait_ready()
+        # 通过控制台菜单进入（黑盒点击，不直链）
+        from pages.portal.portal_home_page import PortalHomePage
+        portal = PortalHomePage(self.page)
+        console = portal.navigate_to_console()
+        if console.page is not self.page:
+            self.__init__(console.page)  # type: ignore[misc]
+        console.open_all_menu_view()
+        self.elements.click_candidates(
+            [
+                ("text", "审批流程"),
+                ("text", "待办"),
+                ("text", "我的待办"),
+                ("text", "待办任务"),
+                ("text", "流程"),
+            ],
+            description="审批流程待办菜单项",
+        )
+        self.nav.wait_ready()
 
         self.assertions.page_not_blank_or_error()
         self.assertions.any_text_visible(["我的待办", "待办列表", "审批中心", "待处理", "审批流程", "流程", "控制台", "暂无数据"], timeout=settings.ACTION_TIMEOUT)

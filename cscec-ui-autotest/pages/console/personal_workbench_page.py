@@ -22,7 +22,6 @@ from playwright.sync_api import Response
 
 from config.settings import settings
 from core.base_page import BasePage
-from pages.portal.portal_home_page import CONSOLE_WORKBENCH_ROUTE
 
 
 class PersonalWorkbenchPage(BasePage):
@@ -31,16 +30,34 @@ class PersonalWorkbenchPage(BasePage):
     PAGE_NAME = "个人工作台"
 
     def open_home(self) -> "PersonalWorkbenchPage":
-        """打开个人工作台首页。"""
-        self.page.goto(
-            settings.console_url(CONSOLE_WORKBENCH_ROUTE),
-            wait_until="domcontentloaded",
-            timeout=settings.NAVIGATION_TIMEOUT,
-        )
-        self.page.wait_for_timeout(3500)
+        """从门户可见入口点进控制台，再回到工作台首页。
+
+        **不做 URL 直链。** 直链 `#/portal/home/workbench?suitKey=portal`
+        会绕过「显示名 → 切换租户」的视图选择，进到账号本不该有的套件，
+        看到的数据不能作为越权判断依据（2026-11-17 用户第三次强调）。
+        """
+        from pages.portal.portal_home_page import PortalHomePage
+
+        if "irp" not in (self.page.url or "").lower():
+            portal = PortalHomePage(self.page)
+            console_page = portal.open_console_page()
+            if console_page is not self.page:
+                # 换到新页签：重建所有绑定 page 的 helper
+                self.__init__(console_page)  # type: ignore[misc]
         for _ in range(2):
             self.page.keyboard.press("Escape")
             self.page.wait_for_timeout(400)
+        # 等「常用模块」渲染完成：控制台落地后磁贴区是异步加载的，
+        # 直接点卡片会因为元素还不存在而找不到。
+        for _ in range(30):
+            try:
+                body = self.page.locator("body").inner_text()
+            except Exception:
+                body = ""
+            if "常用模块" in body:
+                break
+            self.page.wait_for_timeout(500)
+        self.page.wait_for_timeout(800)
         return self
 
     def login_info(self) -> dict:
@@ -83,7 +100,20 @@ class PersonalWorkbenchPage(BasePage):
         try:
             self.open_home()
             loc = self.page.get_by_text(entry_label, exact=True).last
-            assert loc.count(), f"个人工作台未找到入口「{entry_label}」"
+            if not loc.count():
+                try:
+                    body = self.page.locator("body").inner_text()
+                except Exception:
+                    body = ""
+                cards = [
+                    x.strip() for x in body.splitlines()
+                    if 2 <= len(x.strip()) <= 12
+                ][:40]
+                raise AssertionError(
+                    f"个人工作台未找到入口「{entry_label}」；"
+                    f"当前 URL={self.page.url[:120]}；"
+                    f"页面可见短文本={cards}"
+                )
             loc.click()
             waited = 0.0
             while "response" not in captured and waited < timeout_s:

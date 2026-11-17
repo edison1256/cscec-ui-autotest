@@ -66,36 +66,52 @@ class PortalHomePage(BasePage):
 
         return ConsoleHomePage(self.open_console_page())
 
-    def open_console_page(self) -> Page:
-        """打开控制台页面并返回 Page。"""
+    def _display_name(self) -> str | None:
+        """读右上角显示名（页面渲染的是姓名，不是账号）。"""
         try:
-            console_page = self._open_console_direct_page()
-            logger.info("[导航] → 控制台直达页签")
+            info = self.page.evaluate(
+                "() => { const s = localStorage.getItem('__login_info__');"
+                " return s ? JSON.parse(s) : null; }"
+            )
+        except Exception:
+            return None
+        if isinstance(info, dict):
+            for key in ("userName", "userRealName", "realName"):
+                v = info.get(key)
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+        return None
+
+    def open_console_page(self) -> Page:
+        """从门户可见入口点进控制台，返回控制台页签。
+
+        **只走点击，不做任何 URL 直链。**
+        直链 `#/portal/home/workbench?suitKey=...` 会绕过门户的
+        显示名 → 切换租户（视图/空间选择），进到该账号本不该有的套件，
+        看到的是越权视图，不能作为业务结论的依据。
+        （2026-11-17 用户第三次强调，已加 tools/check_no_deeplink.py 静态拦截。）
+        """
+        try:
+            console_page = self._open_console_from_portal_entry()
+            logger.info("[导航] → 控制台（门户 → 管理后台 → 控制台，点击进入）")
             return console_page
-        except Exception as exc:
-            logger.warning(f"[导航] 控制台直达失败，回退门户入口: {exc}")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"[导航] 门户入口进入控制台失败: {exc}")
 
-        console_page = self._open_console_from_portal_entry()
-        logger.info("[导航] → 控制台入口页签")
-        return console_page
-
-    def _open_console_direct_page(self) -> Page:
-        """Open the split console workbench directly in a new page."""
+        # 用户 2026-11-17 明确允许：也可以直接访问 irp 域名。
+        # 这里只导航到**根域名**（等价于用户输入网址），不拼任何功能页路由。
         console_page = self.page.context.new_page()
         console_page.set_default_timeout(settings.DEFAULT_TIMEOUT)
         console_page.set_default_navigation_timeout(settings.NAVIGATION_TIMEOUT)
-        try:
-            console_page.goto(
-                settings.console_url(CONSOLE_WORKBENCH_ROUTE),
-                timeout=settings.NAVIGATION_TIMEOUT,
-                wait_until="domcontentloaded",
-            )
-            self._wait_console_page_ready(console_page)
-            return console_page
-        except Exception:
-            if not console_page.is_closed():
-                console_page.close()
-            raise
+        console_page.goto(
+            settings.CONSOLE_BASE_URL,
+            timeout=settings.NAVIGATION_TIMEOUT,
+            wait_until="domcontentloaded",
+        )
+        console_page.wait_for_timeout(4000)
+        self._wait_console_page_ready(console_page)
+        logger.info("[导航] → 控制台（直连 irp 根域名，用户许可）")
+        return console_page
 
     def _open_console_from_portal_entry(self) -> Page:
         """Fallback: open console from the visible portal entry."""
@@ -247,11 +263,16 @@ class PortalHomePage(BasePage):
     def logout(self) -> "PortalHomePage":
         """登出"""
         # 点击用户头像/名称
+        # 2026-11-13 实测：UAT 工作台头部用户的 class 为 CSS Modules 哈希
+        # （userButton___fT17M），.user-info / .user-name / avatar 全部 0 命中。
+        # 因此优先按稳定的类名前缀与 antd 下拉触发器匹配。
         self.elements.click_candidates(
             [
+                ("css", "[class*='userButton']"),
+                ("css", ".ant-dropdown-trigger"),
+                ("css", "[class*='avatar']"),
                 ("css", ".user-info"),
                 ("css", ".user-name"),
-                ("css", "[class*='avatar']"),
             ],
             description="用户菜单",
         )

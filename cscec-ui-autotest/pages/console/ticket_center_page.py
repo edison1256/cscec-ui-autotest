@@ -575,26 +575,23 @@ class TicketCenterPage(BasePage):
 
     def open_ticket_list(self) -> "TicketCenterPage":
         """进入工单列表（M4-01）。"""
-        try:
-            self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/ticket/list"))
-            self.nav.wait_ready()
-            self.assertions.page_not_blank_or_error()
-        except Exception:
-            # 回退通过控制台菜单进入
-            from pages.portal.portal_home_page import PortalHomePage
-            portal = PortalHomePage(self.page)
-            console = portal.navigate_to_console()
-            console.open_all_menu_view()
-            self.elements.click_candidates(
-                [
-                    ("text", "工单中心"),
-                    ("text", "工单管理"),
-                    ("text", "我的工单"),
-                    ("text", "工单"),
-                ],
-                description="工单中心菜单项",
-            )
-            self.nav.wait_ready()
+        # 通过控制台菜单进入（黑盒点击，不直链）
+        from pages.portal.portal_home_page import PortalHomePage
+        portal = PortalHomePage(self.page)
+        console = portal.navigate_to_console()
+        if console.page is not self.page:
+            self.__init__(console.page)  # type: ignore[misc]
+        console.open_all_menu_view()
+        self.elements.click_candidates(
+            [
+                ("text", "工单中心"),
+                ("text", "工单管理"),
+                ("text", "我的工单"),
+                ("text", "工单"),
+            ],
+            description="工单中心菜单项",
+        )
+        self.nav.wait_ready()
 
         self.assertions.page_not_blank_or_error()
         self.assertions.any_text_visible(["工单列表", "工单管理", "工单中心", "处理中", "工单", "暂无数据", "控制台"], timeout=settings.ACTION_TIMEOUT)

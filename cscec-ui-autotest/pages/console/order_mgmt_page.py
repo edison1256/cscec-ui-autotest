@@ -732,25 +732,22 @@ class OrderMgmtPage(BasePage):
 
     def open_apply_form(self) -> "OrderMgmtPage":
         """进入资源申请/订阅表单页（M2-01）。"""
-        try:
-            self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/order/apply"))
-            self.nav.wait_ready()
-            self.assertions.page_not_blank_or_error()
-        except Exception:
-            # 回退通过控制台菜单进入
-            from pages.portal.portal_home_page import PortalHomePage
-            portal = PortalHomePage(self.page)
-            console = portal.navigate_to_console()
-            console.open_all_menu_view()
-            self.elements.click_candidates(
-                [
-                    ("text", "订阅服务"),
-                    ("text", "资源申请"),
-                    ("text", "申请订阅"),
-                ],
-                description="订阅申请菜单项",
-            )
-            self.nav.wait_ready()
+        # 通过控制台菜单进入（黑盒点击，不直链）
+        from pages.portal.portal_home_page import PortalHomePage
+        portal = PortalHomePage(self.page)
+        console = portal.navigate_to_console()
+        if console.page is not self.page:
+            self.__init__(console.page)  # type: ignore[misc]
+        console.open_all_menu_view()
+        self.elements.click_candidates(
+            [
+                ("text", "订阅服务"),
+                ("text", "资源申请"),
+                ("text", "申请订阅"),
+            ],
+            description="订阅申请菜单项",
+        )
+        self.nav.wait_ready()
 
         self.assertions.page_not_blank_or_error()
         self.assertions.any_text_visible(["资源申请", "服务订阅", "套餐规格", "申请说明", "提交", "订阅", "控制台", "工作台"], timeout=settings.ACTION_TIMEOUT)
@@ -790,25 +787,22 @@ class OrderMgmtPage(BasePage):
 
     def open_order_list(self) -> "OrderMgmtPage":
         """进入订单列表（M2-03）。"""
-        try:
-            self.nav.goto_url(settings.console_url("/udpweb/portal/index.html#/portal/order/list"))
-            self.nav.wait_ready()
-            self.assertions.page_not_blank_or_error()
-        except Exception:
-            # 回退通过控制台菜单进入
-            from pages.portal.portal_home_page import PortalHomePage
-            portal = PortalHomePage(self.page)
-            console = portal.navigate_to_console()
-            console.open_all_menu_view()
-            self.elements.click_candidates(
-                [
-                    ("text", "订单中心"),
-                    ("text", "订单管理"),
-                    ("text", "我的订单"),
-                ],
-                description="订单中心菜单项",
-            )
-            self.nav.wait_ready()
+        # 通过控制台菜单进入（黑盒点击，不直链）
+        from pages.portal.portal_home_page import PortalHomePage
+        portal = PortalHomePage(self.page)
+        console = portal.navigate_to_console()
+        if console.page is not self.page:
+            self.__init__(console.page)  # type: ignore[misc]
+        console.open_all_menu_view()
+        self.elements.click_candidates(
+            [
+                ("text", "订单中心"),
+                ("text", "订单管理"),
+                ("text", "我的订单"),
+            ],
+            description="订单中心菜单项",
+        )
+        self.nav.wait_ready()
 
         self.assertions.page_not_blank_or_error()
         self.assertions.any_text_visible(["订单列表", "订单管理", "订单状态", "订单编号", "订单中心", "暂无数据", "控制台"], timeout=settings.ACTION_TIMEOUT)
@@ -840,57 +834,21 @@ class OrderMgmtPage(BasePage):
     def capture_subscribed_orders(self) -> tuple[list[dict], int | None, dict]:
         """个人工作台 → 被订阅的订单，捕获列表接口。
 
-        `suitKey=portal` 是「个人工作台」套件入口，只直链到该首页（等价于用户
-        点入口进系统），之后靠点击进入「被订阅的订单」，不拼二级页路由。
-
-        生产实测（2026-11-17）：
+        委托给 `PersonalWorkbenchPage.capture_list`：它经门户点击进入控制台
+        （不直链），再点工作台卡片，捕获精确匹配的接口。
+        生产实测该接口：
             POST /irp-api/irp-portal-console/workbench/rsc/app/apply/history/list
-            total=828，tenantNo 去重 26 个租户 —— 个人工作台返回全量，属越权。
         """
-        from pages.portal.portal_home_page import CONSOLE_WORKBENCH_ROUTE
+        from pages.console.personal_workbench_page import PersonalWorkbenchPage
 
-        captured: dict = {}
-
-        def _on_response(response) -> None:
-            if self.SUBSCRIBED_ORDERS_API in response.url:
-                captured["response"] = response
-
-        self.page.on("response", _on_response)
-        try:
-            self.page.goto(
-                settings.console_url(CONSOLE_WORKBENCH_ROUTE),
-                wait_until="domcontentloaded",
-                timeout=settings.NAVIGATION_TIMEOUT,
-            )
-            self.page.wait_for_timeout(4000)
-            for _ in range(2):
-                self.page.keyboard.press("Escape")
-                self.page.wait_for_timeout(500)
-            for label in ("被订阅的订单",):
-                loc = self.page.get_by_text(label, exact=True).last
-                if loc.count():
-                    loc.click()
-                    self.page.wait_for_timeout(6000)
-            for _ in range(30):
-                if "response" in captured:
-                    break
-                self.page.wait_for_timeout(500)
-        finally:
-            self.page.remove_listener("response", _on_response)
-
-        response = captured.get("response")
-        assert response is not None, (
-            f"未捕获到「被订阅的订单」接口 {self.SUBSCRIBED_ORDERS_API}；"
-            "可能入口或接口路径已变更"
+        workbench = PersonalWorkbenchPage(self.page)
+        rows, total = workbench.capture_list(
+            "被订阅的订单", self.SUBSCRIBED_ORDERS_API
         )
-        payload = response.json()
-        data = payload.get("data") if isinstance(payload, dict) else None
-        assert isinstance(data, dict), "被订阅的订单接口返回结构异常（data 不是对象）"
-        rows = data.get("list")
-        assert isinstance(rows, list), "被订阅的订单接口未返回 list 字段"
-        total = data.get("total")
-        logger.info(f"[被订阅的订单] 捕获 {len(rows)} 条，total={total}")
-        return rows, (int(total) if str(total).isdigit() else None), payload
+        if workbench.page is not self.page:
+            # 门户打开控制台可能是新页签，跟随过去
+            self.__init__(workbench.page)  # type: ignore[misc]
+        return rows, total, {}
 
     def capture_order_list(self) -> tuple[list[dict], int | None]:
         """进入订单列表并捕获列表接口的原始记录与 total。
