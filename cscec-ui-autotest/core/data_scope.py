@@ -30,6 +30,12 @@ DEFAULT_SCOPE_FIELDS: tuple[str, ...] = (
     "subscriberTenantNo",
     "ownerTenantNo",
     "orgCode",
+    # 「我的订单」这类列表没有 tenantNo，只有创建人账号（生产实测 /order/page
+    # 返回 creator=20431644 形式），用于按「本人」维度判定范围。
+    "creator",
+    "creatorId",
+    "userNo",
+    "applyUserNo",
 )
 
 

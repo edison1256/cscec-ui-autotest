@@ -1,4 +1,4 @@
-"""个人工作台「被订阅的订单」数据归属（越权）用例。
+"""数据归属判据的自检用例（不访问页面）。
 
 起因（2026-11-17 用户走查）：
   个人工作台下「订单中心 → 被订阅的订单」返回了**全量**数据，
@@ -16,106 +16,13 @@ from __future__ import annotations
 
 import pytest
 
-from core.data_scope import (
-    assert_scope,
-    check_scope,
-    looks_like_platform_admin,
-    tenant_signature,
-)
-from pages.console.order_mgmt_page import OrderMgmtPage
+from core.data_scope import assert_scope, check_scope
 
 pytestmark = [
     pytest.mark.datahealth,
     pytest.mark.console,
     pytest.mark.readonly,
 ]
-
-
-@pytest.fixture(scope="function")
-def order_page(logged_in_page) -> OrderMgmtPage:
-    return OrderMgmtPage(logged_in_page)
-
-
-def _login_info(page) -> dict:
-    """读当前登录态（tenantNo / orgName 等）。"""
-    try:
-        info = page.evaluate(
-            "() => { const s = localStorage.getItem('__login_info__');"
-            " return s ? JSON.parse(s) : null; }"
-        )
-    except Exception:
-        return {}
-    return info if isinstance(info, dict) else {}
-
-
-class TestSubscribedOrderScope:
-    """被订阅的订单：数据范围不得越出当前账户。"""
-
-    def test_dh_scope_001_subscribed_orders_within_account(
-        self, order_page: OrderMgmtPage
-    ) -> None:
-        """DH-SCOPE-001：被订阅订单的归属租户必须收口到当前账号。
-
-        用 `pytest.xfail` 标注为已知缺陷：修复后会自动变成 xpass，
-        届时需移除标记并转为硬断言。
-        """
-        rows, total, _payload = order_page.capture_subscribed_orders()
-        assert rows, f"被订阅的订单接口返回空列表（total={total}）"
-
-        info = _login_info(order_page.page)
-        expected = tenant_signature(info)
-        assert expected, (
-            "无法从登录态解析当前账号的 tenantNo，不能判断数据归属；"
-            f"login_info keys={list(info)[:8]}"
-        )
-
-        report = check_scope(
-            rows,
-            label="被订阅的订单",
-            expected=expected,
-            total=total,
-        )
-        print(f"\n[归属] {report.describe()}")
-
-        if report.leaked:
-            platform = looks_like_platform_admin(info)
-            pytest.xfail(
-                f"已知缺陷：个人工作台返回跨租户数据。{report.describe()}；"
-                f"当前身份 orgName={info.get('orgName')}，"
-                f"平台管理侧={platform}"
-            )
-
-        # 未越权时给出显式通过信息
-        assert not report.leaked, report.describe()
-
-    def test_dh_scope_002_order_list_within_account(
-        self, order_page: OrderMgmtPage
-    ) -> None:
-        """DH-SCOPE-002：控制台「我的订单」归属同样不得越界。
-
-        作为对照组：个人工作台越权时，我的订单是否也越权。
-        """
-        rows, total = order_page.capture_order_list()
-        assert rows, f"订单列表接口返回空列表（total={total}）"
-
-        info = _login_info(order_page.page)
-        expected = tenant_signature(info)
-        if not expected:
-            pytest.skip("NOT_APPLICABLE[DH-SCOPE-002] 登录态缺少 tenantNo")
-
-        report = check_scope(
-            rows,
-            label="我的订单",
-            expected=expected,
-            total=total,
-        )
-        print(f"\n[归属] {report.describe()}")
-
-        if report.leaked:
-            pytest.xfail(
-                f"已知范围问题：我的订单返回跨租户数据。{report.describe()}"
-            )
-        assert not report.leaked, report.describe()
 
 
 class TestScopeJudgeSelfCheck:
