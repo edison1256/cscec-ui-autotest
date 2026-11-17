@@ -834,6 +834,64 @@ class OrderMgmtPage(BasePage):
                 page.wait_for_timeout(4500)
         self.nav.wait_ready()
 
+    SUBSCRIBED_ORDERS_API = "workbench/rsc/app/apply/history/list"
+    PERSONAL_WORKBENCH_ROUTE = "/udpweb/portal/index.html#/portal/home/workbench?suitKey=portal"
+
+    def capture_subscribed_orders(self) -> tuple[list[dict], int | None, dict]:
+        """个人工作台 → 被订阅的订单，捕获列表接口。
+
+        `suitKey=portal` 是「个人工作台」套件入口，只直链到该首页（等价于用户
+        点入口进系统），之后靠点击进入「被订阅的订单」，不拼二级页路由。
+
+        生产实测（2026-11-17）：
+            POST /irp-api/irp-portal-console/workbench/rsc/app/apply/history/list
+            total=828，tenantNo 去重 26 个租户 —— 个人工作台返回全量，属越权。
+        """
+        from pages.portal.portal_home_page import CONSOLE_WORKBENCH_ROUTE
+
+        captured: dict = {}
+
+        def _on_response(response) -> None:
+            if self.SUBSCRIBED_ORDERS_API in response.url:
+                captured["response"] = response
+
+        self.page.on("response", _on_response)
+        try:
+            self.page.goto(
+                settings.console_url(CONSOLE_WORKBENCH_ROUTE),
+                wait_until="domcontentloaded",
+                timeout=settings.NAVIGATION_TIMEOUT,
+            )
+            self.page.wait_for_timeout(4000)
+            for _ in range(2):
+                self.page.keyboard.press("Escape")
+                self.page.wait_for_timeout(500)
+            for label in ("被订阅的订单",):
+                loc = self.page.get_by_text(label, exact=True).last
+                if loc.count():
+                    loc.click()
+                    self.page.wait_for_timeout(6000)
+            for _ in range(30):
+                if "response" in captured:
+                    break
+                self.page.wait_for_timeout(500)
+        finally:
+            self.page.remove_listener("response", _on_response)
+
+        response = captured.get("response")
+        assert response is not None, (
+            f"未捕获到「被订阅的订单」接口 {self.SUBSCRIBED_ORDERS_API}；"
+            "可能入口或接口路径已变更"
+        )
+        payload = response.json()
+        data = payload.get("data") if isinstance(payload, dict) else None
+        assert isinstance(data, dict), "被订阅的订单接口返回结构异常（data 不是对象）"
+        rows = data.get("list")
+        assert isinstance(rows, list), "被订阅的订单接口未返回 list 字段"
+        total = data.get("total")
+        logger.info(f"[被订阅的订单] 捕获 {len(rows)} 条，total={total}")
+        return rows, (int(total) if str(total).isdigit() else None), payload
+
     def capture_order_list(self) -> tuple[list[dict], int | None]:
         """进入订单列表并捕获列表接口的原始记录与 total。
 
