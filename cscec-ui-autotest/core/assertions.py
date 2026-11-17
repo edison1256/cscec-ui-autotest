@@ -84,6 +84,7 @@ class AssertionHelper:
         )
 
         error_indicators = [
+            # ---- 技术级错误页 ----
             "404 Not Found",
             "404页面不存在",
             "500 Internal Server Error",
@@ -93,12 +94,87 @@ class AssertionHelper:
             "应用异常",
             "加载失败",
             "Whitelabel Error Page",
+            # ---- 业务级错误提示（2026-11-17 走查补充）----
+            # 起因：门户「开发者平台→开发者社区」跳 zone.cscec.com 后提示
+            # 「租户错误」，页面本身正常渲染，旧词表识别不到，用例全绿通过。
+            # 只收「强组合词」：像「未开通」「请选择租户」这类同时是正常状态
+            # 标签的词**不能**放进来，否则租户列表页会大面积误报。
+            "租户错误",
+            "租户不存在",
+            "租户未开通",
+            "无权访问该页面",
+            "没有访问权限",
+            "无权限访问",
+            "系统繁忙",
+            "服务暂不可用",
+            "服务不可用",
+            "数据加载异常",
         ]
         first_screen_text = compact_text[:3000]
         for indicator in error_indicators:
             assert indicator not in first_screen_text, (
                 f"Page contains error indicator '{indicator}', current URL: {self.page.url}"
             )
+        return self
+
+    # 业务级错误提示（跨域落地页同样适用）。只收强组合词，
+    # 避免「未开通」「请选择租户」这类正常状态标签造成误报。
+    BIZ_ERROR_INDICATORS = (
+        "租户错误",
+        "租户不存在",
+        "租户未开通",
+        "无权访问该页面",
+        "没有访问权限",
+        "无权限访问",
+        "系统繁忙",
+        "服务暂不可用",
+        "服务不可用",
+        "数据加载异常",
+        "该应用不存在",
+        "应用已下线",
+    )
+
+    def landing_page_healthy(
+        self,
+        expected_host: str | None = None,
+        expected_texts: tuple[str, ...] = (),
+    ) -> "AssertionHelper":
+        """校验「点了一个入口跳过去」之后的落地页是否真的可用。
+
+        起因（2026-11-17 生产走查）：门户「开发者平台 → 开发者社区」跳转到
+        zone.cscec.com 后提示「租户错误」。目标页本身正常渲染，
+        `page_not_blank_or_error()` 只识别 404/500 类技术错误页，因此全绿通过；
+        而该用例当时也没有任何内容断言，等于只验了「点得动」。
+
+        三层判据：域名正确 → 无业务错误提示 → 出现期望内容。
+        """
+        # 1) 域名
+        if expected_host:
+            current = urlparse(self.page.url).netloc.lower()
+            assert expected_host.lower() in current, (
+                f"跳转后域名不符：期望包含 {expected_host}，实际 {self.page.url}"
+            )
+
+        # 2) 业务错误提示
+        body = self.page.locator("body")
+        body.wait_for(state="visible", timeout=settings.ACTION_TIMEOUT)
+        text = " ".join(body.inner_text(timeout=settings.ACTION_TIMEOUT).split())
+        assert text, f"落地页正文为空，当前 URL: {self.page.url}"
+        for indicator in self.BIZ_ERROR_INDICATORS:
+            assert indicator not in text, (
+                f"落地页出现业务错误提示「{indicator}」，当前 URL: {self.page.url}"
+            )
+
+        # 3) 期望内容
+        if expected_texts:
+            hit = [t for t in expected_texts if t in text]
+            assert hit, (
+                f"落地页未包含任何期望内容 {list(expected_texts)}，"
+                f"当前 URL: {self.page.url}，正文前 200 字: {text[:200]}"
+            )
+
+        # 技术级错误页仍复用既有判据
+        self.page_not_blank_or_error()
         return self
 
     def _has_visible_login_form(self) -> bool:

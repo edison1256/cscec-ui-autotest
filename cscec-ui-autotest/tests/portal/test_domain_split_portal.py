@@ -17,6 +17,7 @@ import pytest
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from config.settings import settings
+from core.assertions import AssertionHelper
 from pages.portal.login_page import LoginPage
 from pages.portal.portal_home_page import PortalHomePage
 
@@ -90,7 +91,7 @@ PORTAL_CASES = [
     PortalCase(49, "账号申请模块", "点击申请账号链接，验证链接可打开并跳转至注册页面", "page_access", route="/#/support", expected_texts=("平台注册", "知识中心")),
     PortalCase(50, "VPN 申请", "在浏览器中打开 VPN 申请链接，验证页面正常加载", "external_url", required_env=("PORTAL_VPN_APPLY_URL",)),
     PortalCase(51, "统一开发平台/实验室申请", "使用新域名 cloud.cscec.com 访问实验室申请部署链接，验证页面正常加载", "click_text", route="/#/developer-platform", link_texts=("立即申请",), expected_texts=("支持与帮助", "知识中心")),
-    PortalCase(52, "门户-导航链接", "点击“开发者社区”跳转链接，验证跳转至正确的开发者社区页面", "click_text", "中", route="/#/developer-platform", link_texts=("开发者社区",)),
+    PortalCase(52, "门户-导航链接", "点击“开发者社区”跳转链接，验证跳转至正确的开发者社区页面", "click_text", "中", route="/#/developer-platform", link_texts=("开发者社区",), expected_texts=("论坛", "创新孵化", "数智共享", "产品货架")),
     PortalCase(53, "开发规范指引", "访问开发规范指引文档，验证iframe内正常加载", "iframe_deep", "中", route="/#/developer-platform", expected_texts=("开发者平台",)),
     PortalCase(54, "控制台-开发资源获取与平台展示", "使用irp域名访问控制台，验证开发资源获取配置内容正常展示", "console_scope", route="/udpweb/portal/index.html#/portal/home/workbench?suitKey=portal", expected_texts=("工作台", "开发者社区", "API资源", "组件资源", "云资源")),
     PortalCase(55, "门户首页", "验证门户首页开发者社区配置展示正确", "page_access", "中", route="/#/developer-platform", expected_texts=("开发者社区", "前沿技术分享", "最佳实践分享")),
@@ -584,6 +585,11 @@ class TestPortalDomainSplit:
             target_page = _click_visible_text_and_assert_ready(logged_in_page, case.link_texts[0])
             if case.expected_texts:
                 _assert_body_contains_any(target_page, case.expected_texts)
+            # 额外强制：落地页不得出现业务级错误提示。
+            # 2026-11-17 生产走查中，「开发者社区」跳到 zone.cscec.com 后提示
+            # 「租户错误」，目标页正常渲染、技术级错误词表识别不到，
+            # 而该用例当时连内容断言都没有，问题被完全漏过。
+            AssertionHelper(target_page).landing_page_healthy()
             return
 
         if case.strategy == "support_float_entry":

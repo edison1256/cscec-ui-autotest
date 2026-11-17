@@ -815,6 +815,68 @@ class OrderMgmtPage(BasePage):
         logger.info("[导航] → 订单列表")
         return self
 
+    def _open_order_list_via_menu(self) -> None:
+        """走控制台左侧菜单进入订单管理（黑盒路径）。
+
+        不使用 `#/portal/order/list` 直链：该路由是旧版，实测生产已迁到
+        `#/sub/resource/orderCenter/myOrders`，直链会落到非列表页，
+        导致列表接口根本不发出。
+        """
+        from pages.console.console_menu_page import ConsoleMenuPage
+
+        page = self.page
+        if "irp" not in page.url or "workbench" not in page.url:
+            ConsoleMenuPage(page).open_console_home()
+        for label in ("订单中心", "订单管理"):
+            loc = page.get_by_text(label, exact=True).last
+            if loc.count():
+                loc.click()
+                page.wait_for_timeout(4500)
+        self.nav.wait_ready()
+
+    def capture_order_list(self) -> tuple[list[dict], int | None]:
+        """进入订单列表并捕获列表接口的原始记录与 total。
+
+        为什么需要它：`open_order_list()` 的断言里把「暂无数据」列为可接受文案，
+        列表全空也会通过；而「历史数据还在、近期数据不显示」这类问题
+        total 仍 > 0，只靠页面文案完全无法发现。
+        因此需要拿到接口记录，交由 `core.data_freshness` 判断时间新鲜度。
+
+        生产实测（2026-11-17）：
+            POST /irp-api/irp-portal-console/order/page
+            {"data": {"list": [...], "total": 2375}}，时间字段为 insertDt
+        """
+        captured: dict = {}
+
+        def _on_response(response) -> None:
+            if not self.LIST_API.search(response.url):
+                return
+            # 只存 Response 对象，回调内不读 body，避免 sync API 死锁
+            captured["response"] = response
+
+        self.page.on("response", _on_response)
+        try:
+            self._open_order_list_via_menu()
+            for _ in range(30):
+                if "response" in captured:
+                    break
+                self.page.wait_for_timeout(500)
+        finally:
+            self.page.remove_listener("response", _on_response)
+
+        response = captured.get("response")
+        assert response is not None, (
+            f"未捕获到订单列表接口 {self.LIST_API.pattern}，可能接口路径已变更"
+        )
+        payload = response.json()
+        data = payload.get("data") if isinstance(payload, dict) else None
+        assert isinstance(data, dict), "订单列表接口返回结构异常（data 不是对象）"
+        rows = data.get("list")
+        assert isinstance(rows, list), "订单列表接口未返回 list 字段"
+        total = data.get("total")
+        logger.info(f"[订单列表] 捕获 {len(rows)} 条，total={total}")
+        return rows, (int(total) if isinstance(total, (int, str)) and str(total).isdigit() else None)
+
     def search_order(self, keyword: str) -> "OrderMgmtPage":
         """在订单列表中搜索订单。"""
         input_el = self.elements.find_candidates(
