@@ -66,10 +66,10 @@ def _assert_tenant_scoped(
 
 @pytest.mark.skip(
     reason=(
-        "黑盒路径待打通：进控制台后落地页不是工作台，找不到「常用模块」卡片。"
-        "此前用 suitKey=portal 直链得出的越权结论已作废（绕过视图选择），"
-        "需先确认『门户→管理后台→控制台』或『直连 irp 后点工作台』的稳定路径，"
-        "再用 orgNo 作为归属基准重跑。"
+        "路径已打通（门户→管理后台→工作台→切换租户，suitKey=1899427585366003727，"
+        "orgNo 随租户变化），但该套件下「被订阅的订单」的列表接口名尚未确认"
+        "（不是直链套件里的 workbench/rsc/app/apply/history/list），数据未取到，"
+        "归属结论待重测。此前用 suitKey=portal 直链得出的『四个列表越权』已作废。"
     )
 )
 class TestWorkbenchListScope:

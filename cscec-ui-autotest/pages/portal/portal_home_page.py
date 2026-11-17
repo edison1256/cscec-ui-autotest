@@ -82,6 +82,62 @@ class PortalHomePage(BasePage):
                     return v.strip()
         return None
 
+    def enter_workspace(self) -> Page:
+        """门户 → 右上角「管理后台」→ 工作台，返回工作台页签。
+
+        用户 2026-11-17 明确的**唯一**进入工作台路径。
+        实测要点（生产 DOM）：
+          - 「管理后台」hover 后展开 Ant Design popover
+          - 菜单项必须限定在 `.ant-popover-inner-content` 内点击；
+            页面其它区域（左侧导航、标题）也有同名文字，按坐标或 .last 会点错
+          - 点击后**新开标签页**，URL 形如
+            `#/portal/home/workbench?suitKey=1899427585366003727`
+            （注意：不是 `suitKey=portal`，那是另一个套件）
+          - irp 控制台空间与工作台空间不联通，不能从控制台进入工作台
+        """
+        page = self.page
+        # 用例的 page 初始是 about:blank，需先到门户首页。
+        # 这里只导航到**根域名**（等价于用户输入网址），不含任何功能页路由。
+        if "cloud" not in (page.url or "").lower():
+            page.goto(
+                settings.PORTAL_BASE_URL,
+                wait_until="domcontentloaded",
+                timeout=settings.NAVIGATION_TIMEOUT,
+            )
+            page.wait_for_timeout(3500)
+            for _ in range(2):
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(400)
+        self.assertions.page_not_blank_or_error()
+
+        mgr = page.get_by_text("管理后台", exact=True).last
+        assert mgr.count(), "门户右上角未找到「管理后台」"
+        try:
+            mgr.hover()
+        except Exception:
+            mgr.click()
+        page.wait_for_timeout(2500)
+
+        popover = page.locator(".ant-popover-inner-content").first
+        assert popover.count(), "「管理后台」下拉未展开（未出现 .ant-popover-inner-content）"
+        item = popover.get_by_text("工作台", exact=True).first
+        assert item.count(), "「管理后台」下拉中未找到「工作台」"
+
+        workspace_page = page
+        try:
+            with page.context.expect_page(timeout=10000) as info:
+                item.click()
+            workspace_page = info.value
+            workspace_page.wait_for_load_state(
+                "domcontentloaded", timeout=settings.NAVIGATION_TIMEOUT
+            )
+        except PlaywrightTimeoutError:
+            page.wait_for_timeout(4000)
+
+        workspace_page.wait_for_timeout(3500)
+        logger.info(f"[导航] → 工作台（管理后台点击进入）: {workspace_page.url[:90]}")
+        return workspace_page
+
     def open_console_page(self) -> Page:
         """从门户可见入口点进控制台，返回控制台页签。
 

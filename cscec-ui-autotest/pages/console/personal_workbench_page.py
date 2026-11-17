@@ -38,12 +38,14 @@ class PersonalWorkbenchPage(BasePage):
         """
         from pages.portal.portal_home_page import PortalHomePage
 
-        if "irp" not in (self.page.url or "").lower():
+        # 工作台只存在于 cloud 域，且**不能从 irp 控制台进来**
+        # （两个空间不联通）。唯一路径：门户 → 管理后台 → 工作台。
+        if "workbench" not in (self.page.url or "").lower():
             portal = PortalHomePage(self.page)
-            console_page = portal.open_console_page()
-            if console_page is not self.page:
+            workspace_page = portal.enter_workspace()
+            if workspace_page is not self.page:
                 # 换到新页签：重建所有绑定 page 的 helper
-                self.__init__(console_page)  # type: ignore[misc]
+                self.__init__(workspace_page)  # type: ignore[misc]
         for _ in range(2):
             self.page.keyboard.press("Escape")
             self.page.wait_for_timeout(400)
@@ -96,9 +98,11 @@ class PersonalWorkbenchPage(BasePage):
             # 只存 Response，回调内不读 body（sync API 下读 body 会死锁）
             captured["response"] = response
 
+        # 必须先完成导航再挂监听：open_home() 可能切到新页签，
+        # 监听器若挂在旧页上，新页的接口响应会全部漏掉。
+        self.open_home()
         self.page.on("response", _on_response)
         try:
-            self.open_home()
             loc = self.page.get_by_text(entry_label, exact=True).last
             if not loc.count():
                 try:
