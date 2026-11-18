@@ -30,6 +30,8 @@ class ApplyPrompt:
     dialog_texts: tuple[str, ...]
     tab_opened: bool
     new_tab_url: str = ""
+    specs_seen: tuple[str, ...] = ()
+    spec_clicked: str = ""
 
     @property
     def navigated(self) -> bool:
@@ -38,7 +40,9 @@ class ApplyPrompt:
     @property
     def has_switch_tenant_hint(self) -> bool:
         blob = " ".join(self.dialog_texts) + " " + self.new_tab_url
-        return any(w in blob for w in ("切换其他租户", "切换租户", "请切换租户"))
+        # UAT 实测文案（Ant Modal）：
+        #   注意 / 切换到非个人工作台租户，开启便捷采购。 / 取消 / 切换租户
+        return any(w in blob for w in ("非个人工作台租户", "切换租户", "切换其他租户"))
 
 
 class ServiceCenterPage(BasePage):
@@ -155,10 +159,20 @@ class ServiceCenterPage(BasePage):
         except Exception:
             return ""
 
-    def start_apply_on_first_card(self) -> ApplyPrompt:
-        """hover 第一张卡片 → 点「立即申请」，返回现场快照。
+    # popover 规格项文案（UAT 实测，云资源类资源）
+    SPEC_KEYWORD_HINT = ("申请", "订阅")
 
-        不填表、不提交；只观察点击后的提示。
+    def start_apply_on_first_card(self, spec_keyword: str | None = None) -> ApplyPrompt:
+        """hover 卡片 → 点「立即申请」→ 点规格项 → 进订阅页，返回现场。
+
+        用户 2026-11-18 纠正的交互链（此前只做到第一步就下了结论）：
+          1. hover 卡片才出现「立即申请」
+          2. 点它 → 弹出 Ant popover，列出可用规格
+               实测文案：云资源变更 / 云资源回收 / **云资源申请**
+          3. 点规格 → 进入订阅页
+          4. 「切换其他租户」提示出现在**第 3 步之后**
+
+        不填表、不提交；只观察提示。
         """
         cards = self.cards
         assert cards.count() > 0, "服务中心没有可用的资源卡片"
@@ -168,42 +182,88 @@ class ServiceCenterPage(BasePage):
         self.page.wait_for_timeout(1200)
 
         btn = card.get_by_text("立即申请", exact=True)
-        visible = btn.count() > 0 and btn.first.is_visible()
-        if not visible:
+        if not (btn.count() > 0 and btn.first.is_visible()):
             return ApplyPrompt(
                 clicked=False,
                 url_before=self.page.url,
                 url_after=self.page.url,
                 dialog_texts=(),
                 tab_opened=False,
+                specs_seen=(),
             )
 
+        # 第 2 步：点「立即申请」，弹出规格 popover
         url_before = self.page.url
+        btn.first.click(timeout=8000)
+        self.page.wait_for_timeout(2500)
+
+        popover = self.page.locator(".ant-popover-inner-content").last
+        specs: tuple[str, ...] = ()
+        if popover.count():
+            try:
+                raw = popover.inner_text() or ""
+                specs = tuple(x.strip() for x in raw.splitlines() if x.strip())
+            except Exception:
+                specs = ()
+
+        keywords = (spec_keyword,) if spec_keyword else self.SPEC_KEYWORD_HINT
+        chosen = None
+        for kw in keywords:
+            for name in specs:
+                if kw in name:
+                    target = popover.get_by_text(name, exact=True).first
+                    if target.count():
+                        chosen = name
+                        break
+            if chosen:
+                break
+        if chosen is None and specs:
+            chosen = specs[0]
+
+        if chosen is None:
+            return ApplyPrompt(
+                clicked=True,
+                url_before=url_before,
+                url_after=self.page.url,
+                dialog_texts=(),
+                tab_opened=False,
+                specs_seen=specs,
+            )
+
+        # 第 3 步：点规格，进订阅页
         ctx = self.page.context
         pages_before = len(ctx.pages)
-        btn.first.click(timeout=8000)
+        try:
+            popover.get_by_text(chosen, exact=True).first.click(timeout=8000)
+        except Exception as exc:  # noqa: BLE001
+            return ApplyPrompt(
+                clicked=True,
+                url_before=url_before,
+                url_after=self.page.url,
+                dialog_texts=(f"点击规格「{chosen}」失败: {type(exc).__name__}",),
+                tab_opened=False,
+                specs_seen=specs,
+            )
         self.page.wait_for_timeout(4500)
 
         tab_opened = len(ctx.pages) > pages_before
-        new_tab_url = ""
-        dialogs: list[str] = []
-        target = self.page
+        target = ctx.pages[-1] if tab_opened else self.page
         if tab_opened:
-            target = ctx.pages[-1]
             try:
                 target.wait_for_load_state("domcontentloaded", timeout=15000)
             except Exception:
                 pass
             target.wait_for_timeout(2000)
-            new_tab_url = target.url
 
-        # 抓弹窗 / toast / 提示条
+        dialogs: list[str] = []
         for sel in (
             ".ant-modal-content",
             ".ant-message-notice-content",
             "[role='dialog']",
             ".ant-notification-notice",
             ".ant-alert",
+            ".ant-result-title",
+            ".ant-result-subtitle",
         ):
             try:
                 loc = target.locator(sel)
@@ -222,5 +282,7 @@ class ServiceCenterPage(BasePage):
             url_after=target.url,
             dialog_texts=tuple(dialogs),
             tab_opened=tab_opened,
-            new_tab_url=new_tab_url,
+            new_tab_url=target.url if tab_opened else "",
+            specs_seen=specs,
+            spec_clicked=chosen,
         )

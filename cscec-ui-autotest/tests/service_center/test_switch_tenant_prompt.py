@@ -33,25 +33,17 @@ def service_center(logged_in_page) -> ServiceCenterPage:
 class TestPersonalWorkbenchApplyGuard:
     """个人工作台身份下的发起申请守卫。"""
 
-    @pytest.mark.xfail(
-        strict=False,
-        reason=(
-            "UAT 实测（2026-11-18）：个人工作台身份下对资源「itsm-云资源」点「立即申请」，"
-            "点击前后 URL 相同、无弹窗、无新标签页 —— 未出现「切换其他租户」提醒。"
-            "对照组 SC-ST-002（普通租户）通过，证明链路可用，故这是业务侧未生效，"
-            "需确认：该需求是否已部署到 UAT / 是否所有资源都要提示。"
-            "需求生效后本用例会自动 xpass，届时移除标记转为硬断言。"
-        ),
-    )
     def test_sc_st_001_prompt_switch_tenant_on_apply(
         self, service_center: ServiceCenterPage
     ) -> None:
         """SC-ST-001：个人工作台下点「发起申请」应提示「切换其他租户」。
 
         判定三层，任何一层不过都说明需求未达成：
-          1. 能 hover 出「立即申请」并点到（否则是选择器/交互变了，不是业务结论）
-          2. 点击后出现了某种提示（弹窗/Toast/提示条/跳转到提示页）
-          3. 提示内容包含「切换其他租户」
+          1. hover 出「立即申请」并点到（否则是选择器/交互变了，不是业务结论）
+          2. 弹出的规格 popover 里能点到规格项（实测「云资源变更/云资源回收/云资源申请」）
+          3. 进订阅页后出现了提示，且内容包含「切换其他租户」
+
+        交互链（用户 2026-11-18 纠正）：hover 卡片 → 立即申请 → 选规格 → 订阅页才提示。
         """
         service_center.switch_to_personal_workbench()
         org = service_center.current_org_name
@@ -69,17 +61,28 @@ class TestPersonalWorkbenchApplyGuard:
         )
 
         assert prompt.has_switch_tenant_hint, (
-            f"个人工作台身份下，对资源「{title}」点「立即申请」后"
+            f"个人工作台身份下，对资源「{title}」走完申请链路后"
             f"未出现「切换其他租户」提醒。\n"
+            f"  规格面板: {list(prompt.specs_seen)}\n"
+            f"  点击的规格: {prompt.spec_clicked}\n"
             f"  点击前 URL: {prompt.url_before}\n"
             f"  点击后 URL: {prompt.url_after}\n"
             f"  是否新开标签页: {prompt.tab_opened} {prompt.new_tab_url}\n"
             f"  捕获到的弹窗/提示: {list(prompt.dialog_texts)}\n"
             "需求要求：个人工作台发起申请时必须提醒切换其他租户"
         )
+        dialog = " ".join(prompt.dialog_texts)
         print(
-            f"\n[提示] 资源「{title}」-> {list(prompt.dialog_texts)[:2]}"
+            f"\n[提示] 资源「{title}」规格「{prompt.spec_clicked}」-> "
+            f"{dialog[:160]}"
         )
+        # 收紧：不只是"有切换字样"，而是实测的那句完整引导语
+        assert "非个人工作台租户" in dialog, (
+            f"提示出现但文案不是预期的引导语。实测: {dialog[:200]}\n"
+            "预期包含：切换到非个人工作台租户，开启便捷采购。"
+        )
+        assert "切换租户" in dialog, "提示中缺少「切换租户」按钮，用户无法直接切换"
+        assert "取" in dialog, "提示中缺少「取消」按钮，用户无法留在当前页"
 
 
 class TestOtherTenantApplyAllowed:

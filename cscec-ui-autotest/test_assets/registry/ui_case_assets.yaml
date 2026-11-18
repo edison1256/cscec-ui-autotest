@@ -4518,7 +4518,7 @@ assets:
       - pages/portal/service_center_page.py
     markers: [service_center, portal, readonly]
     env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
-    notes: "UAT 实测未出现该提醒（xfail）；对照组 SC-ST-002 通过证明链路可用，待确认需求是否已部署"
+    notes: "UAT 2026-11-18 实测通过。完整链路：hover 卡片 → 立即申请 → 选规格（云资源申请）→ 订阅页弹『注意/切换到非个人工作台租户，开启便捷采购。/取消/切换租户』。此前误判为未实现，实为只做到第一步就下了结论"
 
   - asset_id: UI-SERVICE-CENTER-002
     module: 服务中心
