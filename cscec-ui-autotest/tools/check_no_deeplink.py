@@ -31,8 +31,11 @@ PROJECT = Path(__file__).resolve().parent.parent
 SCAN_DIRS = ("pages", "tests")
 SCAN_FILES = ("run_tests.py", "conftest.py")
 
-# goto 系列调用
-CALL_RE = re.compile(r"\b(goto|goto_url|goto_path)\s*\(")
+# 导航系列调用。
+# `open_route` / `open_url` / `open_path` 是封装层：调用方传 "/#/xxx"，
+# 内部再拼成完整 URL 传给 goto。护栏只看 goto 会漏掉这种间接直链
+# （2026-11-18 实测：resource_mgmt_page 就是用 open_route 绕过了检查）。
+CALL_RE = re.compile(r"\b(goto|goto_url|goto_path|open_route|open_url|open_path)\s*\(")
 # 违规片段
 DEEPLINK_RE = re.compile(r"#/|suitKey=")
 # 登录入口白名单（等价于用户在浏览器输入站点地址）

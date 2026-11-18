@@ -7,7 +7,6 @@ from dataclasses import dataclass
 import os
 import re
 from typing import Any
-from urllib.parse import urlparse
 
 from playwright.sync_api import (
     Locator,
@@ -28,8 +27,6 @@ from core.interaction_evidence import (
 )
 from core.logger import get_logger
 from pages.console.console_menu_page import ConsoleMenuPage
-from pages.portal.login_page import LoginPage
-from pages.portal.portal_home_page import PortalHomePage
 
 logger = get_logger("resource_mgmt_page")
 
@@ -577,26 +574,24 @@ class ResourceMgmtPage(BasePage):
             expect(detail_page.get_by_text(label, exact=True).first).to_be_visible()
 
     def open_authenticated_portal_service_center(self) -> "ResourceMgmtPage":
-        """Open cloud service center and establish the existing IAM session."""
-        portal = PortalHomePage(self.page).open_route("/#/service-center/2")
-        portal.should_be_on_portal_domain()
-        login_entry = self.page.get_by_text("登录", exact=True).first
-        if login_entry.is_visible(timeout=2000):
-            login_page = LoginPage(self.page).click_login_entry()
-            if login_page.login_form_visible():
-                login_page.fill_credentials().click_login_button(
-                    expected_host=urlparse(settings.PORTAL_BASE_URL).netloc.lower()
-                )
-        authenticated_entry = self.page.get_by_text(
-            re.compile(r"^(管理后台|工作台)$")
-        ).first
-        expect(authenticated_entry).to_be_visible(timeout=settings.NAVIGATION_TIMEOUT)
-        expect(self.page.get_by_text("登录", exact=True)).to_have_count(0)
-        portal.open_route("/#/service-center/2")
-        expect(self.page).to_have_url(re.compile(r"cloud\.cscec\.com/#/service-center/2$"))
-        expect(self.page.get_by_text("云产品", exact=True).first).to_be_visible()
-        return self
+        """从门户点击「服务中心」进入（不直链），并确保已登录。
 
+        旧实现有两个硬伤（2026-11-18 修）：
+          1. 用 open_route 传 `/#/service-center/2` 是直链 —— 绕过导航、违反黑盒原则，
+             已加入 tools/check_no_deeplink.py 的拦截名单（open_route 系列）。
+          2. `to_have_url(re.compile(r"cloud[.]cscec[.]com/#/service-center/2$"))`
+             把**生产域名硬编码**进断言，UAT 是 cloud-uat.cscec.com 必然不匹配。
+             现在改为断言页面内容（「云产品」可见），与域名解耦。
+        """
+        from pages.portal.service_center_page import ServiceCenterPage
+
+        service_center = ServiceCenterPage(self.page)
+        service_center.ensure_portal()          # 必要时补登录，只到门户根域名
+        service_center.open_service_center()    # 点导航「服务中心」
+        assert service_center.cards.count() > 0, (
+            "服务中心未渲染资源卡片，无法继续 M1-04 的搜索流程"
+        )
+        return self
     @classmethod
     def _parse_portal_search_response(
         cls,

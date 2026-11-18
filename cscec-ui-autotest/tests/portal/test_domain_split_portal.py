@@ -219,7 +219,7 @@ def _click_visible_text_and_assert_ready(page, text: str):
 def _open_support_float_entry(portal: PortalHomePage, text: str):
     """打开支持页右侧悬浮入口，只验证入口面板或跳转页可用，不提交表单。"""
     page = portal.page
-    portal.open_route("/#/support")
+    portal.open_route("/#/support")  # noqa: deeplink 本用例就是验路由可达性，直链即被测对象
     portal.should_be_on_portal_domain()
     portal.assertions.page_not_blank_or_error()
     page.locator("[class*=lan_bao]").first.hover(timeout=settings.ACTION_TIMEOUT)
