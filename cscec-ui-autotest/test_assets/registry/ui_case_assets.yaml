@@ -4505,3 +4505,32 @@ assets:
     markers: [datahealth, console, readonly]
     env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
     notes: "直链错误套件下曾为 2376 条/12 创建人"
+  - asset_id: UI-SERVICE-CENTER-001
+    module: 服务中心
+    title: "服务中心-个人工作台发起申请应提示切换其他租户"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 服务中心个人工作台发起申请前置校验
+    test_path: tests/service_center/test_switch_tenant_prompt.py::TestPersonalWorkbenchApplyGuard::test_sc_st_001_prompt_switch_tenant_on_apply
+    page_objects:
+      - pages/portal/service_center_page.py
+    markers: [service_center, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "UAT 实测未出现该提醒（xfail）；对照组 SC-ST-002 通过证明链路可用，待确认需求是否已部署"
+
+  - asset_id: UI-SERVICE-CENTER-002
+    module: 服务中心
+    title: "服务中心-普通租户发起申请不应提示切换租户（对照组）"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 服务中心个人工作台发起申请前置校验
+    test_path: tests/service_center/test_switch_tenant_prompt.py::TestOtherTenantApplyAllowed::test_sc_st_002_no_prompt_after_switch_to_tenant
+    page_objects:
+      - pages/portal/service_center_page.py
+    markers: [service_center, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "防止把守卫写成『任何身份都提示』；无可切换普通租户时记 NOT_APPLICABLE"
