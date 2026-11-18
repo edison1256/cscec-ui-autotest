@@ -4046,3 +4046,462 @@ assets:
     env_policy: {uat: false, pre: true, prod_default: false, prod_explicit: true}
     source: {source_type: blackbox_execution, requirement: 计量订阅260901黑盒复测20261013}
     notes: "原62项记录映射39流程；生产显式只读入口选择38流程/61大纲项，导出任务属于write并排除；3项保留契约/数据阻塞。2026-10-15已确认资源发布方、订阅人所在租户为正式字段，历史差异记录保留。不上升为默认生产门禁；当轮数据动态对账与角色隔离，生产画像不沿用PRE菜单编号。上线后执行见docs/metering-subscription-260901-prod-regression.md。"
+  - asset_id: UI-KESHANG-M02-001
+    module: 客商接入
+    title: "M02-01 个人卡片含账号/租户/待办/常用工具四区域"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestPersonalCardAndTenantSwitcher::test_ks_m02_001_card_areas
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "UAT 实测通过；生产可从门户访问"
+
+  - asset_id: UI-KESHANG-M02-002
+    module: 客商接入
+    title: "M02-02 切换租户列表展示已开通/申请中状态"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestPersonalCardAndTenantSwitcher::test_ks_m02_002_switcher_states
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "申请中分支缺样本时记 NOT_APPLICABLE"
+
+  - asset_id: UI-KESHANG-M02-003
+    module: 客商接入
+    title: "M02-03 切换列表不出现企业/内部组织/子公司类型字样"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestPersonalCardAndTenantSwitcher::test_ks_m02_003_no_type_words
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+
+  - asset_id: UI-KESHANG-M02-004
+    module: 客商接入
+    title: "M02-04 同名不同ID企业不混入可切换列表"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestPersonalCardAndTenantSwitcher::test_ks_m02_004_same_name_not_mixed
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "缺同名样本时记 NOT_APPLICABLE"
+
+  - asset_id: UI-KESHANG-M03-001
+    module: 客商接入
+    title: "M03-01 创建租户弹窗含组织树/对象信息/申请人/说明/声明/取消/提交"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestCreateTenantDialog::test_ks_m03_001_dialog_structure
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "只读：不勾声明不提交"
+
+  - asset_id: UI-KESHANG-M03-002
+    module: 客商接入
+    title: "M03-02 租户名称字段存在且只读"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestCreateTenantDialog::test_ks_m03_002_tenant_name_readonly
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+
+  - asset_id: UI-KESHANG-M03-003
+    module: 客商接入
+    title: "M03-03 申请人/手机号来自当前登录人，不含原型写死的郝仁"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestCreateTenantDialog::test_ks_m03_003_applicant_from_current_user
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "防止原型假数据被当成真实取值"
+
+  - asset_id: UI-KESHANG-M03-004
+    module: 客商接入
+    title: "M03-04 未选对象时确认提交禁用"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestCreateTenantDialog::test_ks_m03_004_submit_disabled_without_selection
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "只读 disabled 状态，绝不点击"
+
+  - asset_id: UI-KESHANG-M03-005
+    module: 客商接入
+    title: "M03-05 未认证企业不可提交并给出认证引导"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestCreateTenantDialog::test_ks_m03_005_unverified_enterprise_blocked
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+    notes: "缺未认证样本时记 NOT_APPLICABLE"
+
+  - asset_id: UI-KESHANG-M03-006
+    module: 客商接入
+    title: "M03-06 取消弹窗不生成记录且重开无残留"
+    lifecycle: uat_automated
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_tenant_apply_readonly.py::TestCreateTenantDialog::test_ks_m03_006_cancel_leaves_no_residue
+    page_objects:
+      - pages/portal/tenant_onboarding_page.py
+    markers: [keshang, portal, readonly]
+    env_policy: {uat: true, pre: false, prod_default: false, prod_explicit: false}
+
+  - asset_id: UI-KESHANG-CONSOLE-001
+    module: 客商接入
+    title: "控制台-权限管理-客商管理含 7 个子菜单"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangMenuStructure::test_ks_console_001_menu_complete
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "含纠错记录：曾误判生产无此菜单（只展开一级菜单即下结论）"
+
+  - asset_id: UI-KESHANG-CONSOLE-002
+    module: 客商接入
+    title: "控制台-客商管理子菜单顺序（认证审核在首位）"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangMenuStructure::test_ks_console_002_menu_order
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "菜单重构时会提醒"
+
+  - asset_id: UI-KESHANG-CONSOLE-101
+    module: 客商接入
+    title: "控制台-客商管理-认证审核页面可达与特征控件"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangSubPages::test_ks_console_10x_subpage
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "参数化：ecosystem/certReview"
+
+  - asset_id: UI-KESHANG-CONSOLE-102
+    module: 客商接入
+    title: "控制台-客商管理-用户中心页面可达与特征控件"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangSubPages::test_ks_console_10x_subpage
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "参数化：ecosystem/userCenter"
+
+  - asset_id: UI-KESHANG-CONSOLE-103
+    module: 客商接入
+    title: "控制台-客商管理-企业名录页面可达与特征控件"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangSubPages::test_ks_console_10x_subpage
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "参数化：ecosystem/certifiedClientList"
+
+  - asset_id: UI-KESHANG-CONSOLE-104
+    module: 客商接入
+    title: "控制台-客商管理-客商列表页面可达与特征控件"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangSubPages::test_ks_console_10x_subpage
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "参数化：ecosystem/clientManage"
+
+  - asset_id: UI-KESHANG-CONSOLE-105
+    module: 客商接入
+    title: "控制台-客商管理-入驻配置页面可达与特征控件"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangSubPages::test_ks_console_10x_subpage
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "参数化：ecosystem/onboardConfig"
+
+  - asset_id: UI-KESHANG-CONSOLE-106
+    module: 客商接入
+    title: "控制台-客商管理-企业类型管理页面可达与特征控件"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangSubPages::test_ks_console_10x_subpage
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "参数化：ecosystem/orgTypeManage"
+
+  - asset_id: UI-KESHANG-CONSOLE-107
+    module: 客商接入
+    title: "控制台-客商管理-认证材料库页面可达与特征控件"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangSubPages::test_ks_console_10x_subpage
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "参数化：ecosystem/docVerify"
+
+  - asset_id: UI-KESHANG-CONSOLE-200
+    module: 客商接入
+    title: "控制台-客商管理只读边界：记录写操作词但不点击"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/keshang/test_console_keshang_readonly.py::TestKeshangNoWriteBoundary::test_ks_console_200_readonly_boundary
+    page_objects:
+      - pages/console/keshang_manage_page.py
+    markers: [keshang, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "写用例需先补数据清理机制"
+
+  - asset_id: UI-DATAHEALTH-ORDER-001
+    module: 数据健康度
+    title: "订单列表接口必须返回记录且 total>0"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_order_data_freshness.py::TestOrderDataFreshness::test_dh_order_001_list_has_records
+    page_objects:
+      - pages/console/order_mgmt_page.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "接口 POST /irp-portal-console/order/page"
+
+  - asset_id: UI-DATAHEALTH-ORDER-002
+    module: 数据健康度
+    title: "订单列表最新记录距今不超过 3 天"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_order_data_freshness.py::TestOrderDataFreshness::test_dh_order_002_latest_record_is_recent
+    page_objects:
+      - pages/console/order_mgmt_page.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "针对 2026-11-17 走查『近期订单不显示』：历史数据还在时只有时间新鲜度能发现"
+
+  - asset_id: UI-DATAHEALTH-ORDER-003
+    module: 数据健康度
+    title: "新鲜度判据自检：10 天前数据必须判 stale"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_order_data_freshness.py::TestOrderFreshnessSelfCheck::test_dh_order_003_stale_data_is_detected
+    page_objects:
+      - core/data_freshness.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "防止有人放宽阈值让门禁变绿"
+
+  - asset_id: UI-DATAHEALTH-ORDER-004
+    module: 数据健康度
+    title: "新鲜度判据自检：时间字段缺失时不得静默通过"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_order_data_freshness.py::TestOrderFreshnessSelfCheck::test_dh_order_004_missing_time_field_fails
+    page_objects:
+      - core/data_freshness.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "字段改名时必须暴露，否则退化成空断言"
+
+  - asset_id: UI-DATAHEALTH-SCOPE-003
+    module: 数据健康度
+    title: "归属判据自检：跨租户数据必须判为越权"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_subscribed_order_scope.py::TestScopeJudgeSelfCheck::test_dh_scope_003_cross_tenant_is_detected
+    page_objects:
+      - core/data_scope.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+
+  - asset_id: UI-DATAHEALTH-SCOPE-004
+    module: 数据健康度
+    title: "归属判据自检：单租户数据必须判为合规"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_subscribed_order_scope.py::TestScopeJudgeSelfCheck::test_dh_scope_004_single_tenant_passes
+    page_objects:
+      - core/data_scope.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+
+  - asset_id: UI-DATAHEALTH-SCOPE-005
+    module: 数据健康度
+    title: "归属判据自检：归属字段缺失必须抛错"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_subscribed_order_scope.py::TestScopeJudgeSelfCheck::test_dh_scope_005_missing_field_fails_loudly
+    page_objects:
+      - core/data_scope.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "曾因 field 做 fallback 导致断言恒真"
+
+  - asset_id: UI-DATAHEALTH-WB-101
+    module: 数据健康度
+    title: "工作台-被订阅的订单数据量落在本租户量级（基线13，上限200）"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_workbench_list_scope.py::TestWorkbenchListScope::test_dh_scope_101_subscribed_orders
+    page_objects:
+      - pages/console/personal_workbench_page.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "正确套件 suitKey=1899427585366003727；直链 suitKey=portal 会看到 828 条/26 租户"
+
+  - asset_id: UI-DATAHEALTH-WB-102
+    module: 数据健康度
+    title: "工作台-云产品订阅数据量落在本租户量级（基线0）"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_workbench_list_scope.py::TestWorkbenchListScope::test_dh_scope_102_cloud_subscription
+    page_objects:
+      - pages/console/personal_workbench_page.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "直链错误套件下曾为 554 条/8 租户"
+
+  - asset_id: UI-DATAHEALTH-WB-103
+    module: 数据健康度
+    title: "工作台-数据资产订阅数据量落在本租户量级（基线0）"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_workbench_list_scope.py::TestWorkbenchListScope::test_dh_scope_103_data_asset_subscription
+    page_objects:
+      - pages/console/personal_workbench_page.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "直链错误套件下曾为 16 条/2 租户"
+
+  - asset_id: UI-DATAHEALTH-WB-104
+    module: 数据健康度
+    title: "工作台-我的订单数据量落在本租户量级（基线1）"
+    lifecycle: prod_regression
+    automation_status: automated
+    source:
+      source_type: requirement
+      requirement: 客商接入中建云
+    test_path: tests/datahealth/test_workbench_list_scope.py::TestWorkbenchListScope::test_dh_scope_104_my_orders
+    page_objects:
+      - pages/console/personal_workbench_page.py
+    markers: [datahealth, console, readonly]
+    env_policy: {uat: false, pre: false, prod_default: false, prod_explicit: true}
+    notes: "直链错误套件下曾为 2376 条/12 创建人"

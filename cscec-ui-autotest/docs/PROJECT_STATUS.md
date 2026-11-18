@@ -1,14 +1,14 @@
 # 项目状态文档（自动生成）
 
-> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-11-02 15:00。请勿手工编辑——改完受监控目录后重跑生成器即可。
+> 本文件由 `tools/generate_progress_doc.py` 从资产登记表 + 生产 dry-run 自动派生，生成时间 2026-11-18 10:01。请勿手工编辑——改完受监控目录后重跑生成器即可。
 >
 > 旧文档 `docs/task-progress-2026-08-12-ui-autotest.md` 已过期被本文件取代。
 
 ## 1. 生产默认套件规模（pytest 实际收集）
 
-- **总用例数**：885
-- **生产默认收集（smoke + readonly）**：115 / 885
-- **未进入生产默认套件（含 PRE 专用、非冒烟、写入及工具测试）**：770
+- **总用例数**：929
+- **生产默认收集（smoke + readonly）**：115 / 929
+- **未进入生产默认套件（含 PRE 专用、非冒烟、写入及工具测试）**：814
 
 - **控制台机器契约**：113
   - Mandatory：44
@@ -18,14 +18,14 @@
 
 ## 2. 资产治理状态（来自 registry）
 
-- **登记资产总数**：185
+- **登记资产总数**：216
 
 ### 按生命周期（lifecycle）
 
 | lifecycle | 数量 |
 | --- | --- |
-| uat_automated | 96 |
-| prod_regression | 63 |
+| uat_automated | 106 |
+| prod_regression | 84 |
 | candidate | 24 |
 | new_requirement | 2 |
 
@@ -33,7 +33,7 @@
 
 | automation_status | 数量 |
 | --- | --- |
-| automated | 173 |
+| automated | 204 |
 | needs_stabilization | 10 |
 | candidate | 2 |
 
@@ -43,9 +43,11 @@
 | --- | --- |
 | 分层数据资源导入 | 53 |
 | 数据资源导入功能优化 | 24 |
+| 客商接入 | 20 |
 | 资源管理 | 14 |
 | 移动端 | 12 |
 | 计量统计 | 12 |
+| 数据健康度 | 11 |
 | 系统配置 | 10 |
 | 控制台 | 8 |
 | 订阅服务 | 8 |
